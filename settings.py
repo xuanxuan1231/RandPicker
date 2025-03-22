@@ -10,7 +10,7 @@ from PyQt6.QtGui import QDesktopServices, QIcon
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
-    InfoBarIcon, FlyoutAnimationType
+    InfoBarIcon, FlyoutAnimationType, SwitchButton
 
 import conf
 
@@ -92,9 +92,9 @@ class Settings(FluentWindow):
         table.setBorderVisible(True)
         table.setBorderRadius(8)
         table.setWordWrap(True)
-        table.setColumnCount(3)
+        table.setColumnCount(4)
         table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        table.setHorizontalHeaderLabels(['姓名', '学号', '权重'])
+        table.setHorizontalHeaderLabels(['姓名', '学号', '权重', '启用'])
 
         students = conf.get_all_students()
         table.setRowCount(conf.get_students_num())
@@ -103,6 +103,15 @@ class Settings(FluentWindow):
             table.setItem(row, 0, QTableWidgetItem(student['name']))
             table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
             table.setItem(row, 2, QTableWidgetItem(str(student['weight'])))
+            btn_active = SwitchButton()
+            btn_active.setOnText('开')
+            btn_active.setOffText('关')
+            if student['active']:
+                btn_active.setChecked(True)
+            else:
+                btn_active.setChecked(False)
+            table.setCellWidget(row, 3, btn_active)
+
 
         btn_save = self.findChild(PushButton, 'save_student')
         btn_save.clicked.connect(lambda: self.save_students())
@@ -116,7 +125,8 @@ class Settings(FluentWindow):
             name = table.item(row, 0).text()
             id_ = int(table.item(row, 1).text())
             weight = int(table.item(row, 2).text())
-            students["students"][row] = {"name": name, "id": id_, "weight": weight}
+            is_active = table.cellWidget(row, 3).isChecked()
+            students["students"][row] = {"name": name, "id": id_, "weight": weight, "active": is_active}
 
         conf.write_conf(students)
         btn_save = self.findChild(PushButton, 'save_student')

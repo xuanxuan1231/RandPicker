@@ -58,6 +58,14 @@ def get(num=1):
     logger.warning("学生未找到")
     return {'weight': '1', 'id': '000000', 'name': '无结果'}
 
+def get_students_list():
+    students = get_all_students()
+    list_ = []
+    for i in range(1, len(students['students'])+1):
+        if students['students'][i-1]['active']:
+            list_.append(i)
+        i = i + 1
+    return list_
 
 def get_students_num():
     """
@@ -89,7 +97,7 @@ def excel2json(excel_path='./example.xlsx'):
     students = {}
     list_ = []
     for i in sheet.index.values:
-        line = sheet.loc[i, ['weight', 'name', 'id']].to_dict()
+        line = sheet.loc[i, ['weight', 'name', 'id', 'active']].to_dict()
         list_.append(line)
     students['students'] = list_
     return students
@@ -131,7 +139,19 @@ def get_all_students():
 
 def get_weight():
     """
-    获取全部权重。
+    获取活动学生权重。
+    :return: 活动学生权重
+    """
+    students = get_all_students()
+    weight = []
+    for student in students['students']:
+        if student['active']:
+            weight.append(student['weight'])
+    return weight
+
+def get_all_weight():
+    """
+    获取全部学生权重。
     :return: 全部权重
     """
     students = get_all_students()

@@ -22,10 +22,26 @@
   - [ ] 自动识别
   - [ ] UI
 - [ ] 从 CSV 导入
-- [ ] 临时禁用
+- [x] 禁用学生 (而非删除)
 - [x] 权重
   - [ ] 使用滑块调整权重
 - [x] 自定义缩放
   - [ ] UI
     - [ ] 使用滑块调整缩放
 - [x] 大头照
+
+## 协议
+此项目 (RandPicker) 基于 GPL-3.0 许可证授权发布，详情请参阅 [LICENSE](LICENSE) 文件。
+
+Copyright © 2025 Wenxuan Shen.
+
+## 致谢
+### 第三方库和框架
+- [PyQt6](https://pypi.org/project/PyQt6)  
+- [PyQt6-Fluent-Widgets](https://pypi.org/project/PyQt6-Fluent-Widgets)  
+- [loguru](https://pypi.org/project/loguru)  
+- [pandas](https://pypi.org/project/pandas)  
+
+### 本项目受到以下项目的启发而开发
+- [Class-Widgets](https://github.com/Class-Widgets/Class-Widgets)
+- 隔壁班未开源的一个随机选人项目

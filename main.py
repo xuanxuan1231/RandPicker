@@ -83,8 +83,8 @@ class Widget(QWidget):
         """
         self.is_picking = True
         # num = rand(1, conf.get_students_num())
-        num = choices(list(range(1, conf.get_students_num() + 1)), weights=conf.get_weight(), k=1)[0]
-        logger.info(f'随机数已生成。JSON 索引是 {num - 1}。它的选择权重是 {conf.get_weight()[num - 1]}。')
+        num = choices(conf.get_students_list(), weights=conf.get_weight(), k=1)[0]
+        logger.info(f'随机数已生成。JSON 索引是 {num - 1}。它的选择权重是 {conf.get_all_weight()[num - 1]}。')
         student = conf.get(num)
         logger.debug(f'已获取 JSON 索引是 {num - 1} 的学生信息。{student}')
         name = self.findChild(QLabel, 'name')
