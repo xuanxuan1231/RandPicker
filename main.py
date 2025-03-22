@@ -4,7 +4,7 @@ from random import choices
 
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QMouseEvent, QIcon
+from PyQt6.QtGui import QColor, QMouseEvent, QIcon, QPixmap
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGraphicsDropShadowEffect, QSystemTrayIcon, QFrame
 from loguru import logger
 from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Action, Dialog
@@ -74,6 +74,7 @@ class Widget(QWidget):
     def mouseMoveEvent(self, event: QMouseEvent):
         if event.buttons() == Qt.MouseButton.LeftButton:
             self.move(event.globalPosition().toPoint() - self.m_Position)  # 更改窗口位置
+            self.r_Position = event.globalPosition().toPoint()  # 记录鼠标释放位置
             event.accept()
 
     def pick(self):
@@ -88,19 +89,81 @@ class Widget(QWidget):
         logger.debug(f'已获取 JSON 索引是 {num - 1} 的学生信息。{student}')
         name = self.findChild(QLabel, 'name')
         id_ = self.findChild(QLabel, 'id')
+        avatar = self.findChild(QLabel, 'avatar')
         name.setText(f'{str(student['id'])[-2:]} {student['name']}')
         id_.setText(str(student['id']))
+        
+        # 设置头像
+        avatar_path = f'./stu_photo/{student["id"]}.png'
+        if os.path.exists(avatar_path):
+            pixmap = QPixmap(avatar_path)
+            scaled_pixmap = pixmap.scaled(80, 80, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
+            avatar.setPixmap(scaled_pixmap)
+            avatar.setStyleSheet('border-radius: 40px; background-color: transparent;')
+        else:
+            avatar.setStyleSheet('background-color: rgb(200, 200, 200); border-radius: 40px;')
         self.is_picking = False
 
     def clear(self):  # 清除结果
         if not self.is_picking:
             name = self.findChild(QLabel, 'name')
             id_ = self.findChild(QLabel, 'id')
+            avatar = self.findChild(QLabel, 'avatar')
             name.setText('无结果')
             id_.setText('000000')
+            avatar.setStyleSheet('background-color: rgb(200, 200, 200); border-radius: 40px;')
             logger.info('清除结果')
             return 0
         logger.warning('没有清除结果，因为正在选人。')
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.LeftButton and conf.get_ini('UI', 'edge_hide') == 'true':
+            screen = QApplication.screenAt(event.globalPosition().toPoint())
+            if not screen:
+                screen = QApplication.primaryScreen()
+            screen_geometry = screen.geometry()
+            edge_distance = int(conf.get_ini('UI', 'edge_distance'))
+            hidden_width = int(conf.get_ini('UI', 'hidden_width'))
+            window_geometry = self.geometry()
+
+            # 检测是否靠近屏幕边缘
+            if self.r_Position.x() <= screen_geometry.left() + edge_distance:
+                # 靠左边缘
+                window_geometry.moveLeft(screen_geometry.left() - window_geometry.width() + hidden_width)
+                self.setGeometry(window_geometry)
+                logger.info('窗口贴靠到左边缘')
+            elif self.r_Position.x() >= screen_geometry.right() - edge_distance:
+                # 靠右边缘
+                window_geometry.moveLeft(screen_geometry.right() - hidden_width)
+                self.setGeometry(window_geometry)
+                logger.info('窗口贴靠到右边缘')
+            event.accept()
+
+    def mousePressEvent(self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.LeftButton:
+            # 检查窗口是否处于隐藏状态
+            screen = QApplication.screenAt(event.globalPosition().toPoint())
+            if not screen:
+                screen = QApplication.primaryScreen()
+            screen_geometry = screen.geometry()
+            window_geometry = self.geometry()
+
+            # 如果窗口被隐藏在左边或右边，则恢复显示
+            if window_geometry.left() < screen_geometry.left() or window_geometry.right() > screen_geometry.right():
+                # 计算窗口应该显示的位置
+                if window_geometry.left() < screen_geometry.left():
+                    window_geometry.moveLeft(screen_geometry.left())
+                else:
+                    window_geometry.moveLeft(screen_geometry.right() - window_geometry.width())
+                self.setGeometry(window_geometry)
+                logger.info('窗口恢复显示')
+                event.accept()
+                return
+
+            # 如果窗口未隐藏，则处理正常的拖动
+            self.m_Position = event.globalPosition().toPoint() - self.pos()  # 获取鼠标相对窗口的位置
+            self.p_Position = event.globalPosition().toPoint()  # 获取鼠标相对屏幕的位置
+            event.accept()
 
 
 class SystemTrayIcon(QSystemTrayIcon):

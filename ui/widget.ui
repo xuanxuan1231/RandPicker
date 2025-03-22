@@ -104,6 +104,26 @@
                             </layout>
                         </item>
                         <item>
+                            <widget class="QLabel" name="avatar">
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>80</width>
+                                        <height>80</height>
+                                    </size>
+                                </property>
+                                <property name="maximumSize">
+                                    <size>
+                                        <width>80</width>
+                                        <height>80</height>
+                                    </size>
+                                </property>
+                                <property name="styleSheet">
+                                    <string notr="true">background-color: rgb(200, 200, 200);
+border-radius: 40px;</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item>
                             <layout class="QVBoxLayout" name="verticalLayout_2">
                                 <property name="spacing">
                                     <number>2</number>
