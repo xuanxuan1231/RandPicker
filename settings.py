@@ -7,11 +7,11 @@ import sys
 from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal
 from PyQt6.QtGui import QDesktopServices, QIcon
-from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QFileDialog
 from loguru import logger
 import configparser
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
-    InfoBarIcon, FlyoutAnimationType, SpinBox, SwitchButton, Slider
+    InfoBarIcon, FlyoutAnimationType, SpinBox, SwitchButton, Slider, MessageBox
 
 import conf
 
@@ -110,12 +110,69 @@ class Settings(FluentWindow):
             # 使用get方法获取weight，如果不存在则使用默认值1
             table.setItem(row, 2, QTableWidgetItem(str(student.get('weight', 1))))
 
+        # 绑定保存按钮事件
         btn_save = self.findChild(PushButton, 'save_student')
         btn_save.clicked.connect(lambda: self.save_students())
         
-        # 绑定Excel导入按钮
+        # 绑定Excel导入按钮事件
         btn_import = self.findChild(PushButton, 'import_excel')
         btn_import.clicked.connect(lambda: self.import_excel())
+
+    def import_excel(self):
+        # 打开文件选择对话框
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "选择Excel文件",
+            "",
+            "Excel文件 (*.xlsx *.xls)"
+        )
+        
+        if not file_path:
+            return  # 用户取消了选择
+        
+        try:
+            # 使用conf.py中的excel2json函数导入数据
+            students = conf.excel2json(file_path)
+            
+            if not students or 'students' not in students or not students['students']:
+                MessageBox.warning(
+                    self,
+                    "导入失败",
+                    "Excel文件中没有找到有效的学生数据。\n请确保Excel文件包含weight、name和id列。",
+                    self
+                )
+                return
+            
+            # 更新表格显示
+            table = self.findChild(TableWidget, 'student_list')
+            table.setRowCount(len(students['students']))
+            
+            for row, student in enumerate(students['students']):
+                table.setItem(row, 0, QTableWidgetItem(student['name']))
+                table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
+                table.setItem(row, 2, QTableWidgetItem(str(student.get('weight', 1))))
+            
+            # 显示成功提示
+            btn_import = self.findChild(PushButton, 'import_excel')
+            Flyout.create(
+                icon=InfoBarIcon.SUCCESS,
+                title='Excel导入成功',
+                content=f"已从{os.path.basename(file_path)}导入{len(students['students'])}条学生记录。",
+                target=btn_import,
+                parent=self,
+                isClosable=False,
+                aniType=FlyoutAnimationType.PULL_UP
+            )
+            logger.info(f'从Excel导入了{len(students["students"])}条学生记录')
+            
+        except Exception as e:
+            MessageBox.critical(
+                self,
+                "导入错误",
+                f"导入Excel文件时发生错误：\n{str(e)}\n\n请确保Excel文件格式正确，并包含weight、name和id列。",
+                self
+            )
+            logger.error(f'Excel导入错误: {str(e)}')
 
     def save_students(self):
         table = self.findChild(TableWidget, 'student_list')
@@ -198,53 +255,6 @@ class Settings(FluentWindow):
         )
         logger.info('界面设置已保存')
 
-    def import_excel(self):
-        """从Excel文件导入学生信息"""
-        # 打开文件选择对话框
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "选择Excel文件",
-            "",
-            "Excel文件 (*.xlsx *.xls)"
-        )
-        
-        if not file_path:
-            return  # 用户取消了选择
-        
-        try:
-            # 使用conf模块中的excel2json函数导入数据
-            students = conf.excel2json(file_path)
-            
-            if not students or 'students' not in students or not students['students']:
-                QMessageBox.warning(self, "导入失败", "Excel文件中没有找到有效的学生数据。")
-                return
-            
-            # 更新表格显示
-            table = self.findChild(TableWidget, 'student_list')
-            table.setRowCount(len(students['students']))
-            
-            for row, student in enumerate(students['students']):
-                table.setItem(row, 0, QTableWidgetItem(student['name']))
-                table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
-                table.setItem(row, 2, QTableWidgetItem(str(student.get('weight', 1))))
-            
-            # 显示成功提示
-            btn_import = self.findChild(PushButton, 'import_excel')
-            Flyout.create(
-                icon=InfoBarIcon.SUCCESS,
-                title='Excel导入成功',
-                content=f"已从{file_path}导入{len(students['students'])}条学生信息。\n请点击保存按钮保存到students.json。",
-                target=btn_import,
-                parent=self,
-                isClosable=False,
-                aniType=FlyoutAnimationType.PULL_UP
-            )
-            logger.info(f'已从{file_path}导入{len(students["students"])}条学生信息')
-            
-        except Exception as e:
-            QMessageBox.critical(self, "导入失败", f"导入Excel文件时发生错误：{str(e)}")
-            logger.error(f'导入Excel文件失败：{str(e)}')
-    
     def closeEvent(self, event):
         self.closed.emit()
         event.accept()
@@ -253,6 +263,63 @@ class Settings(FluentWindow):
 def restart():
     logger.info("重新启动")
     os.execl(sys.executable, sys.executable, *sys.argv)
+
+
+def import_excel(self):
+    # 打开文件选择对话框
+    file_path, _ = QFileDialog.getOpenFileName(
+        self,
+        "选择Excel文件",
+        "",
+        "Excel文件 (*.xlsx *.xls)"
+    )
+    
+    if not file_path:
+        return  # 用户取消了选择
+    
+    try:
+        # 使用conf.py中的excel2json函数导入数据
+        students = conf.excel2json(file_path)
+        
+        if not students or 'students' not in students or not students['students']:
+            MessageBox.warning(
+                self,
+                "导入失败",
+                "Excel文件中没有找到有效的学生数据。\n请确保Excel文件包含weight、name和id列。",
+                self
+            )
+            return
+        
+        # 更新表格显示
+        table = self.findChild(TableWidget, 'student_list')
+        table.setRowCount(len(students['students']))
+        
+        for row, student in enumerate(students['students']):
+            table.setItem(row, 0, QTableWidgetItem(student['name']))
+            table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
+            table.setItem(row, 2, QTableWidgetItem(str(student.get('weight', 1))))
+        
+        # 显示成功提示
+        btn_import = self.findChild(PushButton, 'import_excel')
+        Flyout.create(
+            icon=InfoBarIcon.SUCCESS,
+            title='Excel导入成功',
+            content=f"已从{os.path.basename(file_path)}导入{len(students['students'])}条学生记录。",
+            target=btn_import,
+            parent=self,
+            isClosable=False,
+            aniType=FlyoutAnimationType.PULL_UP
+        )
+        logger.info(f'从Excel导入了{len(students["students"])}条学生记录')
+        
+    except Exception as e:
+        MessageBox.critical(
+            self,
+            "导入错误",
+            f"导入Excel文件时发生错误：\n{str(e)}\n\n请确保Excel文件格式正确，并包含weight、name和id列。",
+            self
+        )
+        logger.error(f'Excel导入错误: {str(e)}')
 
 
 if __name__ == '__main__':
