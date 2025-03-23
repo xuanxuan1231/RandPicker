@@ -5,7 +5,7 @@ import os
 import sys
 
 from PyQt6 import uic
-from PyQt6.QtCore import QUrl, pyqtSignal
+from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory
 from PyQt6.QtGui import QDesktopServices, QIcon
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView
 from loguru import logger
@@ -16,6 +16,8 @@ from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableW
 import conf
 
 settings = None
+
+share = QSharedMemory('RandPicker')
 
 
 def open_settings():
@@ -63,7 +65,7 @@ class Settings(FluentWindow):
         self.stackedWidget.setCurrentIndex(0)  # 设置初始页面
         self.setMinimumWidth(700)
         self.setMinimumHeight(400)
-        self.navigationInterface.setExpandWidth(250)
+        self.navigationInterface.setExpandWidth(200)
         self.navigationInterface.setCollapsible(False)
         self.setMicaEffectEnabled(True)  # 启用云母效果
 
@@ -90,16 +92,16 @@ class Settings(FluentWindow):
 
         btn_license = self.findChild(PushButton, 'btn_license')
         btn_license.clicked.connect(
-            lambda: QDesktopServices.openUrl(QUrl('https://github.com/xuanxuan1231/RandPicker/blob/main/LICENESE')))
+            lambda: QDesktopServices.openUrl(QUrl('https://github.com/xuanxuan1231/RandPicker/blob/main/LICENSE')))
 
     def setup_student_edit_interface(self):  # 设置 学生信息编辑 页面
         table = self.findChild(TableWidget, 'student_list')
         table.setBorderVisible(True)
         table.setBorderRadius(8)
         table.setWordWrap(True)
-        table.setColumnCount(3)
+        table.setColumnCount(4)
         table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        table.setHorizontalHeaderLabels(['姓名', '学号', '权重'])
+        table.setHorizontalHeaderLabels(['姓名', '学号', '权重', '启用'])
 
         students = conf.get_all_students()
         table.setRowCount(conf.get_students_num())
@@ -109,6 +111,14 @@ class Settings(FluentWindow):
             table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
             # 使用get方法获取weight，如果不存在则使用默认值1
             table.setItem(row, 2, QTableWidgetItem(str(student.get('weight', 1))))
+            btn_active = SwitchButton()
+            btn_active.setOnText('开')
+            btn_active.setOffText('关')
+            if student['active']:
+                btn_active.setChecked(True)
+            else:
+                btn_active.setChecked(False)
+            table.setCellWidget(row, 3, btn_active)
 
         btn_save = self.findChild(PushButton, 'save_student')
         btn_save.clicked.connect(lambda: self.save_students())
@@ -122,7 +132,8 @@ class Settings(FluentWindow):
             name = table.item(row, 0).text()
             id_ = int(table.item(row, 1).text())
             weight = int(table.item(row, 2).text())
-            students["students"][row] = {"name": name, "id": id_, "weight": weight}
+            is_active = table.cellWidget(row, 3).isChecked()
+            students["students"][row] = {"name": name, "id": id_, "weight": weight, "active": is_active}
 
         conf.write_conf(students)
         btn_save = self.findChild(PushButton, 'save_student')
@@ -200,6 +211,10 @@ class Settings(FluentWindow):
 
 
 def restart():
+    global share
+    if share.attach():
+        share.detach()
+        share.deleteLater()
     logger.info("重新启动")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
