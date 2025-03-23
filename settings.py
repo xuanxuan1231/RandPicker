@@ -5,12 +5,12 @@ import os
 import sys
 
 from PyQt6 import uic
-from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory
+from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
 from PyQt6.QtGui import QDesktopServices, QIcon
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
-    InfoBarIcon, FlyoutAnimationType, SwitchButton, ToolTipSlider
+    InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider
 
 import conf
 
@@ -104,12 +104,13 @@ class Settings(FluentWindow):
         for row, student in enumerate(students['students']):
             table.setItem(row, 0, QTableWidgetItem(student['name']))
             table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
-            slider_weight = ToolTipSlider(Qt.Horizontal)
+            slider_weight = Slider(Qt.Orientation.Horizontal)
             slider_weight.setSingleStep(1)
             slider_weight.setPageStep(1)
             slider_weight.setRange(1, 50)
             slider_weight.setValue(student['weight'])
-            # table.setItem(row, 2, QTableWidgetItem(str(student['weight'])))
+            slider_weight.setToolTip(f"权重值: {student['weight']}")
+            slider_weight.valueChanged.connect(lambda value, slider=slider_weight: slider.setToolTip(f"权重值: {value}"))
             table.setCellWidget(row, 2, slider_weight)
             btn_active = SwitchButton()
             btn_active.setOnText('开')
