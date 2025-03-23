@@ -105,6 +105,8 @@ class Settings(FluentWindow):
             table.setItem(row, 0, QTableWidgetItem(student['name']))
             table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
             slider_weight = ToolTipSlider(Qt.Horizontal)
+            slider_weight.setSingleStep(1)
+            slider_weight.setPageStep(1)
             slider_weight.setRange(1, 50)
             slider_weight.setValue(student['weight'])
             # table.setItem(row, 2, QTableWidgetItem(str(student['weight'])))
