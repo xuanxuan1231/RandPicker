@@ -137,7 +137,8 @@ def get_weight():
     students = get_all_students()
     weight = []
     for student in students['students']:
-        weight.append(student['weight'])
+        # 如果学生记录中没有weight字段，则使用默认权重1
+        weight.append(student.get('weight', 1))
     return weight
 
 

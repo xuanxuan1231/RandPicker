@@ -9,8 +9,9 @@ from PyQt6.QtCore import QUrl, pyqtSignal
 from PyQt6.QtGui import QDesktopServices, QIcon
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView
 from loguru import logger
+import configparser
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
-    InfoBarIcon, FlyoutAnimationType
+    InfoBarIcon, FlyoutAnimationType, SpinBox, SwitchButton, Slider
 
 import conf
 
@@ -46,12 +47,15 @@ class Settings(FluentWindow):
         self.aboutInterface.setObjectName('aboutInterface')
         self.stuEditInterface = uic.loadUi('./ui/settings/students.ui')
         self.stuEditInterface.setObjectName('stuEditInterface')
+        self.uiInterface = uic.loadUi('./ui/settings/ui.ui')
+        self.uiInterface.setObjectName('uiInterface')
 
         self.init_nav()
         self.setup_ui()
 
     def init_nav(self):  # 设置侧边栏
         self.addSubInterface(self.stuEditInterface, fIcon.EDIT, '学生信息编辑')
+        self.addSubInterface(self.uiInterface, fIcon.SETTING, '界面设置')
         self.navigationInterface.addSeparator(NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.aboutInterface, fIcon.INFO, '关于', NavigationItemPosition.BOTTOM)
 
@@ -61,7 +65,7 @@ class Settings(FluentWindow):
         self.setMinimumHeight(400)
         self.navigationInterface.setExpandWidth(250)
         self.navigationInterface.setCollapsible(False)
-        self.setMicaEffectEnabled(True)
+        self.setMicaEffectEnabled(True)  # 启用云母效果
 
         # 修复设置窗口在各个屏幕分辨率DPI下的窗口大小
         screen_geometry = QApplication.primaryScreen().geometry()
@@ -78,6 +82,7 @@ class Settings(FluentWindow):
         self.setWindowIcon(QIcon('./img/Logo.png'))
         self.setup_about_interface()
         self.setup_student_edit_interface()
+        self.setup_ui_interface()
 
     def setup_about_interface(self):  # 设置 关于 页面
         btn_github = self.findChild(PushButton, 'btn_github')
@@ -131,6 +136,63 @@ class Settings(FluentWindow):
         )
         logger.info('学生信息已保存')
 
+    def setup_ui_interface(self):  # 设置 界面设置 页面
+        # 从配置文件加载设置
+        avatar_size = int(conf.get_ini('UI', 'avatar_size'))
+        edge_hide = conf.get_ini('UI', 'edge_hide') == 'true'
+        edge_distance = int(conf.get_ini('UI', 'edge_distance'))
+        hidden_width = int(conf.get_ini('UI', 'hidden_width'))
+
+        # 设置控件初始值
+        self.uiInterface.avatar_size.setValue(avatar_size)
+        self.uiInterface.edge_hide.setChecked(edge_hide)
+        self.uiInterface.edge_distance.setValue(edge_distance)
+        self.uiInterface.hidden_width.setValue(hidden_width)
+        
+        # 设置标签初始值
+        self.uiInterface.avatar_size_label.setText(str(avatar_size))
+        self.uiInterface.edge_distance_label.setText(str(edge_distance))
+        self.uiInterface.hidden_width_label.setText(str(hidden_width))
+        
+        # 绑定滑块值变化事件
+        self.uiInterface.avatar_size.valueChanged.connect(lambda value: self.uiInterface.avatar_size_label.setText(str(value)))
+        self.uiInterface.edge_distance.valueChanged.connect(lambda value: self.uiInterface.edge_distance_label.setText(str(value)))
+        self.uiInterface.hidden_width.valueChanged.connect(lambda value: self.uiInterface.hidden_width_label.setText(str(value)))
+
+        # 绑定保存按钮事件
+        self.uiInterface.save_ui.clicked.connect(lambda: self.save_ui_settings())
+
+    def save_ui_settings(self):
+        # 获取控件值
+        avatar_size = self.uiInterface.avatar_size.value()
+        edge_hide = 'true' if self.uiInterface.edge_hide.isChecked() else 'false'
+        edge_distance = self.uiInterface.edge_distance.value()
+        hidden_width = self.uiInterface.hidden_width.value()
+
+        # 更新配置文件
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        if 'UI' not in config:
+            config['UI'] = {}
+        config['UI']['avatar_size'] = str(avatar_size)
+        config['UI']['edge_hide'] = edge_hide
+        config['UI']['edge_distance'] = str(edge_distance)
+        config['UI']['hidden_width'] = str(hidden_width)
+        with open('config.ini', 'w', encoding='utf-8') as f:
+            config.write(f)
+
+        # 显示保存成功提示
+        Flyout.create(
+            icon=InfoBarIcon.SUCCESS,
+            title='界面设置已保存',
+            content="界面设置已保存至 config.ini。",
+            target=self.uiInterface.save_ui,
+            parent=self,
+            isClosable=False,
+            aniType=FlyoutAnimationType.PULL_UP
+        )
+        logger.info('界面设置已保存')
+
     def closeEvent(self, event):
         self.closed.emit()
         event.accept()
@@ -146,3 +208,5 @@ if __name__ == '__main__':
     w = Settings()
     w.show()
     sys.exit(app.exec())
+
+import configparser
