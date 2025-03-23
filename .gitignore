@@ -218,3 +218,10 @@ cython_debug/
 
 !/students.json
 /.idea
+config.ini
+
+# Backup Files
+/*.bak
+
+# Excel Files
+*.xls*
