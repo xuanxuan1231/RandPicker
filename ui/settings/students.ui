@@ -88,6 +88,25 @@
                         </spacer>
                     </item>
                     <item>
+                        <widget class="PushButton" name="import_excel">
+                            <property name="sizePolicy">
+                                <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+                                    <horstretch>0</horstretch>
+                                    <verstretch>0</verstretch>
+                                </sizepolicy>
+                            </property>
+                            <property name="minimumSize">
+                                <size>
+                                    <width>150</width>
+                                    <height>0</height>
+                                </size>
+                            </property>
+                            <property name="text">
+                                <string>从Excel导入</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
                         <widget class="PrimaryPushButton" name="save_student">
                             <property name="sizePolicy">
                                 <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
