@@ -107,7 +107,8 @@ class Settings(FluentWindow):
         for row, student in enumerate(students['students']):
             table.setItem(row, 0, QTableWidgetItem(student['name']))
             table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
-            table.setItem(row, 2, QTableWidgetItem(str(student['weight'])))
+            # 使用get方法获取weight，如果不存在则使用默认值1
+            table.setItem(row, 2, QTableWidgetItem(str(student.get('weight', 1))))
 
         btn_save = self.findChild(PushButton, 'save_student')
         btn_save.clicked.connect(lambda: self.save_students())
