@@ -7,7 +7,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QMouseEvent, QIcon, QPixmap, QPainter, QPainterPath
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGraphicsDropShadowEffect, QSystemTrayIcon, QFrame
 from loguru import logger
-from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Action, Dialog
+from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Action, Dialog, AvatarWidget
 
 import conf
 from settings import open_settings, share
@@ -100,14 +100,14 @@ class Widget(QWidget):
         avatar_path = None
         # 尝试不同的图片格式
         for ext in ['png', 'jpg', 'jpeg']:
-            temp_path = f'./stu_photo/{student["id"]}.{ext}'
+            temp_path = f'img/stu_photo/{student["id"]}.{ext}'
             if os.path.exists(temp_path):
                 avatar_path = temp_path
                 break
         
         # 如果没有找到学生照片，使用默认头像
-        if not avatar_path and os.path.exists('./stu_photo/default.jpeg'):
-            avatar_path = './stu_photo/default.jpeg'
+        if not avatar_path and os.path.exists('img/stu_photo/default.jpeg'):
+            avatar_path = 'img/stu_photo/default.jpeg'
             
         # 从配置文件获取头像大小
         avatar_size = int(conf.get_ini('UI', 'avatar_size'))
@@ -160,12 +160,12 @@ class Widget(QWidget):
 
     def show_default_avatar(self):
         """显示默认头像"""
-        avatar = self.findChild(QLabel, 'avatar')
+        avatar = self.findChild(AvatarWidget, 'avatar')
         avatar_size = int(conf.get_ini('UI', 'avatar_size'))
-        
+
         # 使用默认头像
-        if os.path.exists('./stu_photo/default.jpeg'):
-            pixmap = QPixmap('./stu_photo/default.jpeg')
+        if os.path.exists('./img/stu/default.jpeg'):
+            pixmap = QPixmap('./img/stu/default.jpeg')
             # 确保图片按比例缩放到设定大小
             scaled_pixmap = pixmap.scaled(avatar_size, avatar_size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
             # 创建一个设定大小的透明pixmap
@@ -179,7 +179,7 @@ class Widget(QWidget):
             y = (avatar_size - scaled_pixmap.height()) // 2
             painter.drawPixmap(x, y, scaled_pixmap)
             painter.end()
-            
+
             # 创建圆形遮罩
             mask = QPixmap(avatar_size, avatar_size)
             mask.fill(Qt.GlobalColor.transparent)
@@ -188,20 +188,20 @@ class Widget(QWidget):
             mask_painter.setBrush(Qt.GlobalColor.white)
             mask_painter.drawEllipse(0, 0, avatar_size, avatar_size)
             mask_painter.end()
-            
+
             # 应用圆形遮罩
             masked_pixmap = QPixmap(avatar_size, avatar_size)
             masked_pixmap.fill(Qt.GlobalColor.transparent)
             masked_painter = QPainter(masked_pixmap)
             masked_painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            
+
             # 使用QPainterPath创建圆形裁剪区域
             path = QPainterPath()
             path.addEllipse(0, 0, avatar_size, avatar_size)
             masked_painter.setClipPath(path)
             masked_painter.drawPixmap(0, 0, final_pixmap)
             masked_painter.end()
-            
+
             avatar.setPixmap(masked_pixmap)
         else:
             avatar.setPixmap(QPixmap())

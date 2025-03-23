@@ -10,7 +10,7 @@ from PyQt6.QtGui import QDesktopServices, QIcon
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
-    InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, LineEdit, SpinBox, MessageBox
+    InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, LineEdit, MessageBox
 
 import conf
 
@@ -48,7 +48,7 @@ class Settings(FluentWindow):
         self.aboutInterface.setObjectName('aboutInterface')
         self.stuEditInterface = uic.loadUi('./ui/settings/students.ui')
         self.stuEditInterface.setObjectName('stuEditInterface')
-        self.uiInterface = uic.loadUi('./ui/settings/ui.ui')
+        self.uiInterface = uic.loadUi('./ui/settings/widget.ui')
         self.uiInterface.setObjectName('uiInterface')
 
         self.init_nav()
@@ -248,6 +248,8 @@ class Settings(FluentWindow):
         # 设置控件初始值
         self.uiInterface.avatar_size.setValue(avatar_size)
         self.uiInterface.edge_hide.setChecked(edge_hide)
+        self.uiInterface.edge_hide.setOnText('开')
+        self.uiInterface.edge_hide.setOffText('关')
         self.uiInterface.edge_distance.setValue(edge_distance)
         self.uiInterface.hidden_width.setValue(hidden_width)
 
