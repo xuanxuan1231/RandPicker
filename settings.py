@@ -108,7 +108,7 @@ class Settings(FluentWindow):
             slider_weight.setRange(1, 50)
             slider_weight.setValue(student['weight'])
             # table.setItem(row, 2, QTableWidgetItem(str(student['weight'])))
-            table.setCellWidget(row, 3, slider_weight)
+            table.setCellWidget(row, 2, slider_weight)
             btn_active = SwitchButton()
             btn_active.setOnText('开')
             btn_active.setOffText('关')
