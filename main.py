@@ -70,7 +70,28 @@ class Widget(QWidget):
         # btn_clear.clicked.connect(lambda: open_settings())  # Debug Only
 
     def mousePressEvent(self, event: QMouseEvent):
+        edge_distance = int(conf.get_ini('UI', 'edge_distance'))
         if event.button() == Qt.MouseButton.LeftButton:
+            # 检查窗口是否处于隐藏状态
+            screen = QApplication.screenAt(event.globalPosition().toPoint())
+            if not screen:
+                screen = QApplication.primaryScreen()
+            screen_geometry = screen.geometry()
+            window_geometry = self.geometry()
+
+            # 如果窗口被隐藏在左边或右边，则恢复显示
+            if window_geometry.left() < screen_geometry.left() or window_geometry.right() > screen_geometry.right():
+                # 计算窗口应该显示的位置
+                if window_geometry.left() < screen_geometry.left():
+                    window_geometry.moveLeft(screen_geometry.left()  + edge_distance)
+                else:
+                    window_geometry.moveLeft(screen_geometry.right() - window_geometry.width())
+                self.setGeometry(window_geometry)
+                logger.info('窗口恢复显示')
+                event.accept()
+                return
+
+            # 如果窗口未隐藏，则处理正常的拖动
             self.m_Position = event.globalPosition().toPoint() - self.pos()  # 获取鼠标相对窗口的位置
             self.p_Position = event.globalPosition().toPoint()  # 获取鼠标相对屏幕的位置
             event.accept()
@@ -160,43 +181,18 @@ class Widget(QWidget):
             window_geometry = self.geometry()
 
             # 检测是否靠近屏幕边缘
-            if self.r_Position.x() <= screen_geometry.left() + edge_distance:
+            if window_geometry.x() < screen_geometry.left() + edge_distance:
                 # 靠左边缘
                 window_geometry.moveLeft(screen_geometry.left() - window_geometry.width() + hidden_width)
                 self.setGeometry(window_geometry)
                 logger.info('窗口贴靠到左边缘')
-            elif self.r_Position.x() >= screen_geometry.right() - edge_distance:
+            elif window_geometry.x() > screen_geometry.right() - edge_distance:
                 # 靠右边缘
                 window_geometry.moveLeft(screen_geometry.right() - hidden_width)
                 self.setGeometry(window_geometry)
                 logger.info('窗口贴靠到右边缘')
             event.accept()
 
-    def mousePressEvent(self, event: QMouseEvent):
-        if event.button() == Qt.MouseButton.LeftButton:
-            # 检查窗口是否处于隐藏状态
-            screen = QApplication.screenAt(event.globalPosition().toPoint())
-            if not screen:
-                screen = QApplication.primaryScreen()
-            screen_geometry = screen.geometry()
-            window_geometry = self.geometry()
-
-            # 如果窗口被隐藏在左边或右边，则恢复显示
-            if window_geometry.left() < screen_geometry.left() or window_geometry.right() > screen_geometry.right():
-                # 计算窗口应该显示的位置
-                if window_geometry.left() < screen_geometry.left():
-                    window_geometry.moveLeft(screen_geometry.left())
-                else:
-                    window_geometry.moveLeft(screen_geometry.right() - window_geometry.width())
-                self.setGeometry(window_geometry)
-                logger.info('窗口恢复显示')
-                event.accept()
-                return
-
-            # 如果窗口未隐藏，则处理正常的拖动
-            self.m_Position = event.globalPosition().toPoint() - self.pos()  # 获取鼠标相对窗口的位置
-            self.p_Position = event.globalPosition().toPoint()  # 获取鼠标相对屏幕的位置
-            event.accept()
 
 
 class SystemTrayIcon(QSystemTrayIcon):
