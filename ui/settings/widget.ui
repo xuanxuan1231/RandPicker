@@ -101,14 +101,14 @@
               <item>
                <widget class="StrongBodyLabel" name="StrongBodyLabel_3">
                 <property name="text">
-                 <string>头像大小</string>
+                 <string>头像半径</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="CaptionLabel" name="CaptionLabel_5">
                 <property name="text">
-                 <string>调整浮窗中显示的头像大小</string>
+                 <string>调整浮窗中显示的头像半径大小</string>
                 </property>
                 <property name="lightColor" stdset="0">
                  <color alpha="150">
@@ -162,13 +162,13 @@
                </size>
               </property>
               <property name="minimum">
-               <number>50</number>
+               <number>20</number>
               </property>
               <property name="maximum">
-               <number>200</number>
+               <number>64</number>
               </property>
               <property name="value">
-               <number>100</number>
+               <number>32</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
