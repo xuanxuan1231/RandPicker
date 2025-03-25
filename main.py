@@ -177,21 +177,30 @@ class Widget(QWidget):
             if not screen:
                 screen = QApplication.primaryScreen()
             screen_geometry = screen.geometry()
+            screen_available = screen.availableGeometry()
             edge_distance = int(conf.get_ini('UI', 'edge_distance'))
             hidden_width = int(conf.get_ini('UI', 'hidden_width'))
             window_geometry = self.geometry()
 
             # 检测是否靠近屏幕边缘
-            if window_geometry.x() < screen_geometry.left() + edge_distance:
+            if window_geometry.left() < screen_geometry.left() + edge_distance:
                 # 靠左边缘
                 window_geometry.moveRight(screen_geometry.left() + hidden_width)
                 self.setGeometry(window_geometry)
                 logger.info('窗口贴靠到左边缘')
-            elif window_geometry.x() > screen_geometry.right() - edge_distance - window_geometry.width():
+            elif window_geometry.right() > screen_geometry.right() - edge_distance:
                 # 靠右边缘
                 window_geometry.moveLeft(screen_geometry.right() - hidden_width)
                 self.setGeometry(window_geometry)
-                logger.info('窗口贴靠到右边缘')
+                logger.info('窗口贴靠到右边缘。')
+            elif window_geometry.y() > screen_available.top():
+                # 靠上边缘
+                window_geometry.moveTop(screen_available.top())
+                logger.info('窗口从上边缘弹出。')
+            elif window_geometry.bottom() > screen_available.bottom():
+                # 靠下边缘
+                window_geometry.moveBottom(screen_geometry.bottom())
+                logger.info('窗口从下边缘弹出。')
             event.accept()
 
 
