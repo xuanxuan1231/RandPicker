@@ -37,7 +37,7 @@ class Widget(QWidget):
         self.systemTrayIcon.show()
         
         # 初始化时显示默认头像
-        self.show_default_avatar()
+        self.show_avatar()
 
     def init_ui(self):
         uic.loadUi("./ui/widget.ui", self)
@@ -127,49 +127,75 @@ class Widget(QWidget):
                 logger.success(f"找到了学生 {student['id']} 的头像 {student['id']}.{ext}。")
                 break
 
-        # 从配置文件获取头像大小
-        avatar_size = int(conf.get_ini('UI', 'avatar_size'))
-        avatar = self.findChild(AvatarWidget, 'avatar')
-        avatar.setImage() # 清除
-        # 如果没有找到学生照片，使用文字
-        if avatar_path is None:
-            logger.warning(f"没有找到学生 {student['id']} 的头像。将使用文字。")
-            avatar.setText(f"{student['name']}")
-            avatar.setRadius(avatar_size)
-            logger.info(f"加载了文字头像“{student['name'][0]}”。它的半径是 {avatar_size}。")
-        else:
-            avatar.setImage(avatar_path)
-            avatar.setRadius(avatar_size)
-            logger.info(f"加载了头像 {avatar_path}。它的半径是 {avatar_size}。")
+        self.show_avatar(avatar_path)
         self.is_picking = False
-
-    def show_default_avatar(self):
-        """
-        显示默认头像
-        """
-        avatar = self.findChild(AvatarWidget, 'avatar')
-        avatar_size = int(conf.get_ini('UI', 'avatar_size'))
-
-        avatar.setImage('./img/stu/default.jpeg')
-        #avatar.setText(QImage('./img/stu/default.jpeg'))
-        #avatar.setText('选人')
-        logger.info("显示默认头像。")
-        avatar.setRadius(avatar_size)
 
     
     def clear(self):
         if not self.is_picking:
             name = self.findChild(QLabel, 'name')
             id_ = self.findChild(QLabel, 'id')
-            avatar = self.findChild(AvatarWidget, 'avatar')
-            avatar_size = int(conf.get_ini('UI', 'avatar_size'))
             name.setText('无结果')
             id_.setText('000000')
-            avatar.setImage('./img/stu/default.jpeg')
-            avatar.setRadius(avatar_size)
+            self.show_avatar()
             logger.info('清除结果')
             return 0
         logger.warning('没有清除结果，因为正在选人。')
+
+    def show_avatar(self, file_path='./img/stu/default.jpeg'):
+        avatar = self.findChild(QLabel, 'avatar')
+        avatar_size = int(conf.get_ini('UI', 'avatar_size'))
+        if file_path is not None and os.path.exists(file_path):
+            file_path = file_path
+        elif os.path.exists('./img/stu/default.jpeg'):
+            file_path = './img/stu/default.jpeg'
+            logger.warning(f"没有找到头像 {file_path}。使用默认头像。")
+        else:
+            avatar.setPixmap(QPixmap())
+            avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
+            logger.warning(f"没有找到头像 {file_path} 和默认头像。使用空白。")
+            return
+        pixmap = QPixmap(file_path)
+        # 确保图片按比例缩放到设定大小
+        scaled_pixmap = pixmap.scaled(avatar_size, avatar_size, Qt.AspectRatioMode.KeepAspectRatio,
+                                      Qt.TransformationMode.SmoothTransformation)
+        # 创建一个设定大小的透明pixmap
+        final_pixmap = QPixmap(avatar_size, avatar_size)
+        final_pixmap.fill(Qt.GlobalColor.transparent)
+        # 在中心位置绘制缩放后的图片
+        painter = QPainter(final_pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        # 计算居中位置
+        x = (avatar_size - scaled_pixmap.width()) // 2
+        y = (avatar_size - scaled_pixmap.height()) // 2
+        painter.drawPixmap(x, y, scaled_pixmap)
+        painter.end()
+
+        # 创建圆形遮罩
+        mask = QPixmap(avatar_size, avatar_size)
+        mask.fill(Qt.GlobalColor.transparent)
+        mask_painter = QPainter(mask)
+        mask_painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        mask_painter.setBrush(Qt.GlobalColor.white)
+        mask_painter.drawEllipse(0, 0, avatar_size, avatar_size)
+        mask_painter.end()
+
+        # 应用圆形遮罩
+        masked_pixmap = QPixmap(avatar_size, avatar_size)
+        masked_pixmap.fill(Qt.GlobalColor.transparent)
+        masked_painter = QPainter(masked_pixmap)
+        masked_painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # 使用QPainterPath创建圆形裁剪区域
+        path = QPainterPath()
+        path.addEllipse(0, 0, avatar_size, avatar_size)
+        masked_painter.setClipPath(path)
+        masked_painter.drawPixmap(0, 0, final_pixmap)
+        masked_painter.end()
+
+        avatar.setPixmap(masked_pixmap)
+        logger.success(f"显示头像 {file_path}。")
+        avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
 
     def mouseReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton and conf.get_ini('UI', 'edge_hide') == 'true' and self.r_Position is not None:
@@ -193,14 +219,14 @@ class Widget(QWidget):
                 window_geometry.moveLeft(screen_geometry.right() - hidden_width)
                 self.setGeometry(window_geometry)
                 logger.info('窗口贴靠到右边缘。')
-            elif window_geometry.y() > screen_available.top():
+            '''elif window_geometry.y() > screen_available.top():
                 # 靠上边缘
                 window_geometry.moveTop(screen_available.top())
                 logger.info('窗口从上边缘弹出。')
             elif window_geometry.bottom() > screen_available.bottom():
                 # 靠下边缘
                 window_geometry.moveBottom(screen_geometry.bottom())
-                logger.info('窗口从下边缘弹出。')
+                logger.info('窗口从下边缘弹出。')'''
             event.accept()
 
 
