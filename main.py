@@ -85,7 +85,7 @@ class Widget(QWidget):
                 if window_geometry.left() < screen_geometry.left():
                     window_geometry.moveLeft(screen_geometry.left()  + edge_distance)
                 else:
-                    window_geometry.moveLeft(screen_geometry.right() - window_geometry.width())
+                    window_geometry.moveRight(screen_geometry.right() - window_geometry.width())
                 self.setGeometry(window_geometry)
                 logger.info('窗口恢复显示')
                 event.accept()
@@ -151,6 +151,7 @@ class Widget(QWidget):
         avatar_size = int(conf.get_ini('UI', 'avatar_size'))
 
         avatar.setImage('./img/stu/default.jpeg')
+        #avatar.setText(QImage('./img/stu/default.jpeg'))
         #avatar.setText('选人')
         logger.info("显示默认头像。")
         avatar.setRadius(avatar_size)
@@ -183,10 +184,10 @@ class Widget(QWidget):
             # 检测是否靠近屏幕边缘
             if window_geometry.x() < screen_geometry.left() + edge_distance:
                 # 靠左边缘
-                window_geometry.moveLeft(screen_geometry.left() - window_geometry.width() + hidden_width)
+                window_geometry.moveRight(screen_geometry.left() + hidden_width)
                 self.setGeometry(window_geometry)
                 logger.info('窗口贴靠到左边缘')
-            elif window_geometry.x() > screen_geometry.right() - edge_distance:
+            elif window_geometry.x() > screen_geometry.right() - edge_distance - window_geometry.width():
                 # 靠右边缘
                 window_geometry.moveLeft(screen_geometry.right() - hidden_width)
                 self.setGeometry(window_geometry)
