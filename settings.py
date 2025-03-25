@@ -244,12 +244,16 @@ class Settings(FluentWindow):
         edge_hide = conf.get_ini('UI', 'edge_hide') == 'true'
         edge_distance = int(conf.get_ini('UI', 'edge_distance'))
         hidden_width = int(conf.get_ini('UI', 'hidden_width'))
+        avatar = conf.get_ini('UI', 'avatar') == 'true'
 
         # 设置控件初始值
         self.uiInterface.avatar_size.setValue(avatar_size)
         self.uiInterface.edge_hide.setChecked(edge_hide)
         self.uiInterface.edge_hide.setOnText('开')
         self.uiInterface.edge_hide.setOffText('关')
+        self.uiInterface.avatar.setChecked(avatar)
+        self.uiInterface.avatar.setOnText('开')
+        self.uiInterface.avatar.setOffText('关')
         self.uiInterface.edge_distance.setValue(edge_distance)
         self.uiInterface.hidden_width.setValue(hidden_width)
 
@@ -272,6 +276,7 @@ class Settings(FluentWindow):
         edge_hide = 'true' if self.uiInterface.edge_hide.isChecked() else 'false'
         edge_distance = self.uiInterface.edge_distance.value()
         hidden_width = self.uiInterface.hidden_width.value()
+        avatar = 'true' if self.uiInterface.avatar.isChecked() else 'false'
 
         # 更新配置文件
         config = conf.config
@@ -282,6 +287,7 @@ class Settings(FluentWindow):
         config['UI']['edge_hide'] = edge_hide
         config['UI']['edge_distance'] = str(edge_distance)
         config['UI']['hidden_width'] = str(hidden_width)
+        config['UI']['avatar'] = avatar
         with open('config.ini', 'w', encoding='utf-8') as f:
             config.write(f)
 

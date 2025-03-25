@@ -31,16 +31,18 @@ class Widget(QWidget):
         self.p_Position = None
         self.r_Position = None
         self.is_picking = False
+        self.is_avatar = False
         self.init_ui()
         self.setWindowIcon(QIcon('./img/Logo.png'))
         self.systemTrayIcon = SystemTrayIcon(self)
         self.systemTrayIcon.show()
-        
-        # 初始化时显示默认头像
-        self.show_avatar()
 
     def init_ui(self):
-        uic.loadUi("./ui/widget.ui", self)
+        self.is_avatar = True if conf.get_ini('UI', 'avatar') == 'true' else False
+        if self.is_avatar:
+            uic.loadUi("./ui/widget.ui", self)
+        else:
+            uic.loadUi("./ui/widget-no-avatar.ui", self)
 
         # 设置窗口无边框和透明背景
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -67,7 +69,9 @@ class Widget(QWidget):
 
         btn_clear = self.findChild(PushButton, 'btn_clear')
         btn_clear.clicked.connect(lambda: self.clear())
-        # btn_clear.clicked.connect(lambda: open_settings())  # Debug Only
+
+        if self.is_avatar:
+            self.show_avatar()
 
     def mousePressEvent(self, event: QMouseEvent):
         edge_distance = int(conf.get_ini('UI', 'edge_distance'))
@@ -116,18 +120,19 @@ class Widget(QWidget):
         id_ = self.findChild(QLabel, 'id')
         name.setText(f'{str(student['id'])[-2:]} {student['name']}')
         id_.setText(str(student['id']))
-        
-        # 设置头像
-        avatar_path = None
-        # 尝试不同的图片格式
-        for ext in ['png', 'jpg', 'jpeg']:
-            temp_path = f'./img/stu/{student['id']}.{ext}'
-            if os.path.exists(temp_path):
-                avatar_path = temp_path
-                logger.success(f"找到了学生 {student['id']} 的头像 {student['id']}.{ext}。")
-                break
 
-        self.show_avatar(avatar_path)
+        if self.is_avatar:
+            # 设置头像
+            avatar_path = None
+            # 尝试不同的图片格式
+            for ext in ['png', 'jpg', 'jpeg']:
+                temp_path = f'./img/stu/{student['id']}.{ext}'
+                if os.path.exists(temp_path):
+                    avatar_path = temp_path
+                    logger.success(f"找到了学生 {student['id']} 的头像 {student['id']}.{ext}。")
+                    break
+
+            self.show_avatar(avatar_path)
         self.is_picking = False
 
     
@@ -137,7 +142,8 @@ class Widget(QWidget):
             id_ = self.findChild(QLabel, 'id')
             name.setText('无结果')
             id_.setText('000000')
-            self.show_avatar()
+            if self.is_avatar:
+                self.show_avatar()
             logger.info('清除结果')
             return 0
         logger.warning('没有清除结果，因为正在选人。')

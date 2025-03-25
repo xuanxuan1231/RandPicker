@@ -4,6 +4,7 @@
     "version": "v1.0.0"
   },
   "UI": {
+    "avatar": "false",
     "edge_hide": "true",
     "edge_distance": "20",
     "hidden_width": "20",
