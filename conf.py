@@ -104,9 +104,17 @@ def excel2json(file_path='./example.xlsx'):
         # 尝试通过文件内容自动识别
         try:
             sheet = pd.read_excel(file_path)
-        except:
+        except FileNotFoundError:
+            raise FileNotFoundError(f"���件未找到: {file_path}")
+        except pd.errors.EmptyDataError:
+            raise ValueError(f"文件为空或无效: {file_path}")
+        except Exception as e:
             try:
                 sheet = pd.read_csv(file_path)
+            except FileNotFoundError:
+                raise FileNotFoundError(f"文件未找到: {file_path}")
+            except pd.errors.EmptyDataError:
+                raise ValueError(f"文件为空或无效: {file_path}")
             except Exception as e:
                 raise ValueError(f"无法识别的文件格式: {file_path}")
     
