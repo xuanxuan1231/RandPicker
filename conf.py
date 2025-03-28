@@ -86,16 +86,30 @@ def get_students_num():
         csv_writer = csv.writer(csv_file)'''
 
 
-def excel2json(excel_path='./example.xlsx'):
+def excel2json(file_path='./example.xlsx'):
     """
-    从 Excel 文件 (.xls, .xlsx) 导入。
+    从文件导入学生数据，自动识别Excel(.xls, .xlsx)或CSV格式。
 
     注意：第一栏要包含 weight, name 和 id. 即相对权重, 姓名和全局学号。
 
-    :param excel_path: Excel 文件路径
+    :param file_path: 文件路径
     :return: 一个包含所有学生信息的字典
     """
-    sheet = pd.read_excel(excel_path)
+    # 根据文件扩展名自动识别格式
+    if file_path.lower().endswith(('.xls', '.xlsx')):
+        sheet = pd.read_excel(file_path)
+    elif file_path.lower().endswith('.csv'):
+        sheet = pd.read_csv(file_path)
+    else:
+        # 尝试通过文件内容自动识别
+        try:
+            sheet = pd.read_excel(file_path)
+        except:
+            try:
+                sheet = pd.read_csv(file_path)
+            except Exception as e:
+                raise ValueError(f"无法识别的文件格式: {file_path}")
+    
     students = {}
     list_ = []
     for i in sheet.index.values:

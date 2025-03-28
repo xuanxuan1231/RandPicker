@@ -205,6 +205,8 @@ class Widget(QWidget):
         avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
 
     def mouseReleaseEvent(self, event: QMouseEvent):
+        from PyQt6.QtCore import QPropertyAnimation, QEasingCurve
+        
         screen = QApplication.screenAt(event.globalPosition().toPoint())
         if not screen:
             screen = QApplication.primaryScreen()
@@ -218,23 +220,67 @@ class Widget(QWidget):
             # 检测是否靠近屏幕边缘
             if window_geometry.left() < screen_geometry.left() + edge_distance:
                 # 靠左边缘
+                self.animation = QPropertyAnimation(self, b"geometry")
+                elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
+                if elastic_enabled:
+                    self.animation.setDuration(500)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
+                else:
+                    self.animation.setDuration(200)
+                    self.animation.setEasingCurve(QEasingCurve.Type.Linear)
+                logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
+                self.animation.setStartValue(window_geometry)
                 window_geometry.moveRight(screen_geometry.left() + hidden_width)
-                self.setGeometry(window_geometry)
+                self.animation.setEndValue(window_geometry)
+                self.animation.start()
                 logger.info('窗口贴靠到左边缘')
             elif window_geometry.right() > screen_geometry.right() - edge_distance:
                 # 靠右边缘
+                self.animation = QPropertyAnimation(self, b"geometry")
+                elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
+                if elastic_enabled:
+                    self.animation.setDuration(500)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
+                else:
+                    self.animation.setDuration(200)
+                    self.animation.setEasingCurve(QEasingCurve.Type.Linear)
+                logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
+                self.animation.setStartValue(window_geometry)
                 window_geometry.moveLeft(screen_geometry.right() - hidden_width)
-                self.setGeometry(window_geometry)
+                self.animation.setEndValue(window_geometry)
+                self.animation.start()
                 logger.info('窗口贴靠到右边缘。')
-
-            if window_geometry.top() < screen_geometry.top() + edge_distance:
+            elif window_geometry.top() < screen_geometry.top() + edge_distance:
+                # 靠上边缘
+                self.animation = QPropertyAnimation(self, b"geometry")
+                elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
+                if elastic_enabled:
+                    self.animation.setDuration(500)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
+                else:
+                    self.animation.setDuration(200)
+                    self.animation.setEasingCurve(QEasingCurve.Type.Linear)
+                logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
+                self.animation.setStartValue(window_geometry)
                 window_geometry.moveTop(screen_geometry.top() + edge_distance)
-                self.setGeometry(window_geometry)
+                self.animation.setEndValue(window_geometry)
+                self.animation.start()
                 logger.info('窗口调整到屏幕顶部内。')
-            # 新增：靠近下边缘
-            if window_geometry.bottom() > screen_geometry.bottom() - edge_distance:
+            elif window_geometry.bottom() > screen_geometry.bottom() - edge_distance:
+                # 靠下边缘
+                self.animation = QPropertyAnimation(self, b"geometry")
+                elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
+                if elastic_enabled:
+                    self.animation.setDuration(500)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
+                else:
+                    self.animation.setDuration(200)
+                    self.animation.setEasingCurve(QEasingCurve.Type.Linear)
+                logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
+                self.animation.setStartValue(window_geometry)
                 window_geometry.moveBottom(screen_geometry.bottom() - edge_distance)
-                self.setGeometry(window_geometry)
+                self.animation.setEndValue(window_geometry)
+                self.animation.start()
                 logger.info('窗口调整到屏幕底部内。')
 
         event.accept()

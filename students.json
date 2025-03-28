@@ -1,7 +1,28 @@
 {
-"students": [{
-  "name": "测试测试",
-  "id": "260314",
-"active": true, "weight": 1}
-]
+    "students": [
+        {
+            "name": "张三",
+            "id": 1001,
+            "weight": 1,
+            "active": true
+        },
+        {
+            "name": "李四",
+            "id": 1002,
+            "weight": 1,
+            "active": true
+        },
+        {
+            "name": "王五",
+            "id": 1003,
+            "weight": 1,
+            "active": true
+        },
+        {
+            "name": "赵六",
+            "id": 1004,
+            "weight": 1,
+            "active": true
+        }
+    ]
 }

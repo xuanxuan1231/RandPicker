@@ -6,11 +6,11 @@ import sys
 
 from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
-from PyQt6.QtGui import QDesktopServices, QIcon
+from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
-    InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel
+    InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit
 
 import conf
 
@@ -108,7 +108,7 @@ class Settings(FluentWindow):
         for row, student in enumerate(students['students']):
             table.setItem(row, 0, QTableWidgetItem(student['name']))
             table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
-
+            
             # 初始化 slider
             slider_weight = Slider(Qt.Orientation.Horizontal)
             slider_weight.setObjectName('slider_weight')
@@ -118,18 +118,23 @@ class Settings(FluentWindow):
             slider_weight.setValue(student.get('weight', 1))
             slider_weight.setTracking(True)
 
-            # 初始化提示
-            tip = BodyLabel()
-            tip.setText(str(slider_weight.value()))
-            tip.setFixedWidth(47)
-            slider_weight.valueChanged.connect(lambda value, t=tip, s=slider_weight: t.setText(str(value)))
+            # 初始化输入框
+            line_edit = LineEdit()
+            line_edit.setText(str(slider_weight.value()))
+            line_edit.setFixedWidth(60)
+            line_edit.setValidator(QIntValidator(1, 50))
+            
+            # 滑块值变化时更新输入框
+            slider_weight.valueChanged.connect(lambda value, l=line_edit: l.setText(str(value)))
+            # 输入框值变化时更新滑块
+            line_edit.textChanged.connect(lambda text, s=slider_weight: s.setValue(int(text)) if text.isdigit() else None)
 
             # 初始化布局
             layout_weight = QHBoxLayout()
             layout_weight.setSpacing(3)
             layout_weight.setContentsMargins(12, 0, 0, 0)
             layout_weight.addWidget(slider_weight)
-            layout_weight.addWidget(tip)
+            layout_weight.addWidget(line_edit)
 
             # 初始化组件
             widget_weight = QWidget()
@@ -163,27 +168,42 @@ class Settings(FluentWindow):
         
 
 
-    def import_excel(self):
+    def import_file(self, file_type='excel'):
+        """
+        通用文件导入方法
+        :param file_type: 文件类型，支持'excel'或'csv'
+        """
         # 打开文件选择对话框
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "选择 Excel 文件",
-            "",
-            "Microsoft Excel 文件 (*.xlsx *.xls)"
-        )
+        if file_type == 'excel':
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "选择 Excel 文件",
+                "",
+                "Microsoft Excel 文件 (*.xlsx *.xls)"
+            )
+        else:
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "选择 CSV 文件",
+                "",
+                "CSV 文件 (*.csv)"
+            )
 
         if not file_path:
             return  # 用户取消了选择
 
         try:
             # 导入
-            students = conf.excel2json(file_path)
+            if file_type == 'excel':
+                students = conf.excel2json(file_path)
+            else:
+                students = conf.csv2json(file_path)
 
             if not students or 'students' not in students or not students['students']:
                 MessageBox.warning(
                     self,
                     "导入失败",
-                    "Excel 文件中没有找到有效的学生数据。\n"
+                    f"{file_type.upper()}文件中没有找到有效的学生数据。\n"
                     "请确保您的表格中包含包含 weight，name，id 和 active 列。",
                     self
                 )
@@ -196,7 +216,41 @@ class Settings(FluentWindow):
             for row, student in enumerate(students['students']):
                 table.setItem(row, 0, QTableWidgetItem(student['name']))
                 table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
-                table.setItem(row, 2, QTableWidgetItem(str(student.get('weight', 1))))
+                
+                # 初始化 slider
+                slider_weight = Slider(Qt.Orientation.Horizontal)
+                slider_weight.setObjectName('slider_weight')
+                slider_weight.setSingleStep(1)
+                slider_weight.setPageStep(1)
+                slider_weight.setRange(1, 50)
+                slider_weight.setValue(student.get('weight', 1))
+                slider_weight.setTracking(True)
+
+                # 初始化提示
+                tip = BodyLabel()
+                tip.setText(str(slider_weight.value()))
+                tip.setFixedWidth(47)
+                slider_weight.valueChanged.connect(lambda value, t=tip, s=slider_weight: t.setText(str(value)))
+
+                # 初始化布局
+                layout_weight = QHBoxLayout()
+                layout_weight.setSpacing(3)
+                layout_weight.setContentsMargins(12, 0, 0, 0)
+                layout_weight.addWidget(slider_weight)
+                layout_weight.addWidget(tip)
+
+                # 初始化组件
+                widget_weight = QWidget()
+                widget_weight.setLayout(layout_weight)
+
+                # 添加 cellWidget
+                table.setCellWidget(row, 2, widget_weight)
+
+                btn_active = SwitchButton()
+                btn_active.setOnText('开')
+                btn_active.setOffText('关')
+                btn_active.setChecked(student.get('active', True))
+                table.setCellWidget(row, 3, btn_active)
 
             # 显示成功提示
             btn_import = self.findChild(PushButton, 'import_excel')
@@ -253,7 +307,6 @@ class Settings(FluentWindow):
             for row, student in enumerate(students['students']):
                 table.setItem(row, 0, QTableWidgetItem(student['name']))
                 table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
-                table.setItem(row, 2, QTableWidgetItem(str(student.get('weight', 1))))
 
             # 显示成功提示
             btn_import = self.findChild(PushButton, 'import_csv')
@@ -285,8 +338,15 @@ class Settings(FluentWindow):
             # logger.debug(f"正在保存学生信息。第 {row} 行。")
             name = table.item(row, 0).text()
             id_ = int(table.item(row, 1).text())
-            weight = table.cellWidget(row, 2).findChild(Slider, 'slider_weight').value()
-            is_active = table.cellWidget(row, 3).isChecked()
+            widget = table.cellWidget(row, 2)
+            if widget is None:
+                weight = 1
+            else:
+                slider = widget.findChild(Slider, 'slider_weight')
+                weight = slider.value() if slider is not None else 1
+            
+            active_widget = table.cellWidget(row, 3)
+            is_active = active_widget.isChecked() if active_widget else True
             students["students"][row] = {"name": name, "id": id_, "weight": weight, "active": is_active}
 
         conf.write_conf(students)
@@ -310,11 +370,13 @@ class Settings(FluentWindow):
         hidden_width = int(conf.get_ini('UI', 'hidden_width'))
         avatar = conf.get_ini('UI', 'avatar') == 'true'
         scale = int(float(conf.get_ini('General', 'scale')) * 100)
+        elastic_animation = conf.get_ini('UI', 'elastic_animation') == 'true'
 
         slider_avatar_size = self.findChild(Slider, 'avatar_size')
         label_avatar_size = self.findChild(BodyLabel, 'avatar_size_label')
         btn_edge_hide = self.findChild(SwitchButton, 'edge_hide')
         btn_avatar = self.findChild(SwitchButton, 'avatar')
+        btn_elastic_animation = self.findChild(SwitchButton, 'elastic_animation')
         slider_edge_distance = self.findChild(Slider, 'edge_distance')
         label_edge_distance = self.findChild(BodyLabel, 'edge_distance_label')
         slider_hidden_width = self.findChild(Slider, 'hidden_width')
@@ -330,6 +392,9 @@ class Settings(FluentWindow):
         btn_avatar.setChecked(avatar)
         btn_avatar.setOnText('开')
         btn_avatar.setOffText('关')
+        btn_elastic_animation.setChecked(elastic_animation)
+        btn_elastic_animation.setOnText('开')
+        btn_elastic_animation.setOffText('关')
         slider_edge_distance.setValue(edge_distance)
         slider_hidden_width.setValue(hidden_width)
         slider_scale.setValue(scale)
@@ -363,6 +428,7 @@ class Settings(FluentWindow):
                        'UI', 'edge_distance', str(edge_distance),
                        'UI', 'hidden_width', str(hidden_width),
                        'UI', 'avatar', avatar,
+                       'UI', 'elastic_animation', 'true' if self.uiInterface.elastic_animation.isChecked() else 'false',
                        'General', 'scale', str(scale))
 
         # 显示保存成功提示
