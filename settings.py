@@ -157,13 +157,12 @@ class Settings(FluentWindow):
         btn_save.clicked.connect(lambda: self.save_students())
 
         # 绑定 Excel 导入按钮事件
-        btn_import = self.findChild(PushButton, 'import_excel')
-        btn_import.clicked.connect(lambda: self.import_excel())
+        btn_import_excel = self.findChild(PushButton, 'import_excel')
+        btn_import_excel.clicked.connect(lambda: self.import_excel())
         
-        # CSV导入按钮检查（原students.ui中无此按钮）
+        # 绑定 csv 导入按钮事件
         btn_import_csv = self.findChild(PushButton, 'import_csv')
-        if btn_import_csv:
-            btn_import_csv.clicked.connect(lambda: self.import_csv())
+        btn_import_csv.clicked.connect(lambda: self.import_csv())
         
         
 
@@ -203,7 +202,7 @@ class Settings(FluentWindow):
                 MessageBox.warning(
                     self,
                     "导入失败",
-                    f"{file_type.upper()}文件中没有找到有效的学生数据。\n"
+                    "没有找到有效的学生数据。\n"
                     "请确保您的表格中包含包含 weight，name，id 和 active 列。",
                     self
                 )
@@ -256,23 +255,23 @@ class Settings(FluentWindow):
             btn_import = self.findChild(PushButton, 'import_excel')
             Flyout.create(
                 icon=InfoBarIcon.SUCCESS,
-                title='Excel导入成功',
-                content=f"已从{os.path.basename(file_path)}导入{len(students['students'])}条学生记录。",
+                title='导入成功',
+                content=f"导入了 {len(students['students'])} 条学生记录。",
                 target=btn_import,
                 parent=self,
                 isClosable=False,
                 aniType=FlyoutAnimationType.PULL_UP
             )
-            logger.info(f'从Excel导入了{len(students["students"])}条学生记录')
+            logger.info(f'从 Excel 文件导入了 {len(students["students"])} 条学生记录')
 
         except Exception as e:
             MessageBox.critical(
                 self,
                 "导入错误",
-                f"导入Excel文件时发生错误：\n{str(e)}\n\n请确保Excel文件格式正确，并包含weight、name和id列。",
+                f"请确保 Excel 文件格式正确。它应该包含 weight，name，id 和 active 列。",
                 self
             )
-            logger.error(f'Excel导入错误: {str(e)}')
+            logger.error(f'从 Excel 文件导入时发生错误: {str(e)}')
             
     def import_csv(self):
         # 打开文件选择对话框
@@ -312,23 +311,23 @@ class Settings(FluentWindow):
             btn_import = self.findChild(PushButton, 'import_csv')
             Flyout.create(
                 icon=InfoBarIcon.SUCCESS,
-                title='CSV导入成功',
-                content=f"已从{os.path.basename(file_path)}导入{len(students['students'])}条学生记录。",
+                title='导入成功',
+                content=f"导入了 {len(students['students'])} 条学生记录。",
                 target=btn_import,
                 parent=self,
                 isClosable=False,
                 aniType=FlyoutAnimationType.PULL_UP
             )
-            logger.info(f'从CSV导入了{len(students["students"])}条学生记录')
+            logger.success(f'从 CSV 文件导入了 {len(students["students"])} 条学生记录')
 
         except Exception as e:
             MessageBox.critical(
                 self,
                 "导入错误",
-                f"导入CSV文件时发生错误：\n{str(e)}\n\n请确保CSV文件格式正确，并包含weight、name和id列。",
+                f"请确保 Excel 文件格式正确。它应该包含 weight，name，id 和 active 列。",
                 self
             )
-            logger.error(f'CSV导入错误: {str(e)}')
+            logger.error(f'从 CSV 文件导入时发生错误: {str(e)}')
 
     def save_students(self):
         table = self.findChild(TableWidget, 'student_list')
