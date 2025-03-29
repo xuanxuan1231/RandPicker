@@ -459,7 +459,7 @@ class Settings(FluentWindow):
         
     def on_font_changed(self, font):
         """处理字体变更事件"""
-        conf.set_ini('General', 'font', font)
+        conf.write_ini('General', 'font', font)
         QApplication.setFont(QFont(font))
 
     def save_ui_settings(self):
