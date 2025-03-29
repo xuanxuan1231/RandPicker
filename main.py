@@ -58,9 +58,10 @@ class Widget(QWidget):
         else:
             setTheme(Theme.AUTO)
 
-        ui_file = f"./ui{'/dark/' if isDarkTheme() else '/'}{'widget.ui' if self.is_avatar else 'widget-no-avatar.ui'}"
-        with open(ui_file, 'r', encoding='utf-8') as f:
-            uic.loadUi(f, self)
+        if self.is_avatar:
+            uic.loadUi(f"./ui{'/dark/' if isDarkTheme() else '/'}widget.ui", self)
+        else:
+            uic.loadUi(f"./ui{'/dark/' if isDarkTheme() else '/'}widget-no-avatar.ui", self)
 
         logger.info(f"设置主题：{"深色" if isDarkTheme() else "浅色"}")
 
@@ -196,44 +197,45 @@ class Widget(QWidget):
             avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
             logger.warning(f"没有找到头像 {file_path} 和默认头像。使用空白。")
             return
-        from PyQt6.QtGui import QPixmapCache
-        
-        # 使用复合缓存键，避免重复创建
-        final_cache_key = f"final_{file_path}_{avatar_size}"
-        final_pixmap = QPixmapCache.find(final_cache_key)
-        
-        if not final_pixmap:
-            # 原始图片缓存
-            cache_key = f"{file_path}_{avatar_size}"
-            pixmap = QPixmapCache.find(cache_key)
-            if not pixmap:
-                pixmap = QPixmap(file_path)
-                scaled_pixmap = pixmap.scaled(avatar_size, avatar_size, 
-                                             Qt.AspectRatioMode.KeepAspectRatio,
-                                             Qt.TransformationMode.SmoothTransformation)
-                QPixmapCache.insert(cache_key, scaled_pixmap)
-                pixmap = scaled_pixmap
-            
-            # 创建最终带圆形遮罩的图片
-            final_pixmap = QPixmap(avatar_size, avatar_size)
-            final_pixmap.fill(Qt.GlobalColor.transparent)
-            
-            with QPainter(final_pixmap) as painter:
-                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-                
-                # 先设置圆形裁剪区域
-                path = QPainterPath()
-                path.addEllipse(0, 0, avatar_size, avatar_size)
-                painter.setClipPath(path)
-                
-                # 然后在裁剪区域内绘制图片
-                x = (avatar_size - pixmap.width()) // 2
-                y = (avatar_size - pixmap.height()) // 2
-                painter.drawPixmap(x, y, pixmap)
-                
-            QPixmapCache.insert(final_cache_key, final_pixmap)
-        
-        avatar.setPixmap(final_pixmap)
+        pixmap = QPixmap(file_path)
+        # 确保图片按比例缩放到设定大小
+        scaled_pixmap = pixmap.scaled(avatar_size, avatar_size, Qt.AspectRatioMode.KeepAspectRatio,
+                                      Qt.TransformationMode.SmoothTransformation)
+        # 创建一个设定大小的透明pixmap
+        final_pixmap = QPixmap(avatar_size, avatar_size)
+        final_pixmap.fill(Qt.GlobalColor.transparent)
+        # 在中心位置绘制缩放后的图片
+        painter = QPainter(final_pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        # 计算居中位置
+        x = (avatar_size - scaled_pixmap.width()) // 2
+        y = (avatar_size - scaled_pixmap.height()) // 2
+        painter.drawPixmap(x, y, scaled_pixmap)
+        painter.end()
+
+        # 创建圆形遮罩
+        mask = QPixmap(avatar_size, avatar_size)
+        mask.fill(Qt.GlobalColor.transparent)
+        mask_painter = QPainter(mask)
+        mask_painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        mask_painter.setBrush(Qt.GlobalColor.white)
+        mask_painter.drawEllipse(0, 0, avatar_size, avatar_size)
+        mask_painter.end()
+
+        # 应用圆形遮罩
+        masked_pixmap = QPixmap(avatar_size, avatar_size)
+        masked_pixmap.fill(Qt.GlobalColor.transparent)
+        masked_painter = QPainter(masked_pixmap)
+        masked_painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # 使用QPainterPath创建圆形裁剪区域
+        path = QPainterPath()
+        path.addEllipse(0, 0, avatar_size, avatar_size)
+        masked_painter.setClipPath(path)
+        masked_painter.drawPixmap(0, 0, final_pixmap)
+        masked_painter.end()
+
+        avatar.setPixmap(masked_pixmap)
         logger.success(f"显示头像 {file_path}。")
         avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
 
@@ -255,10 +257,10 @@ class Widget(QWidget):
                 self.animation = QPropertyAnimation(self, b"geometry")
                 elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
-                    self.animation.setDuration(300)
-                    self.animation.setEasingCurve(QEasingCurve.Type.OutQuad)
+                    self.animation.setDuration(500)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
                 else:
-                    self.animation.setDuration(150)
+                    self.animation.setDuration(200)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
                 logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
                 self.animation.setStartValue(window_geometry)
@@ -271,10 +273,10 @@ class Widget(QWidget):
                 self.animation = QPropertyAnimation(self, b"geometry")
                 elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
-                    self.animation.setDuration(300)
-                    self.animation.setEasingCurve(QEasingCurve.Type.OutQuad)
+                    self.animation.setDuration(500)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
                 else:
-                    self.animation.setDuration(150)
+                    self.animation.setDuration(200)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
                 logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
                 self.animation.setStartValue(window_geometry)
@@ -287,10 +289,10 @@ class Widget(QWidget):
                 self.animation = QPropertyAnimation(self, b"geometry")
                 elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
-                    self.animation.setDuration(300)
-                    self.animation.setEasingCurve(QEasingCurve.Type.OutQuad)
+                    self.animation.setDuration(500)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
                 else:
-                    self.animation.setDuration(150)
+                    self.animation.setDuration(200)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
                 logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
                 self.animation.setStartValue(window_geometry)
@@ -303,10 +305,10 @@ class Widget(QWidget):
                 self.animation = QPropertyAnimation(self, b"geometry")
                 elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
-                    self.animation.setDuration(300)
-                    self.animation.setEasingCurve(QEasingCurve.Type.OutQuad)
+                    self.animation.setDuration(500)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
                 else:
-                    self.animation.setDuration(150)
+                    self.animation.setDuration(200)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
                 logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
                 self.animation.setStartValue(window_geometry)
@@ -336,7 +338,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         ])
         self.menu.addSeparator()
         self.menu.addActions([
-            Action(fIcon.SYNC, '重新启动', triggered=lambda: restart()),  # 添加重启选项
+            # Action(fIcon.SYNC, '重新启动', triggered=lambda: restart()),
             Action(fIcon.CLOSE, '关闭', triggered=lambda: sys.exit()),
         ])
         self.setContextMenu(self.menu)
@@ -357,13 +359,6 @@ def init():
     widget = Widget()
     widget.show()
     widget.raise_()
-
-
-def restart():
-    """重启应用程序"""
-    logger.info("重启应用程序")
-    python = sys.executable
-    os.execl(python, python, *sys.argv)
 
 
 if __name__ == "__main__":

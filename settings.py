@@ -6,7 +6,7 @@ import sys
 
 from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
-from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator, QFont
+from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
@@ -413,7 +413,6 @@ class Settings(FluentWindow):
         slider_scale = self.findChild(Slider, 'scale')
         label_scale = self.findChild(BodyLabel, 'scale_label')
         combo_theme = self.findChild(ComboBox, 'theme')
-        font_combo = self.findChild(ComboBox, 'font_combo')
 
         # 设置控件初始值
         slider_avatar_size.setValue(avatar_size)
@@ -444,23 +443,8 @@ class Settings(FluentWindow):
         slider_hidden_width.valueChanged.connect(lambda value: label_hidden_width.setText(str(value)))
         slider_scale.valueChanged.connect(lambda value: self.uiInterface.scale_label.setText(str(value)))
 
-        # 设置字体下拉框
-        if font_combo:
-            from PyQt6.QtGui import QFontDatabase
-            font_db = QFontDatabase
-            font_combo.addItems(font_db.families())
-            current_font = conf.get_ini('General', 'font')
-            if current_font and current_font in font_db.families():
-                font_combo.setCurrentText(current_font)
-            font_combo.currentTextChanged.connect(self.on_font_changed)
-
         # 绑定保存按钮事件
         self.uiInterface.save_ui.clicked.connect(lambda: self.save_ui_settings())
-        
-    def on_font_changed(self, font):
-        """处理字体变更事件"""
-        conf.write_ini('General', 'font', font)
-        QApplication.setFont(QFont(font))
 
     def save_ui_settings(self):
         # 获取控件值
