@@ -104,7 +104,7 @@ def excel2json(file_path='./example.xlsx'):
         try:
             sheet = pd.read_excel(file_path)
         except FileNotFoundError:
-            raise FileNotFoundError(f"���件未找到: {file_path}")
+            raise FileNotFoundError(f"文件未找到: {file_path}")
         except pd.errors.EmptyDataError:
             raise ValueError(f"文件为空或无效: {file_path}")
         except Exception as e:
