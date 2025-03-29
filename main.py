@@ -336,7 +336,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         ])
         self.menu.addSeparator()
         self.menu.addActions([
-            # Action(fIcon.SYNC, '重新启动', triggered=lambda: restart()),
+            Action(fIcon.SYNC, '重新启动', triggered=lambda: restart()),  # 添加重启选项
             Action(fIcon.CLOSE, '关闭', triggered=lambda: sys.exit()),
         ])
         self.setContextMenu(self.menu)
@@ -357,6 +357,13 @@ def init():
     widget = Widget()
     widget.show()
     widget.raise_()
+
+
+def restart():
+    """重启应用程序"""
+    logger.info("重启应用程序")
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
 
 
 if __name__ == "__main__":
