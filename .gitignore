@@ -218,7 +218,7 @@ cython_debug/
 
 /students.json
 /.idea
-/config.ini
+/*.ini
 
 # Backup Files
 /*.bak
@@ -228,3 +228,5 @@ cython_debug/
 
 # Students' Image
 /img/stu
+
+*.csv
