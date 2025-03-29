@@ -7,7 +7,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QMouseEvent, QIcon, QPixmap, QPainter, QPainterPath
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGraphicsDropShadowEffect, QSystemTrayIcon, QFrame
 from loguru import logger
-from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Action, Dialog, PrimaryPushButton
+from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Action, Dialog, PrimaryPushButton, \
+    isDarkTheme, setTheme, Theme, qconfig
 
 import conf
 from settings import open_settings, share
@@ -16,7 +17,13 @@ from settings import open_settings, share
 QApplication.setHighDpiScaleFactorRoundingPolicy(
     Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
+widget = None
+last_result = {}
+
 logger.add("./log/RandPicker_{time}.log", rotation="1 MB", encoding="utf-8", retention="1 minute")
+
+# 自动切换主题
+qconfig.themeChanged.connect(lambda: reload_widget())
 
 
 class Widget(QWidget):
@@ -31,6 +38,7 @@ class Widget(QWidget):
         self.r_Position = None
         self.is_picking = False
         self.is_avatar = False
+        self.student = last_result
         self.init_ui()
         self.setWindowIcon(QIcon('./img/Logo.png'))
         self.systemTrayIcon = SystemTrayIcon(self)
@@ -38,10 +46,20 @@ class Widget(QWidget):
 
     def init_ui(self):
         self.is_avatar = True if conf.get_ini('UI', 'avatar') == 'true' else False
-        if self.is_avatar:
-            uic.loadUi("./ui/widget.ui", self)
+        # 设置主题
+        if conf.get_ini('General', 'theme') == '0':
+            setTheme(Theme.LIGHT)
+        elif conf.get_ini('General', 'theme') == '1':
+            setTheme(Theme.DARK)
         else:
-            uic.loadUi("./ui/widget-no-avatar.ui", self)
+            setTheme(Theme.AUTO)
+
+        if self.is_avatar:
+            uic.loadUi(f"./ui{'/dark/' if isDarkTheme() else '/'}widget.ui", self)
+        else:
+            uic.loadUi(f"./ui{'/dark/' if isDarkTheme() else '/'}widget-no-avatar.ui", self)
+
+        logger.info(f"设置主题：{"深色" if isDarkTheme() else "浅色"}")
 
         # 设置窗口无边框和透明背景
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -69,8 +87,7 @@ class Widget(QWidget):
         btn_clear = self.findChild(PushButton, 'btn_clear')
         btn_clear.clicked.connect(lambda: self.clear())
 
-        if self.is_avatar:
-            self.show_avatar()
+        self.clear()
 
     def mousePressEvent(self, event: QMouseEvent):
         edge_distance = int(conf.get_ini('UI', 'edge_distance'))
@@ -84,9 +101,9 @@ class Widget(QWidget):
 
             # 如果窗口被隐藏在左边或右边，则恢复显示
             if window_geometry.left() < screen_geometry.left() or \
-                window_geometry.right() > screen_geometry.right() or \
-                window_geometry.top() < screen_geometry.top() or \
-                window_geometry.bottom() > screen_geometry.bottom():
+                    window_geometry.right() > screen_geometry.right() or \
+                    window_geometry.top() < screen_geometry.top() or \
+                    window_geometry.bottom() > screen_geometry.bottom():
                 # 计算窗口应该显示的位置
                 if window_geometry.left() < screen_geometry.left():
                     window_geometry.moveLeft(screen_geometry.left() + edge_distance)
@@ -116,24 +133,24 @@ class Widget(QWidget):
         # num = rand(1, conf.get_students_num())
         num = choices(conf.get_students_list(), weights=conf.get_weight(), k=1)[0]
         logger.info(f'随机数已生成。JSON 索引是 {num - 1}。它的选择权重是 {conf.get_all_weight()[num - 1]}。')
-        student = conf.get(num)
-        logger.debug(f'已获取 JSON 索引是 {num - 1} 的学生信息。{student}')
+        self.student = conf.get(num)
+        logger.debug(f'已获取 JSON 索引是 {num - 1} 的学生信息。{self.student}')
         name = self.findChild(QLabel, 'name')
         id_ = self.findChild(QLabel, 'id')
-        name.setText(f'{str(student['id'])[-2:]} {student['name']}')
-        id_.setText(str(student['id']))
+        name.setText(f'{str(self.student['id'])[-2:]} {self.student['name']}')
+        id_.setText(str(self.student['id']))
 
         if self.is_avatar:
             # 设置头像
             avatar_path = None
             # 尝试不同的图片格式
             for ext in ['png', 'jpg', 'jpeg']:
-                temp_path = f'./img/stu/{student['id']}.{ext}'
+                temp_path = f'./img/stu/{self.student['id']}.{ext}'
                 if os.path.exists(temp_path):
                     avatar_path = temp_path
-                    logger.success(f"找到了学生 {student['id']} 的头像 {student['id']}.{ext}。")
+                    logger.success(f"找到了学生 {self.student['id']} 的头像 {self.student['id']}.{ext}。")
                     break
-
+            self.student['avatar'] = avatar_path
             self.show_avatar(avatar_path)
         self.is_picking = False
 
@@ -141,12 +158,19 @@ class Widget(QWidget):
         if not self.is_picking:
             name = self.findChild(QLabel, 'name')
             id_ = self.findChild(QLabel, 'id')
-            name.setText('无结果')
-            id_.setText('000000')
-            if self.is_avatar:
-                self.show_avatar()
-            logger.info('清除结果')
-            return 0
+            if last_result:
+                name.setText(f"{str(self.student['id'])[-2:]} {last_result['name']}")
+                id_.setText(str(last_result['id']))
+                if self.is_avatar:
+                    self.show_avatar(last_result['avatar'])
+                logger.info(f'加载重载前的结果。{last_result}')
+            else:
+                name.setText('无结果')
+                id_.setText('000000')
+                if self.is_avatar:
+                    self.show_avatar()
+                logger.info('清除结果')
+            return
         logger.warning('没有清除结果，因为正在选人。')
 
     def show_avatar(self, file_path='./img/stu/default.jpeg'):
@@ -211,7 +235,6 @@ class Widget(QWidget):
         if not screen:
             screen = QApplication.primaryScreen()
         screen_geometry = screen.geometry()
-        screen_available = screen.availableGeometry()
         edge_distance = int(conf.get_ini('UI', 'edge_distance'))
         hidden_width = int(conf.get_ini('UI', 'hidden_width'))
         window_geometry = self.geometry()
@@ -285,6 +308,12 @@ class Widget(QWidget):
 
         event.accept()
 
+    def closeEvent(self, a0):
+        global last_result
+        self.systemTrayIcon.hide()
+        self.systemTrayIcon.deleteLater()
+        last_result = self.student
+
 
 class SystemTrayIcon(QSystemTrayIcon):
 
@@ -301,6 +330,23 @@ class SystemTrayIcon(QSystemTrayIcon):
             Action(fIcon.CLOSE, '关闭', triggered=lambda: sys.exit()),
         ])
         self.setContextMenu(self.menu)
+
+
+def reload_widget():
+    global widget
+    if widget is None:
+        return
+    if widget.isVisible():
+        widget.close()
+    logger.debug("重载浮窗")
+    init()
+
+
+def init():
+    global widget
+    widget = Widget()
+    widget.show()
+    widget.raise_()
 
 
 if __name__ == "__main__":
@@ -324,9 +370,7 @@ if __name__ == "__main__":
         sys.exit(-1)
     logger.info("欢迎。")
     conf.check_config()
-    widget = Widget()
-    widget.show()
-    widget.raise_()
+    init()
 
     app.setQuitOnLastWindowClosed(False)
 

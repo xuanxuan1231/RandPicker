@@ -1,6 +1,7 @@
 {
   "General": {
-    "scale": "1"
+    "scale": "1",
+    "theme": "0"
   },
   "UI": {
     "avatar": "false",

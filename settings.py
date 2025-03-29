@@ -10,7 +10,7 @@ from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
-    InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit
+    InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme
 
 import conf
 
@@ -108,7 +108,7 @@ class Settings(FluentWindow):
         for row, student in enumerate(students['students']):
             table.setItem(row, 0, QTableWidgetItem(student['name']))
             table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
-            
+
             # 初始化 slider
             slider_weight = Slider(Qt.Orientation.Horizontal)
             slider_weight.setObjectName('slider_weight')
@@ -118,23 +118,18 @@ class Settings(FluentWindow):
             slider_weight.setValue(student.get('weight', 1))
             slider_weight.setTracking(True)
 
-            # 初始化输入框
-            line_edit = LineEdit()
-            line_edit.setText(str(slider_weight.value()))
-            line_edit.setFixedWidth(60)
-            line_edit.setValidator(QIntValidator(1, 50))
-            
-            # 滑块值变化时更新输入框
-            slider_weight.valueChanged.connect(lambda value, l=line_edit: l.setText(str(value)))
-            # 输入框值变化时更新滑块
-            line_edit.textChanged.connect(lambda text, s=slider_weight: s.setValue(int(text)) if text.isdigit() else None)
+            # 初始化提示
+            tip = BodyLabel()
+            tip.setText(str(slider_weight.value()))
+            tip.setFixedWidth(47)
+            slider_weight.valueChanged.connect(lambda value, t=tip, s=slider_weight: t.setText(str(value)))
 
             # 初始化布局
             layout_weight = QHBoxLayout()
             layout_weight.setSpacing(3)
             layout_weight.setContentsMargins(12, 0, 0, 0)
             layout_weight.addWidget(slider_weight)
-            layout_weight.addWidget(line_edit)
+            layout_weight.addWidget(tip)
 
             # 初始化组件
             widget_weight = QWidget()
@@ -159,12 +154,10 @@ class Settings(FluentWindow):
         # 绑定 Excel 导入按钮事件
         btn_import_excel = self.findChild(PushButton, 'import_excel')
         btn_import_excel.clicked.connect(lambda: self.import_excel())
-        
+
         # 绑定 csv 导入按钮事件
         btn_import_csv = self.findChild(PushButton, 'import_csv')
         btn_import_csv.clicked.connect(lambda: self.import_csv())
-        
-        
 
 
     def import_file(self, file_type='excel'):
@@ -215,41 +208,8 @@ class Settings(FluentWindow):
             for row, student in enumerate(students['students']):
                 table.setItem(row, 0, QTableWidgetItem(student['name']))
                 table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
-                
-                # 初始化 slider
-                slider_weight = Slider(Qt.Orientation.Horizontal)
-                slider_weight.setObjectName('slider_weight')
-                slider_weight.setSingleStep(1)
-                slider_weight.setPageStep(1)
-                slider_weight.setRange(1, 50)
-                slider_weight.setValue(student.get('weight', 1))
-                slider_weight.setTracking(True)
-
-                # 初始化提示
-                tip = BodyLabel()
-                tip.setText(str(slider_weight.value()))
-                tip.setFixedWidth(47)
-                slider_weight.valueChanged.connect(lambda value, t=tip, s=slider_weight: t.setText(str(value)))
-
-                # 初始化布局
-                layout_weight = QHBoxLayout()
-                layout_weight.setSpacing(3)
-                layout_weight.setContentsMargins(12, 0, 0, 0)
-                layout_weight.addWidget(slider_weight)
-                layout_weight.addWidget(tip)
-
-                # 初始化组件
-                widget_weight = QWidget()
-                widget_weight.setLayout(layout_weight)
-
-                # 添加 cellWidget
-                table.setCellWidget(row, 2, widget_weight)
-
-                btn_active = SwitchButton()
-                btn_active.setOnText('开')
-                btn_active.setOffText('关')
-                btn_active.setChecked(student.get('active', True))
-                table.setCellWidget(row, 3, btn_active)
+                table.cellWidget(row, 2).findChild(Slider, "slider_weight").setValue(student.get('weight', 1))
+                table.cellWidget(row, 3).setChecked(student['active'])
 
             # 显示成功提示
             btn_import = self.findChild(PushButton, 'import_excel')
@@ -272,7 +232,7 @@ class Settings(FluentWindow):
                 self
             )
             logger.error(f'从 Excel 文件导入时发生错误: {str(e)}')
-            
+
     def import_csv(self):
         # 打开文件选择对话框
         file_path, _ = QFileDialog.getOpenFileName(
@@ -306,6 +266,8 @@ class Settings(FluentWindow):
             for row, student in enumerate(students['students']):
                 table.setItem(row, 0, QTableWidgetItem(student['name']))
                 table.setItem(row, 1, QTableWidgetItem(str(student['id'])))
+                table.cellWidget(row, 2).findChild(Slider, "slider_weight").setValue(student.get('weight', 1))
+                table.cellWidget(row, 3).setChecked(student['active'])
 
             # 显示成功提示
             btn_import = self.findChild(PushButton, 'import_csv')
@@ -337,15 +299,8 @@ class Settings(FluentWindow):
             # logger.debug(f"正在保存学生信息。第 {row} 行。")
             name = table.item(row, 0).text()
             id_ = int(table.item(row, 1).text())
-            widget = table.cellWidget(row, 2)
-            if widget is None:
-                weight = 1
-            else:
-                slider = widget.findChild(Slider, 'slider_weight')
-                weight = slider.value() if slider is not None else 1
-            
-            active_widget = table.cellWidget(row, 3)
-            is_active = active_widget.isChecked() if active_widget else True
+            weight = table.cellWidget(row, 2).findChild(Slider, 'slider_weight').value()
+            is_active = table.cellWidget(row, 3).isChecked()
             students["students"][row] = {"name": name, "id": id_, "weight": weight, "active": is_active}
 
         conf.write_conf(students)
@@ -382,6 +337,7 @@ class Settings(FluentWindow):
         label_hidden_width = self.findChild(BodyLabel, 'hidden_width_label')
         slider_scale = self.findChild(Slider, 'scale')
         label_scale = self.findChild(BodyLabel, 'scale_label')
+        combo_theme = self.findChild(ComboBox, 'theme')
 
         # 设置控件初始值
         slider_avatar_size.setValue(avatar_size)
@@ -397,6 +353,8 @@ class Settings(FluentWindow):
         slider_edge_distance.setValue(edge_distance)
         slider_hidden_width.setValue(hidden_width)
         slider_scale.setValue(scale)
+        combo_theme.addItems(['浅色', '深色', '跟随系统'])
+        combo_theme.setCurrentIndex(int(conf.get_ini('General', 'theme')))
 
         # 设置标签初始值
         label_avatar_size.setText(str(avatar_size))
@@ -421,6 +379,7 @@ class Settings(FluentWindow):
         hidden_width = self.uiInterface.hidden_width.value()
         avatar = 'true' if self.uiInterface.avatar.isChecked() else 'false'
         scale = self.uiInterface.scale.value() / 100
+        theme = self.findChild(ComboBox, 'theme')
 
         conf.write_ini('UI', 'avatar_size', str(avatar_size),
                        'UI', 'edge_hide', edge_hide,
@@ -428,7 +387,16 @@ class Settings(FluentWindow):
                        'UI', 'hidden_width', str(hidden_width),
                        'UI', 'avatar', avatar,
                        'UI', 'elastic_animation', 'true' if self.uiInterface.elastic_animation.isChecked() else 'false',
-                       'General', 'scale', str(scale))
+                       'General', 'scale', str(scale),
+                       'General', 'theme', str(theme.currentIndex()))
+
+        if theme.currentIndex() == 0:
+            tg_theme = Theme.LIGHT
+        elif theme.currentIndex() == 1:
+            tg_theme = Theme.DARK
+        else:
+            tg_theme = Theme.AUTO
+        setTheme(tg_theme)
 
         # 显示保存成功提示
         Flyout.create(

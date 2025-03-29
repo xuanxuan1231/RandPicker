@@ -65,7 +65,6 @@ def get_students_list():
     for i in range(1, len(students['students']) + 1):
         if students['students'][i - 1]['active']:
             list_.append(i)
-        i = i + 1
     return list_
 
 
@@ -250,5 +249,6 @@ def write_ini(*args, file_path='config.ini'):
     # 将更改写回文件
     with open(file_path, 'w', encoding='utf-8') as configfile:
         config.write(configfile)
+
 
 config = configparser.ConfigParser()
