@@ -101,14 +101,14 @@
               <item>
                <widget class="StrongBodyLabel" name="StrongBodyLabel_10">
                 <property name="text">
-                 <string>主题</string>
+                 <string>主题与字体</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="CaptionLabel" name="CaptionLabel_9">
                 <property name="text">
-                 <string>调整应用主题</string>
+                 <string>调整应用主题与字体</string>
                 </property>
                 <property name="wordWrap">
                  <bool>true</bool>
@@ -133,6 +133,16 @@
             </item>
             <item>
              <widget class="ComboBox" name="theme">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="ComboBox" name="font_combo">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
