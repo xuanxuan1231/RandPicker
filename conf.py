@@ -116,7 +116,7 @@ def excel2json(file_path='./example.xlsx'):
                 raise ValueError(f"文件为空或无效: {file_path}")
             except Exception:
                 raise ValueError(f"无法识别的文件格式: {file_path}")
-    
+
     students = {}
     list_ = []
     for i in sheet.index.values:
@@ -216,21 +216,6 @@ def get_ini(section='General', key=''):
         logger.debug(f"已获取默认配置 {section} -> {key}。它的值是 {default[section][key]}。 ")
         return default[section][key]
     return None
-
-
-def set_ini(section, option, value):
-    """
-    设置 INI 文件中的配置值。
-
-    :param section: 配置节
-    :param option: 配置项
-    :param value: 要设置的值
-    """
-    if not config.has_section(section):
-        config.add_section(section)
-    config.set(section, option, str(value))
-    with open('config.ini', 'w', encoding='utf-8') as configfile:
-        config.write(configfile)
 
 
 def write_ini(*args, file_path='config.ini'):

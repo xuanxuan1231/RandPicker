@@ -6,7 +6,7 @@ import sys
 
 from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
-from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator, QFont
+from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
@@ -185,7 +185,6 @@ class Settings(FluentWindow):
         btn_del.setIcon(fIcon.DELETE)
         btn_del.clicked.connect(lambda: table.removeRow(table.currentRow()))
 
-
     def new_student(self):
         le_new_name = self.findChild(LineEdit, 'new_name')
         le_new_id = self.findChild(LineEdit, 'new_id')
@@ -194,7 +193,7 @@ class Settings(FluentWindow):
         table = self.findChild(TableWidget, 'student_list')
 
         if le_new_name.text() == '' or le_new_name.text().isspace() \
-            or le_new_id.text() == '':
+                or le_new_id.text() == '':
             return
 
         row = table.rowCount()
@@ -243,20 +242,17 @@ class Settings(FluentWindow):
         slider_new_weight.setValue(1)
         btn_new_active.setChecked(True)
 
-
     def reset_weight(self):
         table = self.findChild(TableWidget, 'student_list')
         for row in range(0, table.rowCount()):
             table.cellWidget(row, 2).findChild(Slider, 'slider_weight').setValue(1)
         logger.info("重置了所有学生的权重为 1。")
 
-
     def reset_active(self):
         table = self.findChild(TableWidget, 'student_list')
         for row in range(0, table.rowCount()):
             table.cellWidget(row, 3).setChecked(True)
         logger.info("重置了所有学生的启用为 True。")
-
 
     def import_file(self, file_type='excel'):
         """
@@ -356,7 +352,6 @@ class Settings(FluentWindow):
             )
             logger.error(f'从文件导入时发生错误: {str(e)}')
 
-
     def save_students(self):
         table = self.findChild(TableWidget, 'student_list')
         students = {'students': [{} for _ in range(table.rowCount())]}
@@ -435,23 +430,8 @@ class Settings(FluentWindow):
         slider_hidden_width.valueChanged.connect(lambda value: label_hidden_width.setText(str(value)))
         slider_scale.valueChanged.connect(lambda value: self.uiInterface.scale_label.setText(str(value)))
 
-        # 设置字体下拉框
-        if font_combo:
-            from PyQt6.QtGui import QFontDatabase
-            font_db = QFontDatabase
-            font_combo.addItems(font_db.families())
-            current_font = conf.get_ini('General', 'font')
-            if current_font and current_font in font_db.families():
-                font_combo.setCurrentText(current_font)
-            font_combo.currentTextChanged.connect(self.on_font_changed)
-
         # 绑定保存按钮事件
         self.uiInterface.save_ui.clicked.connect(lambda: self.save_ui_settings())
-        
-    def on_font_changed(self, font):
-        """处理字体变更事件"""
-        conf.write_ini('General', 'font', font)
-        QApplication.setFont(QFont(font))
 
     def save_ui_settings(self):
         # 获取控件值
@@ -499,9 +479,9 @@ class Settings(FluentWindow):
 
 def restart():
     global share
-    if share.attach():
+    if share.isAttached():
         share.detach()
-        share.deleteLater()
+        # share.deleteLater()
     logger.info("重新启动")
     os.execl(sys.executable, sys.executable, *sys.argv)
 

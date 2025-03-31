@@ -1,10 +1,10 @@
 import os
-import sys
 import random
+import sys
 from random import choices
 
 from PyQt6 import uic
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QColor, QMouseEvent, QIcon, QPixmap, QPainter, QPainterPath
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGraphicsDropShadowEffect, QSystemTrayIcon, QFrame, QLayout
 from loguru import logger
@@ -12,7 +12,7 @@ from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Acti
     isDarkTheme, setTheme, Theme, qconfig, PixmapLabel
 
 import conf
-from settings import open_settings, share
+from settings import open_settings, share, restart
 
 # 适配高DPI缩放
 QApplication.setHighDpiScaleFactorRoundingPolicy(
@@ -59,8 +59,7 @@ class Widget(QWidget):
             setTheme(Theme.AUTO)
 
         ui_file = f"./ui{'/dark/' if isDarkTheme() else '/'}{'widget.ui' if self.is_avatar else 'widget-no-avatar.ui'}"
-        with open(ui_file, 'r', encoding='utf-8') as f:
-            uic.loadUi(f, self)
+        uic.loadUi(ui_file, self)
 
         logger.info(f"设置主题：{"深色" if isDarkTheme() else "浅色"}")
 
@@ -78,8 +77,11 @@ class Widget(QWidget):
 
         self.layout().setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
-        if last_pos:
-            self.move(last_pos)
+        try:
+            self.move(conf.get_ini('UI', 'last_pos'))
+        except:
+            if last_pos:
+                self.move(last_pos)
 
         background = self.findChild(QFrame, 'backgnd')
         shadow_effect = QGraphicsDropShadowEffect(self)
@@ -189,7 +191,7 @@ class Widget(QWidget):
         if file_path is not None and os.path.exists(file_path):
             file_path = file_path
         elif os.path.exists('./img/stu/default.jpeg'):
-            logger.warning(f"没有找到头像 {file_path}。使用默认头像。")
+            logger.warning(f"没有找到头像。使用默认头像。")
             file_path = './img/stu/default.jpeg'
         else:
             avatar.setPixmap(QPixmap())
@@ -197,49 +199,47 @@ class Widget(QWidget):
             logger.warning(f"没有找到头像 {file_path} 和默认头像。使用空白。")
             return
         from PyQt6.QtGui import QPixmapCache
-        
+
         # 使用复合缓存键，避免重复创建
         final_cache_key = f"final_{file_path}_{avatar_size}"
         final_pixmap = QPixmapCache.find(final_cache_key)
-        
+
         if not final_pixmap:
             # 原始图片缓存
             cache_key = f"{file_path}_{avatar_size}"
             pixmap = QPixmapCache.find(cache_key)
             if not pixmap:
                 pixmap = QPixmap(file_path)
-                scaled_pixmap = pixmap.scaled(avatar_size, avatar_size, 
-                                             Qt.AspectRatioMode.KeepAspectRatio,
-                                             Qt.TransformationMode.SmoothTransformation)
+                scaled_pixmap = pixmap.scaled(avatar_size, avatar_size,
+                                              Qt.AspectRatioMode.KeepAspectRatio,
+                                              Qt.TransformationMode.SmoothTransformation)
                 QPixmapCache.insert(cache_key, scaled_pixmap)
                 pixmap = scaled_pixmap
-            
+
             # 创建最终带圆形遮罩的图片
             final_pixmap = QPixmap(avatar_size, avatar_size)
             final_pixmap.fill(Qt.GlobalColor.transparent)
-            
+
             with QPainter(final_pixmap) as painter:
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-                
+
                 # 先设置圆形裁剪区域
                 path = QPainterPath()
                 path.addEllipse(0, 0, avatar_size, avatar_size)
                 painter.setClipPath(path)
-                
+
                 # 然后在裁剪区域内绘制图片
                 x = (avatar_size - pixmap.width()) // 2
                 y = (avatar_size - pixmap.height()) // 2
                 painter.drawPixmap(x, y, pixmap)
-                
+
             QPixmapCache.insert(final_cache_key, final_pixmap)
-        
+
         avatar.setPixmap(final_pixmap)
         logger.success(f"显示头像 {file_path}。")
         avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
 
     def mouseReleaseEvent(self, event: QMouseEvent):
-        from PyQt6.QtCore import QPropertyAnimation, QEasingCurve
-        
         screen = QApplication.screenAt(event.globalPosition().toPoint())
         if not screen:
             screen = QApplication.primaryScreen()
@@ -260,7 +260,8 @@ class Widget(QWidget):
                 else:
                     self.animation.setDuration(150)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
-                logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
+                logger.debug(
+                    f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
                 self.animation.setStartValue(window_geometry)
                 window_geometry.moveRight(screen_geometry.left() + hidden_width)
                 self.animation.setEndValue(window_geometry)
@@ -276,7 +277,8 @@ class Widget(QWidget):
                 else:
                     self.animation.setDuration(150)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
-                logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
+                logger.debug(
+                    f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
                 self.animation.setStartValue(window_geometry)
                 window_geometry.moveLeft(screen_geometry.right() - hidden_width)
                 self.animation.setEndValue(window_geometry)
@@ -292,7 +294,8 @@ class Widget(QWidget):
                 else:
                     self.animation.setDuration(150)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
-                logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
+                logger.debug(
+                    f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
                 self.animation.setStartValue(window_geometry)
                 window_geometry.moveTop(screen_geometry.top() + edge_distance)
                 self.animation.setEndValue(window_geometry)
@@ -308,7 +311,8 @@ class Widget(QWidget):
                 else:
                     self.animation.setDuration(150)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
-                logger.debug(f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
+                logger.debug(
+                    f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
                 self.animation.setStartValue(window_geometry)
                 window_geometry.moveBottom(screen_geometry.bottom() - edge_distance)
                 self.animation.setEndValue(window_geometry)
@@ -323,6 +327,7 @@ class Widget(QWidget):
         self.systemTrayIcon.deleteLater()
         last_result = self.student
         last_pos = self.pos()
+        conf.write_ini('UI', 'last_pos', last_pos)
 
 
 class SystemTrayIcon(QSystemTrayIcon):
@@ -359,19 +364,11 @@ def init():
     widget.raise_()
 
 
-def restart():
-    """重启应用程序"""
-    logger.info("重启应用程序")
-    python = sys.executable
-    os.execl(python, python, *sys.argv)
-
-
 if __name__ == "__main__":
     os.environ['QT_SCALE_FACTOR'] = str(float(conf.get_ini('General', 'scale')))
-    share.create(1)
     app = QApplication(sys.argv)
     logger.info(f"RandPicker 启动。缩放系数 {os.environ['QT_SCALE_FACTOR']}。")
-    if share.attach():
+    if share.isAttached():
         logger.warning("有一个实例正在运行，或者上次没有正常退出。")
         logger.error("不欢迎。")
         msg_box = Dialog(
@@ -385,6 +382,7 @@ if __name__ == "__main__":
         msg_box.exec()
         logger.info("退出。")
         sys.exit(-1)
+    share.create(1)
     logger.info("欢迎。")
     conf.check_config()
     init()
