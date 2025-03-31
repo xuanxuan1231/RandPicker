@@ -86,15 +86,6 @@ class Settings(FluentWindow):
         self.setup_student_edit_interface()
         self.setup_ui_interface()
 
-        theme = conf.get_ini('General', 'theme')
-        if theme == 0:
-            tg_theme = Theme.LIGHT
-        elif theme == 1:
-            tg_theme = Theme.DARK
-        else:
-            tg_theme = Theme.AUTO
-        setTheme(tg_theme)
-
     def setup_about_interface(self):  # 设置 关于 页面
         btn_github = self.findChild(PushButton, 'btn_github')
         btn_github.clicked.connect(lambda: QDesktopServices.openUrl(QUrl('https://github.com/xuanxuan1231/RandPicker')))
