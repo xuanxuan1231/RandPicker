@@ -1,5 +1,4 @@
 import os
-import random
 import sys
 from random import choices
 
@@ -77,11 +76,15 @@ class Widget(QWidget):
 
         self.layout().setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
-        try:
-            self.move(conf.get_ini('UI', 'last_pos'))
-        except:
-            if last_pos:
-                self.move(last_pos)
+        if last_pos:
+            logger.info(f'移动到重载前的位置 ({last_pos.x()}, {last_pos.y()})。')
+            self.move(last_pos)
+        elif conf.get_ini('Last', 'x') and conf.get_ini('Last', 'y'):
+            x = int(conf.get_ini('Last', 'x'))
+            y = int(conf.get_ini('Last', 'y'))
+            pos = QPoint(x, y)
+            logger.info(f'移动到上次关闭的位置 ({x}, {y})。')
+            self.move(pos)
 
         background = self.findChild(QFrame, 'backgnd')
         shadow_effect = QGraphicsDropShadowEffect(self)
@@ -140,7 +143,6 @@ class Widget(QWidget):
         随机选人。
         """
         self.is_picking = True
-        random.seed()
         num = choices(conf.get_students_list(), weights=conf.get_weight(), k=1)[0]
         logger.info(f'随机数已生成。JSON 索引是 {num - 1}。它的选择权重是 {conf.get_all_weight()[num - 1]}。')
         self.student = conf.get(num)
@@ -327,7 +329,8 @@ class Widget(QWidget):
         self.systemTrayIcon.deleteLater()
         last_result = self.student
         last_pos = self.pos()
-        conf.write_ini('UI', 'last_pos', last_pos)
+        conf.write_ini('Last', 'x', last_pos.x(),
+                       'Last', 'y', last_pos.y())
 
 
 class SystemTrayIcon(QSystemTrayIcon):
@@ -342,7 +345,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.menu.addSeparator()
         self.menu.addActions([
             Action(fIcon.SYNC, '重新启动', triggered=lambda: restart()),  # 添加重启选项
-            Action(fIcon.CLOSE, '关闭', triggered=lambda: sys.exit()),
+            Action(fIcon.CLOSE, '关闭', triggered=lambda: stop()),
         ])
         self.setContextMenu(self.menu)
 
@@ -362,6 +365,13 @@ def init():
     widget = Widget()
     widget.show()
     widget.raise_()
+
+
+def stop():
+    global widget
+    if widget.isVisible():
+        widget.close()
+    sys.exit()
 
 
 if __name__ == "__main__":
