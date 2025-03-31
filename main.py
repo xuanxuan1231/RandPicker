@@ -4,7 +4,7 @@ from random import choices
 
 from PyQt6 import uic
 from PyQt6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve
-from PyQt6.QtGui import QColor, QMouseEvent, QIcon, QPixmap, QPainter, QPainterPath
+from PyQt6.QtGui import QColor, QMouseEvent, QIcon, QPixmap, QPainter, QPainterPath, QPixmapCache
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGraphicsDropShadowEffect, QSystemTrayIcon, QFrame, QLayout
 from loguru import logger
 from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Action, Dialog, PrimaryPushButton, \
@@ -200,7 +200,6 @@ class Widget(QWidget):
             avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
             logger.warning(f"没有找到头像 {file_path} 和默认头像。使用空白。")
             return
-        from PyQt6.QtGui import QPixmapCache
 
         # 使用复合缓存键，避免重复创建
         final_cache_key = f"final_{file_path}_{avatar_size}"

@@ -399,7 +399,6 @@ class Settings(FluentWindow):
         slider_scale = self.findChild(Slider, 'scale')
         label_scale = self.findChild(BodyLabel, 'scale_label')
         combo_theme = self.findChild(ComboBox, 'theme')
-        font_combo = self.findChild(ComboBox, 'font_combo')
 
         # 设置控件初始值
         slider_avatar_size.setValue(avatar_size)
