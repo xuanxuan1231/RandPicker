@@ -410,7 +410,12 @@ class Settings(FluentWindow):
         label_edge_distance.setText(str(edge_distance))
         label_hidden_width.setText(str(hidden_width))
         label_scale.setText(str(scale))
-        label_color.setText(conf.get_ini('Color', 'dark' if isDarkTheme() else 'light'))
+        
+        # 设置颜色标签和预览
+        current_color = conf.get_ini('Color', 'dark' if isDarkTheme() else 'light')
+        label_color.setText(current_color)
+        color_obj = QColor(current_color)
+        label_color.setStyleSheet(f"background-color: {current_color}; color: {'white' if color_obj.lightness() < 128 else 'black'}; padding: 2px; border-radius: 3px;")
 
         # 绑定滑块值变化事件
         slider_avatar_size.valueChanged.connect(lambda value: label_avatar_size.setText(str(value)))
@@ -424,9 +429,19 @@ class Settings(FluentWindow):
 
     def setup_color_dialog(self):
         label_color = self.findChild(BodyLabel, 'color_label')
-        dialog_color = ColorDialog(QColor(label_color.text()), '选择主题颜色', self, enableAlpha=False)
+        current_color = QColor(label_color.text())
+        dialog_color = ColorDialog(current_color, '选择主题颜色', self, enableAlpha=False)
         dialog_color.yesButton.setText('好')
-        dialog_color.colorChanged.connect(lambda color: label_color.setText(color.name()))
+        
+        # 更新颜色标签和预览
+        def update_color_preview(color):
+            label_color.setText(color.name())
+            label_color.setStyleSheet(f"background-color: {color.name()}; color: {'white' if color.lightness() < 128 else 'black'}; padding: 2px; border-radius: 3px;")
+        
+        # 初始化颜色预览
+        update_color_preview(current_color)
+        
+        dialog_color.colorChanged.connect(update_color_preview)
         dialog_color.exec()
 
     def save_ui_settings(self):
@@ -470,7 +485,13 @@ class Settings(FluentWindow):
             isClosable=False,
             aniType=FlyoutAnimationType.PULL_UP
         )
-        color.setText(conf.get_ini('Color', 'dark' if isDarkTheme() else 'light'))
+        
+        # 更新颜色标签和预览
+        current_color = conf.get_ini('Color', 'dark' if isDarkTheme() else 'light')
+        color.setText(current_color)
+        color_obj = QColor(current_color)
+        color.setStyleSheet(f"background-color: {current_color}; color: {'white' if color_obj.lightness() < 128 else 'black'}; padding: 2px; border-radius: 3px;")
+        
         logger.info('界面设置已保存')
 
     def closeEvent(self, event):
