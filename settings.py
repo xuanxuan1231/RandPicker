@@ -1,6 +1,7 @@
 """
 设置。
 """
+
 import os
 import sys
 
@@ -9,10 +10,14 @@ from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
 from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator, QColor
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog
 from loguru import logger
-from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
-    InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme, \
-    ToolButton, ColorDialog, setThemeColor, qconfig, isDarkTheme
+from qfluentwidgets import (
+    FluentWindow, FluentIcon as fIcon, PushButton, TableWidget,
+    NavigationItemPosition, Flyout, InfoBarIcon, FlyoutAnimationType,
+    SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme,
+    ComboBox, Theme, ToolButton, ColorDialog, setThemeColor, qconfig, isDarkTheme
+)
 
+# 本地模块
 import conf
 
 settings = None

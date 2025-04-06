@@ -7,9 +7,13 @@ from PyQt6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QLocale
 from PyQt6.QtGui import QColor, QMouseEvent, QIcon, QPixmap, QPainter, QPainterPath, QPixmapCache
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGraphicsDropShadowEffect, QSystemTrayIcon, QFrame, QLayout
 from loguru import logger
-from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Action, Dialog, PrimaryPushButton, \
-    isDarkTheme, setTheme, Theme, qconfig, PixmapLabel, FluentTranslator, setThemeColor
+from qfluentwidgets import (
+    PushButton, SystemTrayMenu, FluentIcon as fIcon, Action, Dialog,
+    PrimaryPushButton, isDarkTheme, setTheme, Theme, qconfig,
+    PixmapLabel, FluentTranslator, setThemeColor
+)
 
+# 本地模块
 import conf
 from settings import open_settings, share, restart
 
