@@ -415,7 +415,8 @@ class Settings(FluentWindow):
         current_color = conf.get_ini('Color', 'dark' if isDarkTheme() else 'light')
         label_color.setText(current_color)
         color_obj = QColor(current_color)
-        label_color.setStyleSheet(f"background-color: {current_color}; color: {'white' if color_obj.lightness() < 128 else 'black'}; padding: 2px; border-radius: 3px;")
+        label_color.setStyleSheet(f"background-color: {current_color}; color: {'white' if color_obj.lightness() < 128 else 'black'}; padding: 2px; border-radius: 5px")
+
 
         # 绑定滑块值变化事件
         slider_avatar_size.valueChanged.connect(lambda value: label_avatar_size.setText(str(value)))
