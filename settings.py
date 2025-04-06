@@ -454,6 +454,7 @@ class Settings(FluentWindow):
         scale = self.uiInterface.scale.value() / 100
         theme = self.findChild(ComboBox, 'theme')
         color = self.findChild(BodyLabel, 'color_label')
+        translucent = 'true' if self.uiInterface.translucentSwitch.isChecked() else 'false'
 
         conf.write_ini('UI', 'avatar_size', str(avatar_size),
                        'UI', 'edge_hide', edge_hide,
@@ -461,6 +462,7 @@ class Settings(FluentWindow):
                        'UI', 'hidden_width', str(hidden_width),
                        'UI', 'avatar', avatar,
                        'UI', 'elastic_animation', 'true' if self.uiInterface.elastic_animation.isChecked() else 'false',
+                       'UI', 'translucent', translucent,
                        'General', 'scale', str(scale),
                        'General', 'theme', str(theme.currentIndex()),
                        'Color', 'dark' if isDarkTheme() else 'light', color.text())
