@@ -114,7 +114,7 @@ class Settings(FluentWindow):
         students = conf.get_all_students()
         table.setRowCount(conf.get_students_num())
 
-        for row, student in enumerate(students['students']):
+        for row, student in enumerate(students):
             table.setItem(row, 1, QTableWidgetItem(student['name']))
             table.setItem(row, 2, QTableWidgetItem(str(student['id'])))
 
@@ -354,7 +354,7 @@ class Settings(FluentWindow):
 
     def save_students(self):
         table = self.findChild(TableWidget, 'student_list')
-        students = {'students': [{} for _ in range(table.rowCount())]}
+        students = [{} for _ in range(table.rowCount())]
 
         for row in range(0, table.rowCount()):
             # logger.debug(f"正在保存学生信息。第 {row} 行。")
@@ -362,9 +362,9 @@ class Settings(FluentWindow):
             id_ = int(table.item(row, 2).text())
             weight = table.cellWidget(row, 3).findChild(Slider, 'slider_weight').value()
             is_active = table.cellWidget(row, 0).isChecked()
-            students["students"][row] = {"name": name, "id": id_, "weight": weight, "active": is_active}
+            students[row] = {"name": name, "id": id_, "weight": weight, "active": is_active}
 
-        conf.write_conf(students)
+        conf.write_conf(students=students)
         btn_save = self.findChild(PushButton, 'save_student')
         Flyout.create(
             icon=InfoBarIcon.SUCCESS,
@@ -507,9 +507,16 @@ class Settings(FluentWindow):
 
     def setup_group_edit_interface(self):
         layout = self.findChild(QGridLayout, 'group_card_layout')
-        for i in range(0,3):
-            card = GroupCard()
-            layout.addWidget(card,floor(i/3),i%3)
+        students = conf.get_students_name()
+        global_card = GroupCard(students=students)
+        layout.addWidget(global_card,0,0)
+        groups = conf.get_group_num()
+        for i in range(0, groups):
+            group = conf.get_group(i)
+            card = GroupCard(title=group['name'],
+                             students=conf.get_students_in_group(group),
+                             is_global=False)
+            layout.addWidget(card,floor(i/3)+1,i%3)
         tips_group_empty = self.findChild(CaptionLabel, 'tips_group_empty')
         tips_group_empty.hide()
 
