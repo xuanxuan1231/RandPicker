@@ -7,11 +7,14 @@ import sys
 from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
 from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator, QColor
-from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog
+from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog, QVBoxLayout, \
+    QListWidget, QAbstractItemView, QGridLayout
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
     InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme, \
-    ToolButton, ColorDialog, setThemeColor, qconfig, isDarkTheme, CheckBox
+    ToolButton, ColorDialog, setThemeColor, isDarkTheme, CheckBox, ListWidget, SubtitleLabel, CardWidget, CaptionLabel, \
+    RoundMenu, TransparentToolButton, Action, TransparentDropDownToolButton
+from math import floor
 
 import conf
 
@@ -51,12 +54,15 @@ class Settings(FluentWindow):
         self.stuEditInterface.setObjectName('stuEditInterface')
         self.uiInterface = uic.loadUi('./ui/settings/widget.ui')
         self.uiInterface.setObjectName('uiInterface')
+        self.groupEditInterface = uic.loadUi('./ui/settings/group.ui')
+        self.groupEditInterface.setObjectName('groupEditInterface')
 
         self.init_nav()
         self.setup_ui()
 
     def init_nav(self):  # 设置侧边栏
         self.addSubInterface(self.stuEditInterface, fIcon.EDIT, '学生信息编辑')
+        self.addSubInterface(self.groupEditInterface, fIcon.EDIT, '小组编辑')
         self.navigationInterface.addSeparator(NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.uiInterface, fIcon.SETTING, '界面设置', NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.aboutInterface, fIcon.INFO, '关于', NavigationItemPosition.BOTTOM)
@@ -85,6 +91,7 @@ class Settings(FluentWindow):
         self.setup_about_interface()
         self.setup_student_edit_interface()
         self.setup_ui_interface()
+        self.setup_group_edit_interface()
 
     def setup_about_interface(self):  # 设置 关于 页面
         btn_github = self.findChild(PushButton, 'btn_github')
@@ -107,7 +114,7 @@ class Settings(FluentWindow):
         students = conf.get_all_students()
         table.setRowCount(conf.get_students_num())
 
-        for row, student in enumerate(students['students']):
+        for row, student in enumerate(students):
             table.setItem(row, 1, QTableWidgetItem(student['name']))
             table.setItem(row, 2, QTableWidgetItem(str(student['id'])))
 
@@ -252,7 +259,7 @@ class Settings(FluentWindow):
     def import_file(self, file_type='excel'):
         """
         通用文件导入方法
-        :param file_type: 文件类型，支持'excel'或'csv'
+        :param file_type: 文件类型，支持 'excel' 或 'csv'
         """
         # 打开文件选择对话框
         if file_type.lower() == 'excel':
@@ -347,7 +354,7 @@ class Settings(FluentWindow):
 
     def save_students(self):
         table = self.findChild(TableWidget, 'student_list')
-        students = {'students': [{} for _ in range(table.rowCount())]}
+        students = [{} for _ in range(table.rowCount())]
 
         for row in range(0, table.rowCount()):
             # logger.debug(f"正在保存学生信息。第 {row} 行。")
@@ -355,9 +362,9 @@ class Settings(FluentWindow):
             id_ = int(table.item(row, 2).text())
             weight = table.cellWidget(row, 3).findChild(Slider, 'slider_weight').value()
             is_active = table.cellWidget(row, 0).isChecked()
-            students["students"][row] = {"name": name, "id": id_, "weight": weight, "active": is_active}
+            students[row] = {"name": name, "id": id_, "weight": weight, "active": is_active}
 
-        conf.write_conf(students)
+        conf.write_conf(students=students)
         btn_save = self.findChild(PushButton, 'save_student')
         Flyout.create(
             icon=InfoBarIcon.SUCCESS,
@@ -411,12 +418,13 @@ class Settings(FluentWindow):
         label_edge_distance.setText(str(edge_distance))
         label_hidden_width.setText(str(hidden_width))
         label_scale.setText(str(scale))
-        
+
         # 设置颜色标签和预览
         current_color = conf.get_ini('Color', 'dark' if isDarkTheme() else 'light')
         label_color.setText(current_color)
         color_obj = QColor(current_color)
-        label_color.setStyleSheet(f"background-color: {current_color}; color: {'white' if color_obj.lightness() < 128 else 'black'}; padding: 2px; border-radius: 5px")
+        label_color.setStyleSheet(
+            f"background-color: {current_color}; color: {'white' if color_obj.lightness() < 128 else 'black'}; padding: 2px; border-radius: 5px")
 
         # 绑定滑块值变化事件
         slider_avatar_size.valueChanged.connect(lambda value: label_avatar_size.setText(str(value)))
@@ -433,15 +441,16 @@ class Settings(FluentWindow):
         current_color = QColor(label_color.text())
         dialog_color = ColorDialog(current_color, '选择主题颜色', self, enableAlpha=False)
         dialog_color.yesButton.setText('好')
-        
+
         # 更新颜色标签和预览
         def update_color_preview(color):
             label_color.setText(color.name())
-            label_color.setStyleSheet(f"background-color: {color.name()}; color: {'white' if color.lightness() < 128 else 'black'}; padding: 2px; border-radius: 3px;")
-        
+            label_color.setStyleSheet(
+                f"background-color: {color.name()}; color: {'white' if color.lightness() < 128 else 'black'}; padding: 2px; border-radius: 3px;")
+
         # 初始化颜色预览
         update_color_preview(current_color)
-        
+
         dialog_color.colorChanged.connect(update_color_preview)
         dialog_color.exec()
 
@@ -486,18 +495,83 @@ class Settings(FluentWindow):
             isClosable=False,
             aniType=FlyoutAnimationType.PULL_UP
         )
-        
+
         # 更新颜色标签和预览
         current_color = conf.get_ini('Color', 'dark' if isDarkTheme() else 'light')
         color.setText(current_color)
         color_obj = QColor(current_color)
-        color.setStyleSheet(f"background-color: {current_color}; color: {'white' if color_obj.lightness() < 128 else 'black'}; padding: 2px; border-radius: 3px;")
-        
+        color.setStyleSheet(
+            f"background-color: {current_color}; color: {'white' if color_obj.lightness() < 128 else 'black'}; padding: 2px; border-radius: 3px;")
+
         logger.info('界面设置已保存')
+
+    def setup_group_edit_interface(self):
+        layout = self.findChild(QGridLayout, 'group_card_layout')
+        students = conf.get_students_name()
+        global_card = GroupCard(students=students)
+        layout.addWidget(global_card,0,0)
+        groups = conf.get_group_num()
+        for i in range(0, groups):
+            group = conf.get_group(i)
+            card = GroupCard(title=group['name'],
+                             students=conf.get_students_in_group(group),
+                             is_global=False)
+            layout.addWidget(card,floor(i/3)+1,i%3)
+        tips_group_empty = self.findChild(CaptionLabel, 'tips_group_empty')
+        tips_group_empty.hide()
 
     def closeEvent(self, event):
         self.closed.emit()
         event.accept()
+
+
+class GroupCard(CardWidget):  # 分组卡片
+    def __init__(
+            self, title='所有学生', students=None, parent=None, is_global=True):
+        super().__init__(parent)
+        if students is None:
+            students = ['未知学生']
+        self.title = title
+        self.parent = parent
+
+        self.titleLabel = SubtitleLabel(title, self)
+        self.moreButton = TransparentDropDownToolButton(fIcon.MORE, self)
+        self.moreMenu = RoundMenu(parent=self.moreButton)
+        self.stuList = ListWidget(self)
+
+        self.hBoxLayout_Title = QHBoxLayout()
+        self.vBoxLayout = QVBoxLayout(self)
+
+        if is_global:
+            self.moreButton.setEnabled(False)
+
+        self.moreMenu.addActions([
+            Action(
+                fIcon.EDIT, '添加或删除学生'
+            ),
+            Action(
+                fIcon.DELETE, f'删除分组 {title}'
+            )
+        ])
+        self.moreButton.setMenu(self.moreMenu)
+
+        self.stuList.addItems(students)
+        self.stuList.setSelectionMode(QListWidget.SelectionMode.NoSelection)
+        self.stuList.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+
+        # 内容
+        self.vBoxLayout.setContentsMargins(6, 6, 6, 6)
+        self.vBoxLayout.setSpacing(3)
+        self.vBoxLayout.addLayout(self.hBoxLayout_Title)
+        self.vBoxLayout.addWidget(self.stuList)
+        self.vBoxLayout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+
+        # 标题栏
+        self.hBoxLayout_Title.setSpacing(12)
+        self.hBoxLayout_Title.setContentsMargins(12, 8, 12, 6)
+        #self.hBoxLayout_Title.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.hBoxLayout_Title.addWidget(self.titleLabel, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.hBoxLayout_Title.addWidget(self.moreButton, 0, Qt.AlignmentFlag.AlignRight)
 
 
 def restart():
