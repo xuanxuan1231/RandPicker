@@ -12,7 +12,8 @@ from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
     InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme, \
-    ToolButton, ColorDialog, setThemeColor, isDarkTheme, CheckBox, ListWidget, SubtitleLabel, CardWidget, CaptionLabel
+    ToolButton, ColorDialog, setThemeColor, isDarkTheme, CheckBox, ListWidget, SubtitleLabel, CardWidget, CaptionLabel, \
+    RoundMenu, TransparentToolButton, Action, TransparentDropDownToolButton
 from math import floor
 
 import conf
@@ -258,7 +259,7 @@ class Settings(FluentWindow):
     def import_file(self, file_type='excel'):
         """
         通用文件导入方法
-        :param file_type: 文件类型，支持'excel'或'csv'
+        :param file_type: 文件类型，支持 'excel' 或 'csv'
         """
         # 打开文件选择对话框
         if file_type.lower() == 'excel':
@@ -505,7 +506,7 @@ class Settings(FluentWindow):
         logger.info('界面设置已保存')
 
     def setup_group_edit_interface(self):
-        layout = self.findChild(QGridLayout, 'group_card_layout_grid')
+        layout = self.findChild(QGridLayout, 'group_card_layout')
         for i in range(0,3):
             card = GroupCard()
             layout.addWidget(card,floor(i/3),i%3)
@@ -519,19 +520,33 @@ class Settings(FluentWindow):
 
 class GroupCard(CardWidget):  # 分组卡片
     def __init__(
-            self, title='所有', students=None, parent=None, is_global=False):
+            self, title='所有学生', students=None, parent=None, is_global=True):
         super().__init__(parent)
         if students is None:
-            students = ['Unknown']
+            students = ['未知学生']
         self.title = title
         self.parent = parent
 
-        self.titleLabel = SubtitleLabel(title, self)  # 插件名
-        #self.moreMenu = RoundMenu(parent=self.moreButton)
+        self.titleLabel = SubtitleLabel(title, self)
+        self.moreButton = TransparentDropDownToolButton(fIcon.MORE, self)
+        self.moreMenu = RoundMenu(parent=self.moreButton)
         self.stuList = ListWidget(self)
 
         self.hBoxLayout_Title = QHBoxLayout()
         self.vBoxLayout = QVBoxLayout(self)
+
+        if is_global:
+            self.moreButton.setEnabled(False)
+
+        self.moreMenu.addActions([
+            Action(
+                fIcon.EDIT, '添加或删除学生'
+            ),
+            Action(
+                fIcon.DELETE, f'删除分组 {title}'
+            )
+        ])
+        self.moreButton.setMenu(self.moreMenu)
 
         self.stuList.addItems(students)
         self.stuList.setSelectionMode(QListWidget.SelectionMode.NoSelection)
@@ -546,9 +561,10 @@ class GroupCard(CardWidget):  # 分组卡片
 
         # 标题栏
         self.hBoxLayout_Title.setSpacing(12)
-        self.hBoxLayout_Title.setContentsMargins(12, 8, 8, 6)
-        self.hBoxLayout_Title.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.hBoxLayout_Title.setContentsMargins(12, 8, 12, 6)
+        #self.hBoxLayout_Title.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.hBoxLayout_Title.addWidget(self.titleLabel, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.hBoxLayout_Title.addWidget(self.moreButton, 0, Qt.AlignmentFlag.AlignRight)
 
 
 def restart():
