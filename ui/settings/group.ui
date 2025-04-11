@@ -70,11 +70,8 @@
           <number>3</number>
          </property>
          <item>
-          <layout class="QVBoxLayout" name="group_card_layout">
-           <property name="spacing">
-            <number>3</number>
-           </property>
-           <item>
+          <layout class="QGridLayout" name="group_card_layout">
+           <item row="0" column="0">
             <widget class="CaptionLabel" name="tips_group_empty">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -145,9 +142,6 @@ FluentLabelBase{color:#7d000000}</string>
             </widget>
            </item>
           </layout>
-         </item>
-         <item>
-          <layout class="QGridLayout" name="group_card_layout_grid"/>
          </item>
         </layout>
        </item>
