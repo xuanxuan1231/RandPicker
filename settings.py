@@ -538,17 +538,19 @@ class Settings(FluentWindow):
                              students=stu,
                              is_global=False,
                              parent=self)
-            layout.addWidget(card, floor(i / 3) + 1, i % 3)
+            layout.addWidget(card, floor(i / 3) + 1, i % 3, 1, 1)
         layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
         tips_group_empty = self.findChild(CaptionLabel, 'tips_group_empty')
         tips_group_empty.close()
 
     def new_group(self):
         students = conf.get_students_name()
-        w = GroupEditBox(parent=self,
-                         new=True,
-                         students=students)
-        w.exec()
+        layout = self.findChild(QGridLayout, 'group_card_layout')
+        group_edit = GroupEditBox(parent=self,
+                                  new=True,
+                                  students=students,
+                                  target=layout)
+        group_edit.exec()
 
     def save_groups(self):
         layout = self.findChild(QGridLayout, 'group_card_layout')
@@ -644,7 +646,8 @@ class GroupCard(CardWidget):  # 分组卡片
         w = GroupEditBox(parent=self.parent,
                          name=self.title,
                          students=students,
-                         exist_students=self.exist_students)
+                         exist_students=self.exist_students,
+                         target=self)
         w.exec()
 
     def del_group(self):
@@ -663,12 +666,33 @@ class GroupCard(CardWidget):  # 分组卡片
 
 
 class GroupEditBox(MessageBoxBase):
-    """ Custom message box """
+    """
+    编辑分组。
+
+    :param parent: 父控件。
+    :type parent: QWidget | None
+    :param new: 是否是新建分组。
+    :type new: bool
+    :param name: 分组现在的名称 (修改分组)。
+    :type name: str | None
+    :param students: 所有学生的列表。
+    :type students: list
+    :param exist_students: 已在分组中的学生 (修改分组)。
+    :type exist_students: list | None
+    :param target: 要修改的布局或控件。新建分组需要 QGridLayout，修改分组需要 GroupCard。
+    :type target: QWidget | None
+
+    :raises: None
+
+    :returns: None
+    """
 
     def __init__(self, parent=None, new: bool = False, name: str = None, students: list = None,
-                 exist_students: list = None):
+                 exist_students: list = None, target: QWidget | None = None):
         super().__init__(parent)
+        self.target = target
         self.parent = parent
+        self.name = name
         self.titleLabel = SubtitleLabel(text=f'{'添加' if new else '修改'}分组{" " + name if name else ''}')
         self.subtitleLabel_name = StrongBodyLabel(text='分组名称')
         self.nameLineEdit = LineEdit()
@@ -684,11 +708,11 @@ class GroupEditBox(MessageBoxBase):
         self.stuList.setMinimumHeight(200)
         self.stuList.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.stuList.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
-        for index, student in enumerate(students):
+        for student in students:
             checkbox = CheckBox(text=student)  # 创建复选框
             if exist_students is None:
                 checkbox.setChecked(False)
-            elif index in exist_students:
+            elif student in exist_students:
                 checkbox.setChecked(True)
             else:
                 checkbox.setChecked(False)
@@ -709,7 +733,30 @@ class GroupEditBox(MessageBoxBase):
         self.widget.setMinimumWidth(350)
 
     def save(self):
-        pass
+        stu = []
+        stu_count = self.stuList.count()
+        self.name = self.nameLineEdit.text()
+        for i in range(stu_count):
+            item = self.stuList.itemWidget(self.stuList.item(i))
+            if item.isChecked():
+                stu.append(item.text())
+
+        if isinstance(self.target, GroupCard):
+            self.target.stuList.clear()
+            self.target.stuList.addItems(stu)
+        elif isinstance(self.target, QGridLayout):
+            card = GroupCard(title=self.name,
+                             students=stu,
+                             is_global=False,
+                             parent=self.parent)
+            row = self.target.rowCount() - 1
+            for column in range(1, self.target.columnCount()):
+                if not self.target.itemAtPosition(row, column):
+                    self.target.addWidget(card, row, column, 1, 1)
+                    return
+            self.target.addWidget(card, row + 1, 0, 1, 1)
+        else:
+            return
 
 
 def restart():
