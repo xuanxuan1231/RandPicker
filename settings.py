@@ -13,7 +13,7 @@ from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
     InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme, \
     ToolButton, ColorDialog, setThemeColor, isDarkTheme, CheckBox, ListWidget, SubtitleLabel, CardWidget, CaptionLabel, \
-    RoundMenu, TransparentToolButton, Action, TransparentDropDownToolButton
+    RoundMenu, TransparentToolButton, Action, TransparentDropDownToolButton, PrimaryPushButton
 from math import floor
 
 import conf
@@ -507,18 +507,48 @@ class Settings(FluentWindow):
 
     def setup_group_edit_interface(self):
         layout = self.findChild(QGridLayout, 'group_card_layout')
+        btn_save = self.findChild(PrimaryPushButton, 'save_group')
+        btn_new = self.findChild(PushButton, 'new_group')
+
+        btn_save.clicked.connect(lambda: self.save_groups())
+        btn_new.clicked.connect(lambda: self.new_group())
+
         students = conf.get_students_name()
         global_card = GroupCard(students=students)
         groups = conf.get_group_num()
-        for i in range(0, groups):
+        for i in range(groups):
             group = conf.get_group(i)
+            stu = conf.get_students_in_group(group)
             card = GroupCard(title=group['name'],
-                             students=conf.get_students_in_group(group),
-                             is_global=False)
+                             students=stu,
+                             is_global=False,
+                             parent=self)
             layout.addWidget(card,floor(i/3)+1,i%3)
         layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
         tips_group_empty = self.findChild(CaptionLabel, 'tips_group_empty')
-        tips_group_empty.hide()
+        tips_group_empty.close()
+
+    def new_group(self):
+        pass
+
+    def save_groups(self):
+        layout = self.findChild(QGridLayout, 'group_card_layout')
+        groups = []
+        for row in range(1, layout.rowCount()):
+            for column in range(0, layout.columnCount()):
+                stu = []
+                card = layout.itemAtPosition(row, column).widget()
+                logger.debug(f'{row}, {column} 是 {type(card)}')
+                if not isinstance(card, GroupCard):
+                    return
+                title = card.titleLabel.text()
+                stu_list = card.stuList
+                stu_count = stu_list.count()
+                for i in range(stu_count):
+                    stu.append(conf.get_index_with_name(stu_list.item(i).text()))
+                group = {"name": title, "stu": stu}
+                groups.append(group)
+        conf.write_conf(groups=groups)
 
     def closeEvent(self, event):
         self.closed.emit()
@@ -547,10 +577,12 @@ class GroupCard(CardWidget):  # 分组卡片
 
         self.moreMenu.addActions([
             Action(
-                fIcon.EDIT, '添加或删除学生'
+                fIcon.EDIT, '添加或删除学生',
+                triggered=lambda: self.set_group()
             ),
             Action(
-                fIcon.DELETE, f'删除分组 {title}'
+                fIcon.DELETE, f'删除分组 {title}',
+                triggered=lambda: self.del_group()
             )
         ])
         self.moreButton.setMenu(self.moreMenu)
@@ -572,6 +604,9 @@ class GroupCard(CardWidget):  # 分组卡片
         #self.hBoxLayout_Title.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.hBoxLayout_Title.addWidget(self.titleLabel, 0, Qt.AlignmentFlag.AlignVCenter)
         self.hBoxLayout_Title.addWidget(self.moreButton, 0, Qt.AlignmentFlag.AlignRight)
+
+    def set_group(self):
+        pass
 
 
 def restart():

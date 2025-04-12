@@ -41,6 +41,15 @@ def get_with_id(num=1):
             return student
     return None
 
+def get_index_with_name(name: str):
+    students = get_all_students()
+    if students == {}:
+        return {'weight': '1', 'id': '000000', 'name': '无结果'}
+    for num, student in enumerate(students):
+        if student['name'] == name:
+            return num
+    return None
+
 
 def get(num=1):
     """
@@ -157,7 +166,7 @@ def write_conf(students=None, groups=None):
     :param groups:
     :return:
     """
-    with open('./students.json', 'w', encoding='utf-8') as f:
+    with open('./students.json', 'r', encoding='utf-8') as f:
         old_data = json.load(f)
     new_data = {}
 
@@ -234,17 +243,17 @@ def get_group_num():
     return len(groups)
 
 
-def get_group(num: int):
+def get_group(num: int) -> dict:
     groups = get_all_group()
     return groups[num]
 
 
-def get_students_in_group(group):
+def get_students_in_group(group: int | dict):
     if group is int:
         group = get_group(group)
     list_ = []
     for student in group['stu']:
-        list_.append(get(student)['name'])
+        list_.append(get(student + 1)['name'])
     return list_
 
 
