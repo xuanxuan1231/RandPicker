@@ -8,13 +8,13 @@ from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
 from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator, QColor
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog, QVBoxLayout, \
-    QListWidget, QAbstractItemView, QGridLayout, QListWidgetItem
+    QListWidget, QAbstractItemView, QGridLayout, QListWidgetItem, QScroller
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
     InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme, \
     ToolButton, ColorDialog, setThemeColor, isDarkTheme, CheckBox, ListWidget, SubtitleLabel, CardWidget, CaptionLabel, \
     RoundMenu, TransparentToolButton, Action, TransparentDropDownToolButton, PrimaryPushButton, MessageBoxBase, \
-    StrongBodyLabel
+    StrongBodyLabel, SmoothScrollArea
 from math import floor
 
 import conf
@@ -507,6 +507,9 @@ class Settings(FluentWindow):
         logger.info('界面设置已保存')
 
     def setup_group_edit_interface(self):
+        scrollArea = self.findChild(SmoothScrollArea, 'scrollArea')  # 触摸屏适配
+        QScroller.grabGesture(scrollArea.viewport(), QScroller.ScrollerGestureType.LeftMouseButtonGesture)
+
         layout = self.findChild(QGridLayout, 'group_card_layout')
 
         # 清空现有布局
@@ -591,6 +594,8 @@ class GroupCard(CardWidget):  # 分组卡片
         self.title = title
         self.parent = parent
         self.isDeleted = False
+
+        self.setMinimumHeight(250)
 
         self.titleLabel = SubtitleLabel(title, self)
         self.moreButton = TransparentDropDownToolButton(fIcon.MORE, self)

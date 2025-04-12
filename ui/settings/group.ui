@@ -37,7 +37,7 @@
     </widget>
    </item>
    <item>
-    <widget class="SmoothScrollArea" name="pm_scroll">
+    <widget class="SmoothScrollArea" name="scroll">
      <property name="styleSheet">
       <string notr="true">background: transparent; border: none</string>
      </property>
@@ -58,41 +58,63 @@
         <layout class="QHBoxLayout" name="horizontalLayout"/>
        </item>
        <item>
-        <widget class="PushButton" name="new_group">
-         <property name="text">
-          <string>添加</string>
+        <widget class="SmoothScrollArea" name="scrollArea">
+         <property name="widgetResizable">
+          <bool>true</bool>
          </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <property name="spacing">
-          <number>3</number>
-         </property>
-         <item>
-          <layout class="QGridLayout" name="group_card_layout">
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>725</width>
+            <height>661</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
            <property name="bottomMargin">
-            <number>3</number>
+            <number>0</number>
            </property>
-           <property name="spacing">
-            <number>8</number>
-           </property>
-           <item row="0" column="0">
-            <widget class="CaptionLabel" name="tips_group_empty">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+           <item>
+            <widget class="PushButton" name="new_group">
+             <property name="text">
+              <string>添加</string>
              </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>150</height>
-              </size>
+            </widget>
+           </item>
+           <item>
+            <layout class="QGridLayout" name="group_card_layout">
+             <property name="bottomMargin">
+              <number>3</number>
              </property>
-             <property name="styleSheet">
-              <string notr="true">FluentLabelBase {
+             <property name="spacing">
+              <number>8</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="CaptionLabel" name="tips_group_empty">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>150</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">FluentLabelBase {
     color: black;
 }
 
@@ -121,48 +143,37 @@ HyperlinkLabel:pressed {
     color: #00a7b3;
 }
 FluentLabelBase{color:#7d000000}</string>
-             </property>
-             <property name="text">
-              <string>还未添加任何小组</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-             <property name="lightColor" stdset="0">
-              <color alpha="125">
-               <red>0</red>
-               <green>0</green>
-               <blue>0</blue>
-              </color>
-             </property>
-             <property name="darkColor" stdset="0">
-              <color alpha="155">
-               <red>255</red>
-               <green>255</green>
-               <blue>255</blue>
-              </color>
-             </property>
-             <property name="pixelFontSize" stdset="0">
-              <number>14</number>
-             </property>
-            </widget>
+               </property>
+               <property name="text">
+                <string>还未添加任何小组</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="lightColor" stdset="0">
+                <color alpha="125">
+                 <red>0</red>
+                 <green>0</green>
+                 <blue>0</blue>
+                </color>
+               </property>
+               <property name="darkColor" stdset="0">
+                <color alpha="155">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </property>
+               <property name="pixelFontSize" stdset="0">
+                <number>14</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
+         </widget>
+        </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
