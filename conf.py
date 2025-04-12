@@ -1,5 +1,5 @@
 """
-配置文件和数据整理。
+RandPicker 配置文件和数据整理。
 """
 
 import configparser
@@ -40,6 +40,7 @@ def get_with_id(num=1):
         if student['id'] == num:
             return student
     return None
+
 
 def get_index_with_name(name: str):
     students = get_all_students()

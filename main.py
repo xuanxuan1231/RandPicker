@@ -1,3 +1,7 @@
+"""
+RandPicker 主程序。
+"""
+
 import os
 import sys
 from random import choices
@@ -8,7 +12,7 @@ from PyQt6.QtGui import QColor, QMouseEvent, QIcon, QPixmap, QPainter, QPainterP
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGraphicsDropShadowEffect, QSystemTrayIcon, QFrame, QLayout
 from loguru import logger
 from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Action, Dialog, PrimaryPushButton, \
-    isDarkTheme, setTheme, Theme, qconfig, PixmapLabel, FluentTranslator, setThemeColor,SystemThemeListener
+    isDarkTheme, setTheme, Theme, qconfig, PixmapLabel, FluentTranslator, setThemeColor, SystemThemeListener
 
 import conf
 from settings import open_settings, share, restart
