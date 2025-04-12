@@ -509,7 +509,6 @@ class Settings(FluentWindow):
         layout = self.findChild(QGridLayout, 'group_card_layout')
         students = conf.get_students_name()
         global_card = GroupCard(students=students)
-        layout.addWidget(global_card,0,0)
         groups = conf.get_group_num()
         for i in range(0, groups):
             group = conf.get_group(i)
@@ -517,6 +516,7 @@ class Settings(FluentWindow):
                              students=conf.get_students_in_group(group),
                              is_global=False)
             layout.addWidget(card,floor(i/3)+1,i%3)
+        layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
         tips_group_empty = self.findChild(CaptionLabel, 'tips_group_empty')
         tips_group_empty.hide()
 
