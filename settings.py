@@ -508,6 +508,20 @@ class Settings(FluentWindow):
 
     def setup_group_edit_interface(self):
         layout = self.findChild(QGridLayout, 'group_card_layout')
+
+        # 清空现有布局
+        item_list = list(range(layout.count()))
+        item_list.reverse()  # 倒序删除，避免影响布局顺序
+
+        for i in item_list:
+            item = layout.itemAt(i)
+            if isinstance(item.widget(), CaptionLabel):
+                continue
+            layout.removeItem(item)
+            if item.widget():
+                item.widget().deleteLater()
+        logger.success('清空了分组卡片所在的布局。')
+
         btn_save = self.findChild(PrimaryPushButton, 'save_group')
         btn_new = self.findChild(PushButton, 'new_group')
 
@@ -546,6 +560,8 @@ class Settings(FluentWindow):
                 logger.debug(f'{row}, {column} 是 {type(card)}')
                 if not isinstance(card, GroupCard):
                     return
+                if card.isDeleted:
+                    continue
                 title = card.titleLabel.text()
                 stu_list = card.stuList
                 stu_count = stu_list.count()
@@ -554,6 +570,9 @@ class Settings(FluentWindow):
                 group = {"name": title, "stu": stu}
                 groups.append(group)
         conf.write_conf(groups=groups)
+
+        # 重载页面
+        self.setup_group_edit_interface()
 
     def closeEvent(self, event):
         self.closed.emit()
@@ -569,6 +588,7 @@ class GroupCard(CardWidget):  # 分组卡片
         self.exist_students = students
         self.title = title
         self.parent = parent
+        self.isDeleted = False
 
         self.titleLabel = SubtitleLabel(title, self)
         self.moreButton = TransparentDropDownToolButton(fIcon.MORE, self)
@@ -581,15 +601,23 @@ class GroupCard(CardWidget):  # 分组卡片
         if is_global:
             self.moreButton.setEnabled(False)
 
+        self.action_del = Action(
+                fIcon.DELETE, f'删除分组 {title}',
+                triggered=lambda: self.del_group()
+            )
+        self.action_undo_del = Action(
+                fIcon.RETURN, f'撤销删除分组 {title}',
+                triggered=lambda: self.undo_del_group()
+            )
+        self.action_undo_del.setEnabled(False)
+
         self.moreMenu.addActions([
             Action(
                 fIcon.EDIT, '添加或删除学生',
                 triggered=lambda: self.set_group()
             ),
-            Action(
-                fIcon.DELETE, f'删除分组 {title}',
-                triggered=lambda: self.del_group()
-            )
+            self.action_del,
+            self.action_undo_del
         ])
         self.moreButton.setMenu(self.moreMenu)
 
@@ -620,35 +648,18 @@ class GroupCard(CardWidget):  # 分组卡片
         w.exec()
 
     def del_group(self):
-        alert = MessageBox(f"确定要删除分组 {self.title}？", "删除后一旦保存，将无法恢复。", self.parent)
-        alert.yesButton.setText('删除')
-        alert.yesButton.setStyleSheet("""
-                        PushButton{
-                            border-radius: 5px;
-                            padding: 5px 12px 6px 12px;
-                            outline: none;
-                        }
-                        PrimaryPushButton{
-                            color: white;
-                            background-color: #FF6167;
-                            border: 1px solid #FF8585;
-                            border-bottom: 1px solid #943333;
-                        }
-                        PrimaryPushButton:hover{
-                            background-color: #FF7E83;
-                            border: 1px solid #FF8084;
-                            border-bottom: 1px solid #B13939;
-                        }
-                        PrimaryPushButton:pressed{
-                            color: rgba(255, 255, 255, 0.63);
-                            background-color: #DB5359;
-                            border: 1px solid #DB5359;
-                        }
-                    """)
-        alert.cancelButton.setText('我再想想……')
+        self.action_del.setEnabled(False)
+        self.action_undo_del.setEnabled(True)
 
-        if alert.exec():
-            self.deleteLater()
+        self.titleLabel.setText(self.title + ' (删除)')
+        self.isDeleted = True
+
+    def undo_del_group(self):
+        self.action_del.setEnabled(True)
+        self.action_undo_del.setEnabled(False)
+
+        self.titleLabel.setText(self.title)
+        self.isDeleted = False
 
 
 class GroupEditBox(MessageBoxBase):
