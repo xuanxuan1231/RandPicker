@@ -8,12 +8,13 @@ from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
 from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator, QColor
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog, QVBoxLayout, \
-    QListWidget, QAbstractItemView, QGridLayout
+    QListWidget, QAbstractItemView, QGridLayout, QListWidgetItem
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
     InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme, \
     ToolButton, ColorDialog, setThemeColor, isDarkTheme, CheckBox, ListWidget, SubtitleLabel, CardWidget, CaptionLabel, \
-    RoundMenu, TransparentToolButton, Action, TransparentDropDownToolButton, PrimaryPushButton
+    RoundMenu, TransparentToolButton, Action, TransparentDropDownToolButton, PrimaryPushButton, MessageBoxBase, \
+    StrongBodyLabel
 from math import floor
 
 import conf
@@ -523,13 +524,17 @@ class Settings(FluentWindow):
                              students=stu,
                              is_global=False,
                              parent=self)
-            layout.addWidget(card,floor(i/3)+1,i%3)
+            layout.addWidget(card, floor(i / 3) + 1, i % 3)
         layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
         tips_group_empty = self.findChild(CaptionLabel, 'tips_group_empty')
         tips_group_empty.close()
 
     def new_group(self):
-        pass
+        students = conf.get_students_name()
+        w = GroupEditBox(parent=self,
+                         new=True,
+                         students=students)
+        w.exec()
 
     def save_groups(self):
         layout = self.findChild(QGridLayout, 'group_card_layout')
@@ -561,6 +566,7 @@ class GroupCard(CardWidget):  # 分组卡片
         super().__init__(parent)
         if students is None:
             students = ['未知学生']
+        self.exist_students = students
         self.title = title
         self.parent = parent
 
@@ -601,11 +607,97 @@ class GroupCard(CardWidget):  # 分组卡片
         # 标题栏
         self.hBoxLayout_Title.setSpacing(12)
         self.hBoxLayout_Title.setContentsMargins(12, 8, 12, 6)
-        #self.hBoxLayout_Title.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        # self.hBoxLayout_Title.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.hBoxLayout_Title.addWidget(self.titleLabel, 0, Qt.AlignmentFlag.AlignVCenter)
         self.hBoxLayout_Title.addWidget(self.moreButton, 0, Qt.AlignmentFlag.AlignRight)
 
     def set_group(self):
+        students = conf.get_students_name()
+        w = GroupEditBox(parent=self.parent,
+                         name=self.title,
+                         students=students,
+                         exist_students=self.exist_students)
+        w.exec()
+
+    def del_group(self):
+        alert = MessageBox(f"确定要删除分组 {self.title}？", "删除后一旦保存，将无法恢复。", self.parent)
+        alert.yesButton.setText('删除')
+        alert.yesButton.setStyleSheet("""
+                        PushButton{
+                            border-radius: 5px;
+                            padding: 5px 12px 6px 12px;
+                            outline: none;
+                        }
+                        PrimaryPushButton{
+                            color: white;
+                            background-color: #FF6167;
+                            border: 1px solid #FF8585;
+                            border-bottom: 1px solid #943333;
+                        }
+                        PrimaryPushButton:hover{
+                            background-color: #FF7E83;
+                            border: 1px solid #FF8084;
+                            border-bottom: 1px solid #B13939;
+                        }
+                        PrimaryPushButton:pressed{
+                            color: rgba(255, 255, 255, 0.63);
+                            background-color: #DB5359;
+                            border: 1px solid #DB5359;
+                        }
+                    """)
+        alert.cancelButton.setText('我再想想……')
+
+        if alert.exec():
+            self.deleteLater()
+
+
+class GroupEditBox(MessageBoxBase):
+    """ Custom message box """
+
+    def __init__(self, parent=None, new: bool = False, name: str = None, students: list = None,
+                 exist_students: list = None):
+        super().__init__(parent)
+        self.parent = parent
+        self.titleLabel = SubtitleLabel(text=f'{'添加' if new else '修改'}分组{" " + name if name else ''}')
+        self.subtitleLabel_name = StrongBodyLabel(text='分组名称')
+        self.nameLineEdit = LineEdit()
+        self.subtitleLabel_stu = StrongBodyLabel(text='学生')
+        self.stuList = ListWidget()
+
+        self.nameLineEdit.setPlaceholderText('分组名称')
+        if name:
+            self.nameLineEdit.setText(name)
+
+        self.yesButton.clicked.connect(lambda: self.save())
+
+        self.stuList.setMinimumHeight(200)
+        self.stuList.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.stuList.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        for index, student in enumerate(students):
+            checkbox = CheckBox(text=student)  # 创建复选框
+            if exist_students is None:
+                checkbox.setChecked(False)
+            elif index in exist_students:
+                checkbox.setChecked(True)
+            else:
+                checkbox.setChecked(False)
+            list_item = QListWidgetItem()  # 创建列表项
+
+            # 将复选框与列表项关联起来
+            self.stuList.addItem(list_item)
+            self.stuList.setItemWidget(list_item, checkbox)
+
+        # 将组件添加到布局中
+        self.viewLayout.addWidget(self.titleLabel)
+        self.viewLayout.addWidget(self.subtitleLabel_name)
+        self.viewLayout.addWidget(self.nameLineEdit)
+        self.viewLayout.addWidget(self.subtitleLabel_stu)
+        self.viewLayout.addWidget(self.stuList)
+
+        # 设置对话框的最小宽度
+        self.widget.setMinimumWidth(350)
+
+    def save(self):
         pass
 
 
