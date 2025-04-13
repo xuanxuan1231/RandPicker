@@ -9,6 +9,8 @@ import os.path
 import pandas as pd
 from loguru import logger
 
+import conf
+
 
 def get_with_short_id(num=1):
     """
@@ -231,6 +233,15 @@ def get_all_weight():
         # 如果学生记录中没有weight字段，则使用默认权重1
         weight.append(student.get('weight', 1))
     return weight
+
+
+def get_some_weight(stu: list = None) -> list:
+    students = conf.get_all_students()
+    result = []
+    for student in stu:
+        if students[student - 1]['active']:
+            result.append = students[student - 1]['weight']
+    return result
 
 
 def get_all_group():

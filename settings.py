@@ -569,7 +569,6 @@ class Settings(FluentWindow):
             for column in range(0, layout.columnCount()):
                 stu = []
                 card = layout.itemAtPosition(row, column).widget()
-                logger.debug(f'{row}, {column} 是 {type(card)}')
                 if not isinstance(card, GroupCard):
                     return
                 if card.isDeleted:

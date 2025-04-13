@@ -144,7 +144,9 @@ class Widget(QWidget):
         随机选人。
         """
         self.is_picking = True
-        num = choices(conf.get_students_list(), weights=conf.get_weight(), k=1)[0]
+        students = conf.get_students_list()
+
+        num = choices(conf.get_students_list(), weights=conf.get_some_weight(), k=1)[0]
         logger.info(f'随机数已生成。JSON 索引是 {num - 1}。它的选择权重是 {conf.get_all_weight()[num - 1]}。')
         self.student = conf.get(num)
         logger.debug(f'已获取 JSON 索引是 {num - 1} 的学生信息。{self.student}')
