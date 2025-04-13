@@ -144,9 +144,18 @@ class Widget(QWidget):
         随机选人。
         """
         self.is_picking = True
-        students = conf.get_students_list()
+        students = []
 
-        num = choices(conf.get_students_list(), weights=conf.get_some_weight(), k=1)[0]
+        if conf.get_ini('Group', 'global') == 'true':
+            logger.debug('使用全局分组。')
+            students = conf.get_students_list()
+        else:
+            groups = list(conf.get_ini('Group', 'group'))
+            logger.debug(f'使用分组 {groups}。')
+            for group in groups:
+                students.extend(conf.get_students_in_group(int(group)))
+
+        num = choices(students, weights=conf.get_some_weight(students), k=1)[0]
         logger.info(f'随机数已生成。JSON 索引是 {num - 1}。它的选择权重是 {conf.get_all_weight()[num - 1]}。')
         self.student = conf.get(num)
         logger.debug(f'已获取 JSON 索引是 {num - 1} 的学生信息。{self.student}')

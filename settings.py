@@ -542,7 +542,7 @@ class Settings(FluentWindow):
         groups = conf.get_group_num()
         for i in range(groups):
             group = conf.get_group(i)
-            stu = conf.get_students_in_group(group)
+            stu = conf.get_students_name_in_group(group)
             card = GroupCard(title=group['name'],
                              students=stu,
                              is_global=False,

@@ -229,7 +229,7 @@ def get_all_weight():
     """
     students = get_all_students()
     weight = []
-    for student in students['students']:
+    for student in students:
         # 如果学生记录中没有weight字段，则使用默认权重1
         weight.append(student.get('weight', 1))
     return weight
@@ -240,7 +240,7 @@ def get_some_weight(stu: list = None) -> list:
     result = []
     for student in stu:
         if students[student - 1]['active']:
-            result.append = students[student - 1]['weight']
+            result.append(students[student - 1]['weight'])
     return result
 
 
@@ -260,12 +260,21 @@ def get_group(num: int) -> dict:
     return groups[num]
 
 
-def get_students_in_group(group: int | dict):
-    if group is int:
+def get_students_name_in_group(group: int | dict):
+    if isinstance(group, int):
         group = get_group(group)
     list_ = []
     for student in group['stu']:
         list_.append(get(student + 1)['name'])
+    return list_
+
+
+def get_students_in_group(group: int | dict):
+    if isinstance(group, int):
+        group = get_group(group)
+    list_ = []
+    for student in group['stu']:
+        list_.append(student + 1)
     return list_
 
 
@@ -290,7 +299,7 @@ def write_ini(*args, file_path='config.ini'):
     :param args: 成对的 Section 和 Key 值，后面跟着对应的 Value 值。
     """
     if len(args) % 3 != 0:
-        raise ValueError("Arguments must be provided in triplets of (section, key, value).")
+        raise ValueError("必须是成对的 section, key, value。")
 
     # 读取现有文件（如果存在）
     config.read(file_path, encoding='utf-8')

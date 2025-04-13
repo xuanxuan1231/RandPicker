@@ -1,12 +1,15 @@
 {
     "General": {
         "scale": "1",
-        "theme": "2",
-        "group": "global"
+        "theme": "2"
+    },
+    "Group": {
+        "global": true,
+        "groups": []
     },
     "UI": {
-        "avatar": "false",
-        "edge_hide": "true",
+        "avatar": false,
+        "edge_hide": true,
         "edge_distance": "20",
         "hidden_width": "20",
         "avatar_size": "32"
