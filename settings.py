@@ -532,9 +532,13 @@ class Settings(FluentWindow):
 
         btn_save = self.findChild(PrimaryPushButton, 'save_group')
         btn_new = self.findChild(PushButton, 'new_group')
+        btn_reload = self.findChild(PushButton, 'reload_page')
 
         btn_save.clicked.connect(lambda: self.save_groups())
         btn_new.clicked.connect(lambda: self.new_group())
+        btn_new.setIcon(fIcon.ADD)
+        btn_reload.clicked.connect(lambda: self.setup_group_edit_interface())
+        btn_reload.setIcon(fIcon.SYNC)
 
         students = conf.get_students_name()
         global_card = GroupCard(students=students)
