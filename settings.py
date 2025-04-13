@@ -547,6 +547,49 @@ class Settings(FluentWindow):
         tips_group_empty.close()
 
     def new_group(self):
+        all_group_names = []
+        layout = self.findChild(QGridLayout, 'group_card_layout')
+        for row in range(1, layout.rowCount()):
+            for column in range(0, layout.columnCount()):
+                item = layout.itemAtPosition(row, column)
+                if not item:
+                    continue
+                card = item.widget()
+                if isinstance(card, GroupCard):
+                    all_group_names.append(card.titleLabel.text().strip())
+        w = GroupEditBox(parent=self,
+                         name='',
+                         students=conf.get_students_name(),
+                         exist_students=[],
+                         target=None)
+        w.nameEdit.textChanged.connect(lambda:
+            self.validate_group_name(w.nameEdit.text().strip(), all_group_names, w))
+        w.exec()
+
+    def validate_group_name(self, name, all_group_names, dialog):
+        if name in all_group_names:
+            dialog.nameEdit.setStyleSheet('border: 1px solid red;')
+            dialog.error_label.setText('组名已存在，请选择其他名称。')
+        else:
+            dialog.nameEdit.setStyleSheet('')
+            dialog.error_label.setText('')
+
+        students = conf.get_students_name()
+        global_card = GroupCard(students=students)
+        groups = conf.get_group_num()
+        for i in range(groups):
+            group = conf.get_group(i)
+            stu = conf.get_students_in_group(group)
+            card = GroupCard(title=group['name'],
+                             students=stu,
+                             is_global=False,
+                             parent=self)
+            layout.addWidget(card, floor(i / 3) + 1, i % 3, 1, 1)
+        layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
+        tips_group_empty = self.findChild(CaptionLabel, 'tips_group_empty')
+        tips_group_empty.close()
+
+    def new_group(self):
         students = conf.get_students_name()
         layout = self.findChild(QGridLayout, 'group_card_layout')
         group_edit = GroupEditBox(parent=self,
@@ -560,21 +603,35 @@ class Settings(FluentWindow):
         groups = []
         for row in range(1, layout.rowCount()):
             for column in range(0, layout.columnCount()):
-                stu = []
-                card = layout.itemAtPosition(row, column).widget()
+                item = layout.itemAtPosition(row, column)
+                if not item:  # 检查item是否为None
+                    continue
+                    
+                card = item.widget()
                 logger.debug(f'{row}, {column} 是 {type(card)}')
                 if not isinstance(card, GroupCard):
-                    return
+                    continue  # 跳过非GroupCard类型的widget
                 if card.isDeleted:
                     continue
+                    
                 title = card.titleLabel.text()
+                if not title or title.isspace():  # 检查组名是否为空
+                    logger.warning(f'跳过空组名的分组')
+                    continue
+                    
                 stu_list = card.stuList
                 stu_count = stu_list.count()
+                stu = []
                 for i in range(stu_count):
-                    stu.append(conf.get_index_with_name(stu_list.item(i).text()))
+                    student_index = conf.get_index_with_name(stu_list.item(i).text())
+                    if student_index is not None:  # 确保学生索引有效
+                        stu.append(student_index)
+                
                 group = {"name": title, "stu": stu}
                 groups.append(group)
+                
         conf.write_conf(groups=groups)
+        logger.info(f'保存了 {len(groups)} 个分组')
 
         # 重载页面
         self.setup_group_edit_interface()
@@ -738,6 +795,10 @@ class GroupEditBox(MessageBoxBase):
         self.widget.setMinimumWidth(350)
 
     def save(self):
+        name = self.nameEdit.text().strip()
+        if not name:
+            QMessageBox.warning(self, '错误', '组名不能为空，请输入有效的组名。')
+            return
         stu = []
         stu_count = self.stuList.count()
         self.name = self.nameLineEdit.text()

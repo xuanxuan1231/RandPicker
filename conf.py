@@ -249,7 +249,7 @@ def get_group(num: int) -> dict:
 
 
 def get_students_in_group(group: int | dict):
-    if group is int:
+    if isinstance(group, int):
         group = get_group(group)
     list_ = []
     for student in group['stu']:
