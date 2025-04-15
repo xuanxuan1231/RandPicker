@@ -1,17 +1,21 @@
 {
-  "General": {
-    "scale": "1",
-    "theme": "2"
-  },
-  "UI": {
-    "avatar": "false",
-    "edge_hide": "true",
-    "edge_distance": "20",
-    "hidden_width": "20",
-    "avatar_size": "32"
-  },
-  "Color": {
-    "dark": "#29f1ff",
-    "light": "#009faa"
-  }
+    "General": {
+        "scale": "1",
+        "theme": "2"
+    },
+    "Group": {
+        "global": true,
+        "groups": []
+    },
+    "UI": {
+        "avatar": false,
+        "edge_hide": true,
+        "edge_distance": "20",
+        "hidden_width": "20",
+        "avatar_size": "32"
+    },
+    "Color": {
+        "dark": "#29f1ff",
+        "light": "#009faa"
+    }
 }

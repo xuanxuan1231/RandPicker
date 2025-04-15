@@ -1,5 +1,5 @@
 """
-配置文件和数据整理。
+RandPicker 配置文件和数据整理。
 """
 
 import configparser
@@ -9,8 +9,10 @@ import os.path
 import pandas as pd
 from loguru import logger
 
+import conf
 
-def get_with_json_index(num=1):
+
+def get_with_short_id(num=1):
     """
     通过班级序号获取学生信息。
 
@@ -18,9 +20,9 @@ def get_with_json_index(num=1):
     :return: 学生信息
     """
     students = get_all_students()
-    if students == {} or students['students'] == {}:
+    if students == {}:
         return {'short_id': '', 'id': '000000', 'name': '无结果'}
-    for student in students['students']:
+    for student in students:
         if student['short_id'] == num:
             return student
     return None
@@ -34,11 +36,21 @@ def get_with_id(num=1):
     :return: 学生信息
     """
     students = get_all_students()
-    if students == {} or students['students'] == {}:
+    if students == {}:
         return {'weight': '1', 'id': '000000', 'name': '无结果'}
-    for student in students['students']:
+    for student in students:
         if student['id'] == num:
             return student
+    return None
+
+
+def get_index_with_name(name: str):
+    students = get_all_students()
+    if students == {}:
+        return {'weight': '1', 'id': '000000', 'name': '无结果'}
+    for num, student in enumerate(students):
+        if student['name'] == name:
+            return num
     return None
 
 
@@ -49,12 +61,12 @@ def get(num=1):
     :return: 学生信息
     """
     students = get_all_students()
-    if students == {} or students['students'] == {}:
+    if students == {}:
         logger.warning("配置文件为空！")
         return {'weight': '1', 'id': '000000', 'name': '无结果'}
     num = num - 1
-    if students['students'][num]:
-        return students['students'][num]
+    if students[num]:
+        return students[num]
     logger.warning("学生未找到")
     return {'weight': '1', 'id': '000000', 'name': '无结果'}
 
@@ -62,9 +74,17 @@ def get(num=1):
 def get_students_list():
     students = get_all_students()
     list_ = []
-    for i in range(1, len(students['students']) + 1):
-        if students['students'][i - 1]['active']:
+    for i in range(1, len(students) + 1):
+        if students[i - 1]['active']:
             list_.append(i)
+    return list_
+
+
+def get_students_name():
+    students = get_all_students()
+    list_ = []
+    for student in students:
+        list_.append(student['name'])
     return list_
 
 
@@ -75,7 +95,7 @@ def get_students_num():
     :return: 学生人数
     """
     students = get_all_students()
-    return len(students['students'])
+    return len(students)
 
 
 '''def export2csv():  # WIP
@@ -117,13 +137,11 @@ def excel2json(file_path='./example.xlsx'):
             except Exception:
                 raise ValueError(f"无法识别的文件格式: {file_path}")
 
-    students = {}
     list_ = []
     for i in sheet.index.values:
         line = sheet.loc[i, ['weight', 'name', 'id', 'active']].to_dict()
         list_.append(line)
-    students['students'] = list_
-    return students
+    return list_
 
 
 def csv2json(csv_path='./example.csv'):
@@ -136,25 +154,36 @@ def csv2json(csv_path='./example.csv'):
     :return: 一个包含所有学生信息的字典
     """
     sheet = pd.read_csv(csv_path)
-    students = {}
     list_ = []
     for i in sheet.index.values:
         line = sheet.loc[i, ['weight', 'name', 'id', 'active']].to_dict()
         list_.append(line)
-    students['students'] = list_
-    return students
+    return list_
 
 
-def write_conf(students=None):
+def write_conf(students=None, groups=None):
     """
     写入学生信息。
 
     :param students:
+    :param groups:
     :return:
     """
+    with open('./students.json', 'r', encoding='utf-8') as f:
+        old_data = json.load(f)
+    new_data = {}
+
     if students is None:
-        return
-    data = json.dumps(students, ensure_ascii=False, indent=4)
+        new_data['students'] = old_data['students']
+    else:
+        new_data['students'] = students
+
+    if groups is None:
+        new_data['groups'] = old_data['groups']
+    else:
+        new_data['groups'] = groups
+
+    data = json.dumps(new_data, ensure_ascii=False, indent=4)
     with open('./students.json', 'w', encoding='utf-8') as f:
         f.write(data)
 
@@ -170,13 +199,14 @@ def check_config():
             default = json.load(json_file)
         config.read_dict(default)
         with open('./config.ini', 'w', encoding='utf-8') as ini:
+            # noinspection PyTypeChecker
             config.write(ini)
 
 
 def get_all_students():
     with open('./students.json', 'r', encoding='utf-8') as f:
         students = json.load(f)
-    return students
+    return students['students']
 
 
 def get_weight():
@@ -186,7 +216,7 @@ def get_weight():
     """
     students = get_all_students()
     weight = []
-    for student in students['students']:
+    for student in students:
         if student['active']:
             weight.append(student['weight'])
     return weight
@@ -199,10 +229,61 @@ def get_all_weight():
     """
     students = get_all_students()
     weight = []
-    for student in students['students']:
+    for student in students:
         # 如果学生记录中没有weight字段，则使用默认权重1
         weight.append(student.get('weight', 1))
     return weight
+
+
+def get_some_weight(stu: list = None) -> list:
+    students = conf.get_all_students()
+    result = []
+    for student in stu:
+        if students[student - 1]['active']:
+            result.append(students[student - 1]['weight'])
+    return result
+
+
+def get_all_group():
+    with open('./students.json', 'r', encoding='utf-8') as f:
+        students = json.load(f)
+    return students['groups']
+
+
+def get_group_len():
+    groups = get_all_group()
+    return len(groups)
+
+
+def get_group(num: int) -> dict:
+    groups = get_all_group()
+    return groups[num]
+
+
+def get_group_num(name: str = '测试1'):
+    groups = get_all_group()
+    for index, group in enumerate(groups):
+        if group['name'] == name:
+            return index
+    return
+
+
+def get_students_name_in_group(group: int | dict):
+    if isinstance(group, int):
+        group = get_group(group)
+    list_ = []
+    for student in group['stu']:
+        list_.append(get(student + 1)['name'])
+    return list_
+
+
+def get_students_in_group(group: int | dict):
+    if isinstance(group, int):
+        group = get_group(group)
+    list_ = []
+    for student in group['stu']:
+        list_.append(student + 1)
+    return list_
 
 
 def get_ini(section='General', key=''):
@@ -226,7 +307,7 @@ def write_ini(*args, file_path='config.ini'):
     :param args: 成对的 Section 和 Key 值，后面跟着对应的 Value 值。
     """
     if len(args) % 3 != 0:
-        raise ValueError("Arguments must be provided in triplets of (section, key, value).")
+        raise ValueError("必须是成对的 section, key, value。")
 
     # 读取现有文件（如果存在）
     config.read(file_path, encoding='utf-8')
