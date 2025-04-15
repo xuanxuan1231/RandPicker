@@ -145,7 +145,7 @@ class Widget(QWidget):
         """
         students = []
 
-        if conf.get_ini('Group', 'global') == 'true' and conf.get_ini('Group', 'global') != '[]':
+        if conf.get_ini('Group', 'global') == 'true' or conf.get_ini('Group', 'group') == '':
             logger.debug('使用全局分组。')
             students = conf.get_students_list()
         else:
