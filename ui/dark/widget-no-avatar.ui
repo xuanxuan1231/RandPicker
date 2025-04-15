@@ -153,16 +153,16 @@ font-weight: bold;                         </string>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="PrimaryPushButton" name="btn">
+         <widget class="PrimaryPushButton" name="btn_person">
           <property name="text">
            <string>选人</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="PushButton" name="btn_clear">
+         <widget class="PushButton" name="btn_group">
           <property name="text">
-           <string>清除</string>
+           <string>选小组</string>
           </property>
          </widget>
         </item>

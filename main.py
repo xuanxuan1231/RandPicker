@@ -3,6 +3,7 @@ RandPicker 主程序。
 """
 
 import os
+import random
 import sys
 from random import choices
 
@@ -43,7 +44,6 @@ class Widget(QWidget):
         self.m_Position = None
         self.p_Position = None
         self.r_Position = None
-        self.is_picking = False
         self.is_avatar = False
         self.animation = None
         self.student = last_result
@@ -95,11 +95,11 @@ class Widget(QWidget):
         shadow_effect.setColor(QColor(0, 0, 0, 75))
         background.setGraphicsEffect(shadow_effect)
 
-        btn = self.findChild(PrimaryPushButton, 'btn')
-        btn.clicked.connect(lambda: self.pick())
+        btn_person = self.findChild(PrimaryPushButton, 'btn_person')
+        btn_person.clicked.connect(lambda: self.pick_person())
 
-        btn_clear = self.findChild(PushButton, 'btn_clear')
-        btn_clear.clicked.connect(lambda: self.clear())
+        btn_group = self.findChild(PushButton, 'btn_group')
+        btn_group.clicked.connect(lambda: self.pick_group())
 
         self.clear()
 
@@ -139,18 +139,17 @@ class Widget(QWidget):
             self.r_Position = event.globalPosition().toPoint()  # 记录鼠标释放位置
             event.accept()
 
-    def pick(self):
+    def pick_person(self):
         """
         随机选人。
         """
-        self.is_picking = True
         students = []
 
-        if conf.get_ini('Group', 'global') == 'true':
+        if conf.get_ini('Group', 'global') == 'true' and conf.get_ini('Group', 'global') != '[]':
             logger.debug('使用全局分组。')
             students = conf.get_students_list()
         else:
-            groups = list(conf.get_ini('Group', 'group'))
+            groups = conf.get_ini('Group', 'group').split(', ')
             logger.debug(f'使用分组 {groups}。')
             for group in groups:
                 students.extend(conf.get_students_in_group(int(group)))
@@ -176,28 +175,52 @@ class Widget(QWidget):
                     break
             self.student['avatar'] = avatar_path
             self.show_avatar(avatar_path)
-        self.is_picking = False
 
     def clear(self):
         global last_result
-        if not self.is_picking:
-            name = self.findChild(QLabel, 'name')
-            id_ = self.findChild(QLabel, 'id')
-            if last_result:
-                name.setText(f"{str(self.student['id'])[-2:]} {last_result['name']}")
-                id_.setText(str(last_result['id']))
-                if self.is_avatar:
-                    self.show_avatar(last_result['avatar'])
-                last_result = {}
-                logger.info(f'加载重载前的结果。{last_result}')
-            else:
-                name.setText('无结果')
-                id_.setText('000000')
-                if self.is_avatar:
-                    self.show_avatar()
-                logger.info('清除结果')
-            return
-        logger.warning('没有清除结果，因为正在选人。')
+        name = self.findChild(QLabel, 'name')
+        id_ = self.findChild(QLabel, 'id')
+        if last_result:
+            name.setText(f"{str(self.student['id'])[-2:]} {last_result['name']}")
+            id_.setText(str(last_result['id']))
+            if self.is_avatar:
+                self.show_avatar(last_result['avatar'])
+            last_result = {}
+            logger.info(f'加载重载前的结果。{last_result}')
+        else:
+            name.setText('无结果')
+            id_.setText('000000')
+            if self.is_avatar:
+                self.show_avatar()
+            logger.info('清除结果')
+
+    def pick_group(self):
+        """
+        随机选小组。
+
+        """
+        groups = conf.get_group_len()
+        num = random.randint(0, conf.get_group_len() - 1)
+        logger.debug(f'随机数已生成。小组的 JSON 索引是 {num}。')
+        group = conf.get_group(num)
+        logger.debug(f'已获取 JSON 索引是 {num} 的小组信息。{group}')
+        students = ''
+
+        for index in group['stu']:
+            name = conf.get(index + 1)['name']
+            students = students + name + ', '
+
+        name = self.findChild(QLabel, 'name')
+        id_ = self.findChild(QLabel, 'id')
+
+        if students.endswith(', '):
+            students = students[:-2]
+
+        logger.debug(f'信息已解析。名称：{group['name']}；学生：{students}。')
+
+        name.setText(group['name'])
+        id_.setText(students)
+        self.show_avatar()
 
     def show_avatar(self, file_path='./img/stu/default.jpeg'):
         avatar = self.findChild(PixmapLabel, 'avatar')
