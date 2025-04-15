@@ -56,11 +56,12 @@
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <property name="spacing">
-          <number>10</number>
-         </property>
          <item>
-          <layout class="QHBoxLayout" name="group_enable_layout"/>
+          <widget class="PushButton" name="enable_groups">
+           <property name="text">
+            <string>更改启用状态</string>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="horizontalSpacer_3">
@@ -305,4 +306,7 @@ FluentLabelBase{color:#7d000000}</string>
  </customwidgets>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="global_button_group"/>
+ </buttongroups>
 </ui>

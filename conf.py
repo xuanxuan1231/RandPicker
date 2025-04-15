@@ -250,7 +250,7 @@ def get_all_group():
     return students['groups']
 
 
-def get_group_num():
+def get_group_len():
     groups = get_all_group()
     return len(groups)
 
@@ -258,6 +258,14 @@ def get_group_num():
 def get_group(num: int) -> dict:
     groups = get_all_group()
     return groups[num]
+
+
+def get_group_num(name: str = '测试1'):
+    groups = get_all_group()
+    for index, group in enumerate(groups):
+        if group['name'] == name:
+            return index
+    return
 
 
 def get_students_name_in_group(group: int | dict):

@@ -9,13 +9,13 @@ from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
 from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator, QColor
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog, QVBoxLayout, \
-    QListWidget, QAbstractItemView, QGridLayout, QListWidgetItem, QScroller
+    QListWidget, QAbstractItemView, QGridLayout, QListWidgetItem, QScroller, QButtonGroup
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
     InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme, \
     ToolButton, ColorDialog, setThemeColor, isDarkTheme, CheckBox, ListWidget, SubtitleLabel, CardWidget, CaptionLabel, \
     RoundMenu, Action, TransparentDropDownToolButton, PrimaryPushButton, MessageBoxBase, \
-    StrongBodyLabel, SmoothScrollArea
+    StrongBodyLabel, SmoothScrollArea, RadioButton
 
 import conf
 
@@ -511,9 +511,23 @@ class Settings(FluentWindow):
 
         logger.info('界面设置已保存')
 
-    def setup_group_edit_interface(self):  # 设置 分组编辑 页面
-        scrollArea = self.findChild(SmoothScrollArea, 'scrollArea')  # 触摸屏适配
-        QScroller.grabGesture(scrollArea.viewport(), QScroller.ScrollerGestureType.LeftMouseButtonGesture)
+    def setup_group_edit_interface(self):
+        self.setup_group_edit()
+
+        btn_new = self.findChild(PushButton, 'new_group')
+        btn_reload = self.findChild(PushButton, 'reload_page')
+
+        btn_new.clicked.connect(lambda: self.new_group())
+        btn_new.setIcon(fIcon.ADD)
+        btn_reload.clicked.connect(lambda: self.setup_group_edit_interface())
+        btn_reload.setIcon(fIcon.SYNC)
+
+        btn_enable = self.findChild(PushButton, 'enable_groups')
+        btn_enable.clicked.connect(lambda: self.setup_group_enabled())
+
+    def setup_group_edit(self):  # 设置 分组编辑 页面
+        scroll_area = self.findChild(SmoothScrollArea, 'scrollArea')  # 触摸屏适配
+        QScroller.grabGesture(scroll_area.viewport(), QScroller.ScrollerGestureType.LeftMouseButtonGesture)
 
         layout = self.findChild(QGridLayout, 'group_card_layout')
 
@@ -531,19 +545,13 @@ class Settings(FluentWindow):
         logger.success('清空了分组卡片所在的布局。')
 
         btn_save = self.findChild(PrimaryPushButton, 'save_group')
-        btn_new = self.findChild(PushButton, 'new_group')
-        btn_reload = self.findChild(PushButton, 'reload_page')
 
         btn_save.clicked.connect(lambda: self.save_groups())
-        btn_new.clicked.connect(lambda: self.new_group())
-        btn_new.setIcon(fIcon.ADD)
-        btn_reload.clicked.connect(lambda: self.setup_group_edit_interface())
-        btn_reload.setIcon(fIcon.SYNC)
 
         students = conf.get_students_name()
         global_card = GroupCard(students=students)
 
-        groups = conf.get_group_num()
+        groups = conf.get_group_len()
         for i in range(groups):
             group = conf.get_group(i)
             stu = conf.get_students_name_in_group(group)
@@ -556,6 +564,10 @@ class Settings(FluentWindow):
         layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
         tips_group_empty = self.findChild(CaptionLabel, 'tips_group_empty')
         tips_group_empty.close()
+
+    def setup_group_enabled(self):
+        group_enabled_edit = GroupEnablePolicyBox(self)
+        group_enabled_edit.exec()
 
     def new_group(self):  # 新建分组
         students = conf.get_students_name()
@@ -824,6 +836,74 @@ class GroupEditBox(MessageBoxBase):
             return True
         self.captionLabel_name.setTextColor(QColor(255, 0, 0))
         return False
+
+
+class GroupEnablePolicyBox(MessageBoxBase):
+    """
+    编辑分组启用。
+
+    """
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+
+        self.titleLabel = SubtitleLabel(text='编辑分组策略')
+
+        self.btn_global = RadioButton(text='所有学生')
+        self.btn_group = RadioButton(text='分组')
+
+        self.group_btn_global = QButtonGroup()
+        self.group_btn_global.addButton(self.btn_global, 0)
+        self.group_btn_global.addButton(self.btn_group, 1)
+
+        if conf.get_ini('Group', 'global') == 'true':
+            self.btn_global.setChecked(True)
+        else:
+            self.btn_group.setChecked(True)
+
+        self.yesButton.clicked.connect(lambda: self.save())
+
+        self.groupList = ListWidget()
+
+        enabled_group = conf.get_ini('Group', 'group').split(', ')
+
+        for group_num in range(conf.get_group_len()):
+            group = conf.get_group(group_num)
+
+            checkbox = CheckBox(text=group['name'])  # 创建复选框
+            if enabled_group is None:
+                checkbox.setChecked(False)
+            elif str(group_num) in enabled_group:
+                checkbox.setChecked(True)
+            else:
+                checkbox.setChecked(False)
+
+            list_item = QListWidgetItem()  # 创建列表项
+
+            # 将复选框与列表项关联起来
+            self.groupList.addItem(list_item)
+            self.groupList.setItemWidget(list_item, checkbox)
+
+        self.viewLayout.addWidget(self.titleLabel)
+        self.viewLayout.addWidget(self.btn_global)
+        self.viewLayout.addWidget(self.btn_group)
+        self.viewLayout.addWidget(self.groupList)
+
+    def save(self):
+        count = self.groupList.count()
+        enable_group = []
+        for group in range(count):
+            item = self.groupList.item(group)
+            if item is None:
+                continue
+            widget = self.groupList.itemWidget(item)
+            if not isinstance(widget, CheckBox):
+                return
+            if widget.isChecked():
+                enable_group.append(group)
+
+        conf.write_ini('Group', 'global', str(self.btn_global.isChecked()),
+                       'Group', 'group', str(enable_group).replace('[', '').replace(']', ''))
 
 
 def restart():
