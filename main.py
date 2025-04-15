@@ -216,7 +216,7 @@ class Widget(QWidget):
         if students.endswith(', '):
             students = students[:-2]
 
-        logger.debug(f'信息已解析。名称：{group['name']}；学生：{students}。')
+        logger.debug(f"信息已解析。名称：{group['name']}；学生：{students}。")
 
         name.setText(group['name'])
         id_.setText(students)
