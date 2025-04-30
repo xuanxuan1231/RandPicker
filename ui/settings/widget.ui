@@ -43,7 +43,7 @@
     </widget>
    </item>
    <item>
-    <widget class="SmoothScrollArea" name="ct_scroll">
+    <widget class="SmoothScrollArea" name="wg_scroll">
      <property name="styleSheet">
       <string notr="true">background: transparent; border: none</string>
      </property>

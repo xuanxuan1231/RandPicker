@@ -384,6 +384,10 @@ class Settings(FluentWindow):
         logger.info('学生信息已保存')
 
     def setup_ui_interface(self):  # 设置 界面设置 页面
+        # 触摸屏适配
+        scroll_area = self.findChild(SmoothScrollArea, 'wg_scroll')
+        QScroller.grabGesture(scroll_area.viewport(), QScroller.ScrollerGestureType.LeftMouseButtonGesture)
+        
         # 从配置文件加载设置
         avatar_size = int(conf.get_ini('UI', 'avatar_size'))
         edge_hide = conf.get_ini('UI', 'edge_hide') == 'true'
@@ -526,7 +530,7 @@ class Settings(FluentWindow):
         btn_enable.clicked.connect(lambda: self.setup_group_enabled())
 
     def setup_group_edit(self):  # 设置 分组编辑 页面
-        scroll_area = self.findChild(SmoothScrollArea, 'scrollArea')  # 触摸屏适配
+        scroll_area = self.findChild(SmoothScrollArea, 'ge_scroll')  # 触摸屏适配
         QScroller.grabGesture(scroll_area.viewport(), QScroller.ScrollerGestureType.LeftMouseButtonGesture)
 
         layout = self.findChild(QGridLayout, 'group_card_layout')

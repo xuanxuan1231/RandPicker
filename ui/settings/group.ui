@@ -37,7 +37,7 @@
     </widget>
    </item>
    <item>
-    <widget class="SmoothScrollArea" name="scroll">
+    <widget class="SmoothScrollArea" name="ge_scroll">
      <property name="styleSheet">
       <string notr="true">background: transparent; border: none</string>
      </property>
