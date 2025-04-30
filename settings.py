@@ -427,7 +427,7 @@ class Settings(FluentWindow):
 
         # 设置颜色标签和预览
         current_color = conf.get_ini('Color', 'dark' if isDarkTheme() else 'light')
-        label_color.setText(current_color)
+        label_color.setText(current_color.lower())
         color_obj = QColor(current_color)
         label_color.setStyleSheet(
             f"background-color: {current_color}; color: {'white' if color_obj.lightness() < 128 else 'black'}; padding: 2px; border-radius: 5px")
@@ -864,6 +864,7 @@ class GroupEnablePolicyBox(MessageBoxBase):
         self.yesButton.clicked.connect(lambda: self.save())
 
         self.groupList = ListWidget()
+        self.groupList.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
         enabled_group = conf.get_ini('Group', 'group').split(', ')
 
