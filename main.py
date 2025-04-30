@@ -207,18 +207,16 @@ class Widget(QWidget):
         logger.debug(f'随机数已生成。小组的 JSON 索引是 {num}。')
         group = conf.get_group(num)
         logger.debug(f'已获取 JSON 索引是 {num} 的小组信息。{group}')
-        students = ''
+        student_names = []
 
         for index in group['stu']:
             name = conf.get(index + 1)['name']
-            students = students + name + ', '
+            student_names.append(name)
+
+        students = ', '.join(student_names)
 
         name = self.findChild(QLabel, 'name')
         id_ = self.findChild(QLabel, 'id')
-
-        if students.endswith(', '):
-            students = students[:-2]
-
         logger.debug(f"信息已解析。名称：{group['name']}；学生：{students}。")
 
         name.setText(group['name'])
