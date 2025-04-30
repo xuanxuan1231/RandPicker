@@ -6,6 +6,7 @@ import os
 import random
 import sys
 from random import choices
+from typing import override
 
 from PyQt6 import uic
 from PyQt6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QLocale
@@ -103,6 +104,7 @@ class Widget(QWidget):
 
         self.clear()
 
+    @override
     def mousePressEvent(self, event: QMouseEvent):
         edge_distance = int(conf.get_ini('UI', 'edge_distance'))
         if event.button() == Qt.MouseButton.LeftButton:
@@ -133,6 +135,7 @@ class Widget(QWidget):
             self.p_Position = event.globalPosition().toPoint()  # 获取鼠标相对屏幕的位置
             event.accept()
 
+    @override
     def mouseMoveEvent(self, event: QMouseEvent):
         if event.buttons() == Qt.MouseButton.LeftButton:
             self.move(event.globalPosition().toPoint() - self.m_Position)  # 更改窗口位置
@@ -199,7 +202,7 @@ class Widget(QWidget):
         随机选小组。
 
         """
-        groups = conf.get_group_len()
+
         num = random.randint(0, conf.get_group_len() - 1)
         logger.debug(f'随机数已生成。小组的 JSON 索引是 {num}。')
         group = conf.get_group(num)
@@ -275,6 +278,7 @@ class Widget(QWidget):
         logger.success(f"显示头像 {file_path}。")
         avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
 
+    @override
     def mouseReleaseEvent(self, event: QMouseEvent):
         screen = QApplication.screenAt(event.globalPosition().toPoint())
         if not screen:
@@ -357,6 +361,7 @@ class Widget(QWidget):
 
         event.accept()
 
+    @override
     def closeEvent(self, e):
         global last_result, last_pos
         self.systemTrayIcon.hide()

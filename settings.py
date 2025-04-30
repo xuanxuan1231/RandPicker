@@ -4,6 +4,7 @@ RandPicker 设置。
 import os
 import sys
 from math import floor
+from typing import override
 
 from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
@@ -655,6 +656,7 @@ class Settings(FluentWindow):
         # 重载页面
         self.reload_group_edit()
 
+    @override
     def closeEvent(self, event):  # 重写 closeEvent
         self.closed.emit()
         event.accept()
