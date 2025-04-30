@@ -9,7 +9,7 @@ from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
 from PyQt6.QtGui import QDesktopServices, QIcon, QIntValidator, QColor
 from PyQt6.QtWidgets import QApplication, QTableWidgetItem, QHeaderView, QWidget, QHBoxLayout, QFileDialog, QVBoxLayout, \
-    QListWidget, QAbstractItemView, QGridLayout, QListWidgetItem, QScroller, QButtonGroup
+    QListWidget, QAbstractItemView, QGridLayout, QListWidgetItem, QScroller, QButtonGroup, QLayoutItem
 from loguru import logger
 from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableWidget, NavigationItemPosition, Flyout, \
     InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme, \
@@ -519,7 +519,7 @@ class Settings(FluentWindow):
 
         btn_new.clicked.connect(lambda: self.new_group())
         btn_new.setIcon(fIcon.ADD)
-        btn_reload.clicked.connect(lambda: self.setup_group_edit_interface())
+        btn_reload.clicked.connect(lambda: self.reload_group_edit())
         btn_reload.setIcon(fIcon.SYNC)
 
         btn_enable = self.findChild(PushButton, 'enable_groups')
@@ -565,6 +565,37 @@ class Settings(FluentWindow):
         tips_group_empty = self.findChild(CaptionLabel, 'tips_group_empty')
         tips_group_empty.close()
 
+    def reload_group_edit(self): # 重载 分组编辑 页面
+        layout = self.findChild(QGridLayout, 'group_card_layout')
+
+        # 清空现有布局
+        item_list = list(range(layout.count()))
+        item_list.reverse()  # 倒序删除，避免影响布局顺序
+
+        for i in item_list:
+            item = layout.itemAt(i)
+            if isinstance(item.widget(), CaptionLabel):
+                continue
+            layout.removeItem(item)
+            if item.widget():
+                item.widget().deleteLater()
+        logger.success('清空了分组卡片所在的布局。')
+
+        students = conf.get_students_name()
+        global_card = GroupCard(students=students)
+
+        groups = conf.get_group_len()
+        for i in range(groups):
+            group = conf.get_group(i)
+            stu = conf.get_students_name_in_group(group)
+            card = GroupCard(title=group['name'],
+                             students=stu,
+                             is_global=False,
+                             parent=self)
+            layout.addWidget(card, floor(i / 3) + 1, i % 3, 1, 1)
+
+        layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
+
     def setup_group_enabled(self):
         group_enabled_edit = GroupEnablePolicyBox(self)
         group_enabled_edit.exec()
@@ -584,11 +615,19 @@ class Settings(FluentWindow):
         for row in range(1, layout.rowCount()):
             for column in range(0, layout.columnCount()):
                 stu = []
-                card = layout.itemAtPosition(row, column).widget()
-                if not isinstance(card, GroupCard):
-                    return
-                if card.isDeleted:
+                item = layout.itemAtPosition(row, column)
+                if not isinstance(item, QLayoutItem):
+                    logger.warning(f"保存分组时，对于 {row}, {column} 处来说，没有找到 QLayoutItem。")
+                    logger.warning(f"跳过 {row}, {column} 处的卡片。")
                     continue
+
+                card = item.widget()
+
+                if card.isDeleted:
+                    logger.warning(f"保存分组时，卡片 {row}, {column} 被标记为已删除。")
+                    logger.warning(f"跳过 {row}, {column} 处的卡片。")
+                    continue
+
                 title = card.titleLabel.text()
                 stu_list = card.stuList
                 stu_count = stu_list.count()
@@ -610,7 +649,7 @@ class Settings(FluentWindow):
         )
 
         # 重载页面
-        self.setup_group_edit_interface()
+        self.reload_group_edit()
 
     def closeEvent(self, event):  # 重写 closeEvent
         self.closed.emit()
@@ -915,8 +954,8 @@ def restart():
     logger.info("重新启动")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
-
-if __name__ == '__main__':
+@logger.catch
+def main():
     app = QApplication(sys.argv)
     w = Settings()
     w.show()
