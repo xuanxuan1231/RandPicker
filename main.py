@@ -156,13 +156,18 @@ class Widget(QWidget):
             logger.debug(f'使用分组 {groups}。')
             for group in groups:
                 students.extend(conf.get_students_in_group(int(group)))
+        
+        name = self.findChild(QLabel, 'name')
+        id_ = self.findChild(QLabel, 'id')
+
+        if not students:
+            name.setText('无结果')
+            id_.setText('000000')
 
         num = choices(students, weights=conf.get_some_weight(students), k=1)[0]
         logger.info(f'随机数已生成。JSON 索引是 {num - 1}。它的选择权重是 {conf.get_all_weight()[num - 1]}。')
         self.student = conf.get(num)
         logger.debug(f'已获取 JSON 索引是 {num - 1} 的学生信息。{self.student}')
-        name = self.findChild(QLabel, 'name')
-        id_ = self.findChild(QLabel, 'id')
         name.setText(f'{str(self.student['id'])[-2:]} {self.student['name']}')
         id_.setText(str(self.student['id']))
 
@@ -203,7 +208,11 @@ class Widget(QWidget):
 
         """
 
-        num = random.randint(0, conf.get_group_len() - 1)
+        groups = conf.get_group_len()
+        if groups < 1:
+            self.pick_person()
+            return
+        num = random.randint(0, groups - 1)
         logger.debug(f'随机数已生成。小组的 JSON 索引是 {num}。')
         group = conf.get_group(num)
         logger.debug(f'已获取 JSON 索引是 {num} 的小组信息。{group}')
