@@ -9,8 +9,6 @@ import os.path
 import pandas as pd
 from loguru import logger
 
-import conf
-
 
 def get_with_short_id(num=1):
     """
@@ -236,7 +234,7 @@ def get_all_weight():
 
 
 def get_some_weight(stu: list = None) -> list:
-    students = conf.get_all_students()
+    students = get_all_students()
     result = []
     for student in stu:
         if students[student - 1]['active']:
