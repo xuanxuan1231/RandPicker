@@ -42,9 +42,9 @@ class Widget(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.m_Position = None
-        self.p_Position = None
-        self.r_Position = None
+        self.m_Position = QPoint()
+        self.p_Position = QPoint()
+        self.r_Position = QPoint()
         self.is_avatar = False
         self.animation = None
         self.student = last_result
@@ -137,7 +137,7 @@ class Widget(QWidget):
 
     @override
     def mouseMoveEvent(self, event: QMouseEvent):
-        if event.buttons() == Qt.MouseButton.LeftButton:
+        if event.buttons() == Qt.MouseButton.LeftButton and hasattr(self, 'm_Position'):
             self.move(event.globalPosition().toPoint() - self.m_Position)  # 更改窗口位置
             self.r_Position = event.globalPosition().toPoint()  # 记录鼠标释放位置
             event.accept()
@@ -203,17 +203,19 @@ class Widget(QWidget):
             logger.info('清除结果')
 
     def pick_group(self):
-        """
-        随机选小组。
-
-        """
-
         groups = conf.get_group_len()
         if groups < 1:
             self.pick_person()
             return
-        num = random.randint(0, groups - 1)
-        logger.debug(f'随机数已生成。小组的 JSON 索引是 {num}。')
+            
+        # 获取所有小组的权重
+        weights = conf.get_all_group_weights()
+        if not weights or len(weights) != groups:
+            weights = [1] * groups
+            
+        # 使用权重进行选择
+        num = choices(range(groups), weights=weights, k=1)[0]
+        logger.debug(f'随机数已生成。小组的 JSON 索引是 {num}。权重为 {weights[num]}')
         group = conf.get_group(num)
         logger.debug(f'已获取 JSON 索引是 {num} 的小组信息。{group}')
         student_names = []
@@ -228,12 +230,17 @@ class Widget(QWidget):
         id_ = self.findChild(QLabel, 'id')
         logger.debug(f"信息已解析。名称：{group['name']}；学生：{students}。")
 
+        # 显示组名
         name.setText(group['name'])
         id_.setText(students)
         self.show_avatar()
 
     def show_avatar(self, file_path='./img/stu/default.jpeg'):
         avatar = self.findChild(PixmapLabel, 'avatar')
+        if not avatar:
+            logger.warning("未找到avatar控件，跳过头像显示")
+            return
+            
         avatar_size = int(conf.get_ini('UI', 'avatar_size'))
         if file_path is not None and os.path.exists(file_path):
             file_path = file_path

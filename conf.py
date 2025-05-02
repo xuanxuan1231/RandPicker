@@ -331,3 +331,56 @@ def write_ini(*args, file_path='config.ini'):
 
 
 config = configparser.ConfigParser()
+
+
+def get_group_weight(group_index):
+    """
+    获取小组权重。
+    
+    :param group_index: 小组索引
+    :return: 小组权重，默认为1
+    """
+    with open('./students.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    if 'groups' not in data or len(data['groups']) <= group_index:
+        return 1
+    
+    group = data['groups'][group_index]
+    return group.get('weight', 1)
+
+def get_all_group_weights():
+    """
+    获取所有小组的权重。
+    
+    :return: 小组权重列表
+    """
+    with open('./students.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    if 'groups' not in data:
+        return []
+    
+    weights = []
+    for group in data['groups']:
+        weights.append(group.get('weight', 1))
+    
+    return weights
+
+def set_group_weight(group_index, weight):
+    """
+    设置小组权重。
+    
+    :param group_index: 小组索引
+    :param weight: 权重值
+    """
+    with open('./students.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    if 'groups' not in data or len(data['groups']) <= group_index:
+        return
+    
+    data['groups'][group_index]['weight'] = weight
+    
+    with open('./students.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
