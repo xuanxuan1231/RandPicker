@@ -73,7 +73,7 @@ class Settings(FluentWindow):
 
     def init_nav(self):  # 设置侧边栏
         self.addSubInterface(self.stuEditInterface, fIcon.EDIT, '学生信息编辑')
-        self.addSubInterface(self.groupEditInterface, fIcon.EDIT, '小组编辑')
+        self.addSubInterface(self.groupEditInterface, fIcon.EDIT, '小组信息编辑')
         self.navigationInterface.addSeparator(NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.uiInterface, fIcon.SETTING, '界面设置', NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.aboutInterface, fIcon.INFO, '关于', NavigationItemPosition.BOTTOM)
@@ -527,8 +527,10 @@ class Settings(FluentWindow):
         btn_reload.clicked.connect(lambda: self.reload_group_edit())
         btn_reload.setIcon(fIcon.SYNC)
 
+        # 隐藏"更改启用状态"按钮
         btn_enable = self.findChild(PushButton, 'enable_groups')
-        btn_enable.clicked.connect(lambda: self.setup_group_enabled())
+        if btn_enable:
+            btn_enable.hide()
 
     def setup_group_edit(self):  # 设置 分组编辑 页面
         scroll_area = self.findChild(SmoothScrollArea, 'ge_scroll')  # 触摸屏适配
@@ -563,7 +565,8 @@ class Settings(FluentWindow):
             card = GroupCard(title=group['name'],
                              students=stu,
                              is_global=False,
-                             parent=self)
+                             parent=self,
+                             group_index=i)
             layout.addWidget(card, floor(i / 3) + 1, i % 3, 1, 1)
 
         layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
@@ -596,7 +599,8 @@ class Settings(FluentWindow):
             card = GroupCard(title=group['name'],
                              students=stu,
                              is_global=False,
-                             parent=self)
+                             parent=self,
+                             group_index=i)
             layout.addWidget(card, floor(i / 3) + 1, i % 3, 1, 1)
 
         layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
@@ -638,7 +642,11 @@ class Settings(FluentWindow):
                 stu_count = stu_list.count()
                 for i in range(stu_count):
                     stu.append(conf.get_index_with_name(stu_list.item(i).text()))
-                group = {"name": title, "stu": stu}
+                
+                # 获取权重值
+                weight = card.weightSlider.value() if hasattr(card, 'weightSlider') else 1
+                
+                group = {"name": title, "stu": stu, "weight": weight}
                 groups.append(group)
         conf.write_conf(groups=groups)
 
@@ -677,11 +685,13 @@ class GroupCard(CardWidget):  # 分组卡片
     :type parent: QWidget | None
     :param is_global: 是否是全局分组（所有学生），默认为 True。
     :type is_global: bool
+    :param group_index: 小组在配置中的索引，默认为-1（全局分组）。
+    :type group_index: int
     """
 
     def __init__(
             self, title: str = '所有学生', students: list = None, parent: QWidget | None = None,
-            is_global: bool = True):
+            is_global: bool = True, group_index: int = -1):
         super().__init__(parent)
         if students is None:
             students = ['未知学生']
@@ -689,6 +699,7 @@ class GroupCard(CardWidget):  # 分组卡片
         self.title = title
         self.parent = parent
         self.isDeleted = False
+        self.group_index = group_index
 
         self.setMinimumHeight(250)
 
@@ -696,12 +707,36 @@ class GroupCard(CardWidget):  # 分组卡片
         self.moreButton = TransparentDropDownToolButton(fIcon.MORE, self)
         self.moreMenu = RoundMenu(parent=self.moreButton)
         self.stuList = ListWidget(self)
+        
+        # 添加权重设置
+        self.weightLayout = QHBoxLayout()
+        self.weightLabel = BodyLabel("权重:", self)
+        self.weightSlider = Slider(Qt.Orientation.Horizontal, self)
+        self.weightSlider.setRange(1, 50)
+        self.weightValue = BodyLabel("1", self)
+        self.weightValue.setFixedWidth(30)
+        
+        if not is_global and group_index >= 0:
+            weight = conf.get_group_weight(group_index)
+            self.weightSlider.setValue(weight)
+            self.weightValue.setText(str(weight))
+        else:
+            self.weightSlider.setValue(1)
+            
+        self.weightSlider.valueChanged.connect(self.update_weight_value)
+        
+        self.weightLayout.addWidget(self.weightLabel)
+        self.weightLayout.addWidget(self.weightSlider)
+        self.weightLayout.addWidget(self.weightValue)
 
         self.hBoxLayout_Title = QHBoxLayout()
         self.vBoxLayout = QVBoxLayout(self)
 
         if is_global:
             self.moreButton.setEnabled(False)
+            self.weightSlider.setEnabled(False)
+            self.weightLabel.setEnabled(False)
+            self.weightValue.setEnabled(False)
 
         self.action_del = Action(
             fIcon.DELETE, f'删除分组 {title}',
@@ -731,15 +766,517 @@ class GroupCard(CardWidget):  # 分组卡片
         self.vBoxLayout.setContentsMargins(6, 6, 6, 6)
         self.vBoxLayout.setSpacing(3)
         self.vBoxLayout.addLayout(self.hBoxLayout_Title)
+        if not is_global:
+            self.vBoxLayout.addLayout(self.weightLayout)
         self.vBoxLayout.addWidget(self.stuList)
         self.vBoxLayout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         # 标题栏
         self.hBoxLayout_Title.setSpacing(12)
         self.hBoxLayout_Title.setContentsMargins(12, 8, 12, 6)
-        # self.hBoxLayout_Title.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.hBoxLayout_Title.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.hBoxLayout_Title.addWidget(self.titleLabel, 0, Qt.AlignmentFlag.AlignVCenter)
         self.hBoxLayout_Title.addWidget(self.moreButton, 0, Qt.AlignmentFlag.AlignRight)
+
+    def update_weight_value(self, value):
+        self.weightValue.setText(str(value))
+        if self.group_index >= 0:
+            conf.set_group_weight(self.group_index, value)
+
+    def set_group(self):
+        students = conf.get_students_name()
+        stu_count = self.stuList.count()
+        self.exist_students = []
+        for i in range(stu_count):
+            item = self.stuList.item(i)
+            self.exist_students.append(item.text())
+        w = GroupEditBox(parent=self.parent,
+                         name=self.title,
+                         students=students,
+                         exist_students=self.exist_students,
+                         target=self)
+        w.exec()
+
+    def del_group(self):
+        self.action_del.setEnabled(False)
+        self.action_undo_del.setEnabled(True)
+
+        self.titleLabel.setText(self.title + ' (删除)')
+        self.isDeleted = True
+
+    def undo_del_group(self):
+        self.action_del.setEnabled(True)
+        self.action_undo_del.setEnabled(False)
+
+        self.titleLabel.setText(self.title)
+        self.isDeleted = False
+
+
+class GroupEditBox(MessageBoxBase):
+    """
+    编辑分组。
+
+    :param parent: 父控件。
+    :type parent: QWidget | None
+    :param new: 是否是新建分组。
+    :type new: bool
+    :param name: 分组现在的名称 (修改分组)。
+    :type name: str | None
+    :param students: 所有学生的列表。
+    :type students: list
+    :param exist_students: 已在分组中的学生 (修改分组)。
+    :type exist_students: list | None
+    :param target: 要修改的布局或控件。新建分组需要 QGridLayout，修改分组需要 GroupCard。
+    :type target: QWidget | None
+
+    :raises: None
+
+    :returns: None
+    """
+
+    def __init__(self, parent=None, new: bool = False, name: str = None, students: list = None,
+                 exist_students: list = None, target: QWidget | None = None):
+        super().__init__(parent)
+        self.target = target
+        self.parent = parent
+        self.name = name
+        self.titleLabel = SubtitleLabel(text=f'{'添加' if new else '修改'}分组{" " + name if name else ''}')
+        self.subtitleLabel_name = StrongBodyLabel(text='分组名称')
+        self.nameLineEdit = LineEdit()
+        self.captionLabel_name = CaptionLabel(text='名称不能为空。')
+        self.subtitleLabel_stu = StrongBodyLabel(text='学生')
+        self.stuList = ListWidget()
+
+        self.nameLineEdit.setPlaceholderText('分组名称')
+        if name:
+            self.nameLineEdit.setText(name)
+
+        self.stuList.setMinimumHeight(200)
+        self.stuList.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.stuList.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        for student in students:
+            checkbox = CheckBox(text=student)  # 创建复选框
+            if exist_students is None:
+                checkbox.setChecked(False)
+            elif student in exist_students:
+                checkbox.setChecked(True)
+            else:
+                checkbox.setChecked(False)
+            list_item = QListWidgetItem()  # 创建列表项
+
+            # 将复选框与列表项关联起来
+            self.stuList.addItem(list_item)
+            self.stuList.setItemWidget(list_item, checkbox)
+
+        # 将组件添加到布局中
+        self.viewLayout.addWidget(self.titleLabel)
+        self.viewLayout.addWidget(self.subtitleLabel_name)
+        self.viewLayout.addWidget(self.nameLineEdit)
+        self.viewLayout.addWidget(self.captionLabel_name)
+        self.viewLayout.addWidget(self.subtitleLabel_stu)
+        self.viewLayout.addWidget(self.stuList)
+
+        # 设置确认按钮操作
+        self.yesButton.clicked.connect(lambda: self.save())
+
+        # 设置对话框的最小宽度
+        self.widget.setMinimumWidth(350)
+
+    def save(self):
+        if self.validate():
+            stu = []
+            stu_count = self.stuList.count()
+            name = self.nameLineEdit.text()
+            for i in range(stu_count):
+                item = self.stuList.itemWidget(self.stuList.item(i))
+                if item.isChecked():
+                    stu.append(item.text())
+
+            if isinstance(self.target, GroupCard):
+                self.target.titleLabel.setText(name)
+                self.target.stuList.clear()
+                self.target.stuList.addItems(stu)
+
+                logger.success(f'修改了分组 {self.name} -> {name} 的信息。')
+            elif isinstance(self.target, QGridLayout):
+                card = GroupCard(title=name,
+                                 students=stu,
+                                 is_global=False,
+                                 parent=self.parent)
+                row = self.target.rowCount() - 1
+                students = conf.get_students_name()
+                global_card = GroupCard(students=students)
+                for column in range(1, 3):
+                    if not self.target.itemAtPosition(row, column):
+                        self.target.addWidget(card, row, column, 1, 1)
+                        self.target.addWidget(global_card, 0, 0, 1, self.target.columnCount())
+                        logger.success(f'添加了新分组 {name}。')
+                        return
+                self.target.addWidget(card, row + 1, 0, 1, 1)
+                self.target.addWidget(global_card, 0, 0, 1, self.target.columnCount())
+                logger.success(f'添加了新分组 {name}。')
+            else:
+                return
+
+    def validate(self) -> bool:
+        if self.nameLineEdit.text() != '' and not self.nameLineEdit.text().isspace():
+            return True
+        self.captionLabel_name.setTextColor(QColor(255, 0, 0))
+        return False
+
+
+class GroupEnablePolicyBox(MessageBoxBase):
+    """
+    编辑分组启用。
+
+    """
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+
+        self.titleLabel = SubtitleLabel(text='编辑分组策略')
+
+        self.btn_global = RadioButton(text='所有学生')
+        self.btn_group = RadioButton(text='分组')
+
+        self.group_btn_global = QButtonGroup()
+        self.group_btn_global.addButton(self.btn_global, 0)
+        self.group_btn_global.addButton(self.btn_group, 1)
+
+        if conf.get_ini('Group', 'global') == 'true':
+            self.btn_global.setChecked(True)
+        else:
+            self.btn_group.setChecked(True)
+
+        self.yesButton.clicked.connect(lambda: self.save())
+
+        self.groupList = ListWidget()
+        self.groupList.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+
+        enabled_group = conf.get_ini('Group', 'group').split(', ')
+
+        for group_num in range(conf.get_group_len()):
+            group = conf.get_group(group_num)
+
+            checkbox = CheckBox(text=group['name'])  # 创建复选框
+            if enabled_group is None:
+                checkbox.setChecked(False)
+            elif str(group_num) in enabled_group:
+                checkbox.setChecked(True)
+            else:
+                checkbox.setChecked(False)
+
+            list_item = QListWidgetItem()  # 创建列表项
+
+            # 将复选框与列表项关联起来
+            self.groupList.addItem(list_item)
+            self.groupList.setItemWidget(list_item, checkbox)
+
+        self.viewLayout.addWidget(self.titleLabel)
+        self.viewLayout.addWidget(self.btn_global)
+        self.viewLayout.addWidget(self.btn_group)
+        self.viewLayout.addWidget(self.groupList)
+
+    def save(self):
+        count = self.groupList.count()
+        enable_group = []
+        for group in range(count):
+            item = self.groupList.item(group)
+            if item is None:
+                continue
+            widget = self.groupList.itemWidget(item)
+            if not isinstance(widget, CheckBox):
+                return
+            if widget.isChecked():
+                enable_group.append(group)
+
+        conf.write_ini('Group', 'global', str(self.btn_global.isChecked()),
+                       'Group', 'group', str(enable_group).replace('[', '').replace(']', ''))
+
+
+def restart():
+    global share
+    if share.isAttached():
+        share.detach()
+        # share.deleteLater()
+    logger.info("重新启动")
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
+@logger.catch
+def main():
+    app = QApplication(sys.argv)
+    w = Settings()
+    w.show()
+    sys.exit(app.exec())
+
+    # 添加 ListWidget 控件
+    self.group_member_list = QListWidget(self.groupEditInterface)
+    self.group_member_list.setObjectName('group_member_list')
+    # 假设这里有获取组内组员数据的方法
+    members = self.get_group_members()
+    for member in members:
+        item = QListWidgetItem(member)
+        self.group_member_list.addItem(item)
+    # 将 ListWidget 添加到布局中，假设使用垂直布局
+    layout = self.groupEditInterface.findChild(QVBoxLayout)
+    if layout:
+        layout.addWidget(self.group_member_list)
+
+    def setup_group_edit(self):  # 设置 分组编辑 页面
+        scroll_area = self.findChild(SmoothScrollArea, 'ge_scroll')  # 触摸屏适配
+        QScroller.grabGesture(scroll_area.viewport(), QScroller.ScrollerGestureType.LeftMouseButtonGesture)
+
+        layout = self.findChild(QGridLayout, 'group_card_layout')
+
+        # 清空现有布局
+        item_list = list(range(layout.count()))
+        item_list.reverse()  # 倒序删除，避免影响布局顺序
+
+        for i in item_list:
+            item = layout.itemAt(i)
+            if isinstance(item.widget(), CaptionLabel):
+                continue
+            layout.removeItem(item)
+            if item.widget():
+                item.widget().deleteLater()
+        logger.success('清空了分组卡片所在的布局。')
+
+        btn_save = self.findChild(PrimaryPushButton, 'save_group')
+
+        btn_save.clicked.connect(lambda: self.save_groups())
+
+        students = conf.get_students_name()
+        global_card = GroupCard(students=students)
+
+        groups = conf.get_group_len()
+        for i in range(groups):
+            group = conf.get_group(i)
+            stu = conf.get_students_name_in_group(group)
+            card = GroupCard(title=group['name'],
+                             students=stu,
+                             is_global=False,
+                             parent=self,
+                             group_index=i)
+            layout.addWidget(card, floor(i / 3) + 1, i % 3, 1, 1)
+
+        layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
+        tips_group_empty = self.findChild(CaptionLabel, 'tips_group_empty')
+        tips_group_empty.close()
+
+    def reload_group_edit(self): # 重载 分组编辑 页面
+        layout = self.findChild(QGridLayout, 'group_card_layout')
+
+        # 清空现有布局
+        item_list = list(range(layout.count()))
+        item_list.reverse()  # 倒序删除，避免影响布局顺序
+
+        for i in item_list:
+            item = layout.itemAt(i)
+            if isinstance(item.widget(), CaptionLabel):
+                continue
+            layout.removeItem(item)
+            if item.widget():
+                item.widget().deleteLater()
+        logger.success('清空了分组卡片所在的布局。')
+
+        students = conf.get_students_name()
+        global_card = GroupCard(students=students)
+
+        groups = conf.get_group_len()
+        for i in range(groups):
+            group = conf.get_group(i)
+            stu = conf.get_students_name_in_group(group)
+            card = GroupCard(title=group['name'],
+                             students=stu,
+                             is_global=False,
+                             parent=self,
+                             group_index=i)
+            layout.addWidget(card, floor(i / 3) + 1, i % 3, 1, 1)
+
+        layout.addWidget(global_card, 0, 0, 1, layout.columnCount())
+
+    def setup_group_enabled(self):
+        group_enabled_edit = GroupEnablePolicyBox(self)
+        group_enabled_edit.exec()
+
+    def new_group(self):  # 新建分组
+        students = conf.get_students_name()
+        layout = self.findChild(QGridLayout, 'group_card_layout')
+        group_edit = GroupEditBox(parent=self,
+                                  new=True,
+                                  students=students,
+                                  target=layout)
+        group_edit.exec()
+
+    def save_groups(self):  # 保存 分组编辑 设置
+        layout = self.findChild(QGridLayout, 'group_card_layout')
+        groups = []
+        for row in range(1, layout.rowCount()):
+            for column in range(0, layout.columnCount()):
+                stu = []
+                item = layout.itemAtPosition(row, column)
+                if not isinstance(item, QLayoutItem):
+                    logger.warning(f"保存分组时，对于 {row}, {column} 处来说，没有找到 QLayoutItem。")
+                    logger.warning(f"跳过 {row}, {column} 处的卡片。")
+                    continue
+
+                card = item.widget()
+
+                if card.isDeleted:
+                    logger.warning(f"保存分组时，卡片 {row}, {column} 被标记为已删除。")
+                    logger.warning(f"跳过 {row}, {column} 处的卡片。")
+                    continue
+
+                title = card.titleLabel.text()
+                stu_list = card.stuList
+                stu_count = stu_list.count()
+                for i in range(stu_count):
+                    stu.append(conf.get_index_with_name(stu_list.item(i).text()))
+                
+                # 获取权重值
+                weight = card.weightSlider.value() if hasattr(card, 'weightSlider') else 1
+                
+                group = {"name": title, "stu": stu, "weight": weight}
+                groups.append(group)
+        conf.write_conf(groups=groups)
+
+        # 显示保存成功提示
+        Flyout.create(
+            icon=InfoBarIcon.SUCCESS,
+            title='分组设置已保存',
+            content="分组设置已保存至 students.json。",
+            target=self.groupEditInterface.save_group,
+            parent=self,
+            isClosable=False,
+            aniType=FlyoutAnimationType.PULL_UP
+        )
+
+        # 重载页面
+        self.reload_group_edit()
+
+    @override
+    def closeEvent(self, event):  # 重写 closeEvent
+        self.closed.emit()
+        event.accept()
+
+
+class GroupCard(CardWidget):  # 分组卡片
+    """
+    一个表示学生分组的小部件，包含标题、学生列表和管理选项。
+
+    该类继承自 `CardWidget`，提供了一个用于管理学生分组的用户界面。它包括一个标题、学生姓名列表以及一个菜单，
+    菜单中包含编辑分组、删除分组和撤销删除的操作。该小部件设计用于需要管理学生分组的大型应用程序中。
+
+    :param title: 分组名称，默认为 '所有学生'。
+    :type title: str
+    :param students: 分组内的学生姓名列表，默认为 ['未知学生']。
+    :type students: list
+    :param parent: 父窗口部件，默认为 None。
+    :type parent: QWidget | None
+    :param is_global: 是否是全局分组（所有学生），默认为 True。
+    :type is_global: bool
+    :param group_index: 小组在配置中的索引，默认为-1（全局分组）。
+    :type group_index: int
+    """
+
+    def __init__(
+            self, title: str = '所有学生', students: list = None, parent: QWidget | None = None,
+            is_global: bool = True, group_index: int = -1):
+        super().__init__(parent)
+        if students is None:
+            students = ['未知学生']
+        self.exist_students = students
+        self.title = title
+        self.parent = parent
+        self.isDeleted = False
+        self.group_index = group_index
+
+        self.setMinimumHeight(250)
+
+        self.titleLabel = SubtitleLabel(title, self)
+        self.moreButton = TransparentDropDownToolButton(fIcon.MORE, self)
+        self.moreMenu = RoundMenu(parent=self.moreButton)
+        self.stuList = ListWidget(self)
+        
+        # 添加权重设置
+        self.weightLayout = QHBoxLayout()
+        self.weightLabel = BodyLabel("权重:", self)
+        self.weightSlider = Slider(Qt.Orientation.Horizontal, self)
+        self.weightSlider.setRange(1, 50)
+        self.weightValue = BodyLabel("1", self)
+        self.weightValue.setFixedWidth(30)
+        
+        if not is_global and group_index >= 0:
+            weight = conf.get_group_weight(group_index)
+            self.weightSlider.setValue(weight)
+            self.weightValue.setText(str(weight))
+        else:
+            self.weightSlider.setValue(1)
+            
+        self.weightSlider.valueChanged.connect(self.update_weight_value)
+        
+        self.weightLayout.addWidget(self.weightLabel)
+        self.weightLayout.addWidget(self.weightSlider)
+        self.weightLayout.addWidget(self.weightValue)
+
+        self.hBoxLayout_Title = QHBoxLayout()
+        self.vBoxLayout = QVBoxLayout(self)
+
+        if is_global:
+            self.moreButton.setEnabled(False)
+            self.weightSlider.setEnabled(False)
+            self.weightLabel.setEnabled(False)
+            self.weightValue.setEnabled(False)
+
+        self.action_del = Action(
+            fIcon.DELETE, f'删除分组 {title}',
+            triggered=lambda: self.del_group()
+        )
+        self.action_undo_del = Action(
+            fIcon.CANCEL, f'撤销删除分组 {title}',
+            triggered=lambda: self.undo_del_group()
+        )
+        self.action_undo_del.setEnabled(False)
+
+        self.moreMenu.addActions([
+            Action(
+                fIcon.EDIT, '添加或删除学生',
+                triggered=lambda: self.set_group()
+            ),
+            self.action_del,
+            self.action_undo_del
+        ])
+        self.moreButton.setMenu(self.moreMenu)
+
+        self.stuList.addItems(students)
+        self.stuList.setSelectionMode(QListWidget.SelectionMode.NoSelection)
+        self.stuList.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+
+        # 内容
+        self.vBoxLayout.setContentsMargins(6, 6, 6, 6)
+        self.vBoxLayout.setSpacing(3)
+        self.vBoxLayout.addLayout(self.hBoxLayout_Title)
+        if not is_global:
+            self.vBoxLayout.addLayout(self.weightLayout)
+        self.vBoxLayout.addWidget(self.stuList)
+        self.vBoxLayout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+
+        # 标题栏
+        self.hBoxLayout_Title.setSpacing(12)
+        self.hBoxLayout_Title.setContentsMargins(12, 8, 12, 6)
+        self.hBoxLayout_Title.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.hBoxLayout_Title.addWidget(self.titleLabel, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.hBoxLayout_Title.addWidget(self.moreButton, 0, Qt.AlignmentFlag.AlignRight)
+        
+    def update_weight_value(self, value):
+        self.weightValue.setText(str(value))
+        if self.group_index >= 0:
+            conf.set_group_weight(self.group_index, value)
+
+    def update_weight_value(self, value):
+        self.weightValue.setText(str(value))
+        if self.group_index >= 0:
+            conf.set_group_weight(self.group_index, value)
 
     def set_group(self):
         students = conf.get_students_name()

@@ -124,6 +124,54 @@
         </layout>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QLabel" name="weight_title">
+           <property name="text">
+            <string>组权重设置</string>
+           </property>
+           <property name="class" stdset="0">
+            <string>SubtitleLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="PushButton" name="reset_group_weight">
+           <property name="text">
+            <string>重置权重</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QLabel" name="weight_description">
+           <property name="text">
+            <string>调整各小组的权重值，权重值越大，被抽中的概率越高</string>
+           </property>
+           <property name="class" stdset="0">
+            <string>CaptionLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="SmoothScrollArea" name="scrollArea">
          <property name="widgetResizable">
           <bool>true</bool>
@@ -302,6 +350,7 @@ FluentLabelBase{color:#7d000000}</string>
    <class>PrimaryPushButton</class>
    <extends>QPushButton</extends>
    <header>qfluentwidgets</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
