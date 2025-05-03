@@ -961,12 +961,10 @@ def restart():
     logger.info("重新启动")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
-@logger.catch
-def main():
+
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = Settings()
     w.show()
     sys.exit(app.exec())
 
-if __name__ == '__main__':
-    main()

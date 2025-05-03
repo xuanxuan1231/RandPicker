@@ -3,6 +3,18 @@ import os
 
 from loguru import logger
 
+# region 检查配置文件
+def check_config():
+    if not os.path.exists('./students.json'):  # 配置文件不存在
+        with open('./default_students.json', 'r', encoding='utf-8') as default:
+            students = json.load(default)
+        with open('./students.json', 'w', encoding='utf-8') as f:
+            # noinspection PyTypeChecker
+            json.dump(students, f, ensure_ascii=False, indent=4)  # 创建空配置文件
+# endregion
+
+check_config()
+
 # region 通用方法
 def get_all() -> list:
     with open('students.json', 'r', encoding='utf-8') as f:
@@ -16,14 +28,6 @@ def _refresh():
     students = get_all()
 # endregion
 
-# region 检查配置文件
-def check_config():
-    students = {'students': [], 'groups': []}
-    if not os.path.exists('./students.json'):  # 配置文件不存在
-        with open('./students.json', 'w', encoding='utf-8') as f:
-            # noinspection PyTypeChecker
-            json.dump(students, f, ensure_ascii=False, indent=4)  # 创建空配置文件
-# endregion
 
 # region 学生
 def get_all_name() -> list:

@@ -423,8 +423,7 @@ def stop():
     sys.exit()
 
 
-@logger.catch
-def main():
+if __name__ == "__main__":
     os.environ['QT_SCALE_FACTOR'] = str(float(conf.ini.get('General', 'scale')))
     app = QApplication(sys.argv)
     translator = FluentTranslator(QLocale(QLocale.Language.Chinese, QLocale.Country.China))
@@ -446,7 +445,6 @@ def main():
         sys.exit(-1)
     share.create(1)
     logger.info("欢迎。")
-    conf.check_config()
     # 设置主题
     if conf.ini.get('General', 'theme') == '0':
         setTheme(Theme.LIGHT)
@@ -460,5 +458,3 @@ def main():
 
     sys.exit(app.exec())
 
-if __name__ == "__main__":
-    main()

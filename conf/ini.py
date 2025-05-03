@@ -20,6 +20,8 @@ def check_config():
             # noinspection PyTypeChecker
             _config.write(ini)
 
+check_config()
+
 def get(section: str = 'General', key: str = '') -> str:
     """
     获取配置文件。
