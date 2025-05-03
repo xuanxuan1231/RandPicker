@@ -57,7 +57,7 @@ class Widget(QWidget):
 
     def init_ui(self):
         global last_pos
-        self.is_avatar = True if conf.get_ini('UI', 'avatar') == 'true' else False
+        self.is_avatar = True if conf.ini.get('UI', 'avatar') == 'true' else False
 
         ui_file = f"./ui{'/dark/' if isDarkTheme() else '/'}{'widget.ui' if self.is_avatar else 'widget-no-avatar.ui'}"
         uic.loadUi(ui_file, self)
@@ -81,9 +81,9 @@ class Widget(QWidget):
         if last_pos:
             logger.info(f'移动到重载前的位置 ({last_pos.x()}, {last_pos.y()})。')
             self.move(last_pos)
-        elif conf.get_ini('Last', 'x') and conf.get_ini('Last', 'y'):
-            x = int(conf.get_ini('Last', 'x'))
-            y = int(conf.get_ini('Last', 'y'))
+        elif conf.ini.get('Last', 'x') and conf.ini.get('Last', 'y'):
+            x = int(conf.ini.get('Last', 'x'))
+            y = int(conf.ini.get('Last', 'y'))
             pos = QPoint(x, y)
             logger.info(f'移动到上次关闭的位置 ({x}, {y})。')
             self.move(pos)
@@ -106,7 +106,7 @@ class Widget(QWidget):
 
     @override
     def mousePressEvent(self, event: QMouseEvent):
-        edge_distance = int(conf.get_ini('UI', 'edge_distance'))
+        edge_distance = int(conf.ini.get('UI', 'edge_distance'))
         if event.button() == Qt.MouseButton.LeftButton:
             # 检查窗口是否处于隐藏状态
             screen = QApplication.screenAt(event.globalPosition().toPoint())
@@ -148,14 +148,14 @@ class Widget(QWidget):
         """
         students = []
 
-        if conf.get_ini('Group', 'global') == 'true' or conf.get_ini('Group', 'group') == '':
+        if conf.ini.get('Group', 'global') == 'true' or conf.ini.get('Group', 'group') == '':
             logger.debug('使用全局分组。')
-            students = conf.get_students_list()
+            students = conf.stu.get_active_index()
         else:
-            groups = conf.get_ini('Group', 'group').split(', ')
+            groups = conf.ini.get('Group', 'group').split(', ')
             logger.debug(f'使用分组 {groups}。')
             for group in groups:
-                students.extend(conf.get_students_in_group(int(group)))
+                students.extend(conf.group.get_stu_index(int(group)))
         
         name = self.findChild(QLabel, 'name')
         id_ = self.findChild(QLabel, 'id')
@@ -164,10 +164,10 @@ class Widget(QWidget):
             name.setText('无结果')
             id_.setText('000000')
 
-        num = choices(students, weights=conf.get_some_weight(students), k=1)[0]
-        logger.info(f'随机数已生成。JSON 索引是 {num - 1}。它的选择权重是 {conf.get_all_weight()[num - 1]}。')
-        self.student = conf.get(num)
-        logger.debug(f'已获取 JSON 索引是 {num - 1} 的学生信息。{self.student}')
+        num = choices(students, weights=conf.stu.get_weight(students), k=1)[0]
+        logger.info(f'随机数已生成。JSON 索引是 {num}。它的选择权重是 {conf.stu.get_all_weight()[num]}。')
+        self.student = conf.stu.get_single(num)
+        logger.debug(f'已获取 JSON 索引是 {num} 的学生信息。{self.student}')
         name.setText(f'{str(self.student['id'])[-2:]} {self.student['name']}')
         id_.setText(str(self.student['id']))
 
@@ -208,19 +208,15 @@ class Widget(QWidget):
 
         """
 
-        groups = conf.get_group_len()
+        groups = len(conf.group.get_all())
         if groups < 1:
             self.pick_person()
             return
         num = random.randint(0, groups - 1)
         logger.debug(f'随机数已生成。小组的 JSON 索引是 {num}。')
-        group = conf.get_group(num)
+        group = conf.group.get_single(num)
         logger.debug(f'已获取 JSON 索引是 {num} 的小组信息。{group}')
-        student_names = []
-
-        for index in group['stu']:
-            name = conf.get(index + 1)['name']
-            student_names.append(name)
+        student_names = conf.group.get_stu_name(group)
 
         students = ', '.join(student_names)
 
@@ -234,7 +230,7 @@ class Widget(QWidget):
 
     def show_avatar(self, file_path='./img/stu/default.jpeg'):
         avatar = self.findChild(PixmapLabel, 'avatar')
-        avatar_size = int(conf.get_ini('UI', 'avatar_size'))
+        avatar_size = int(conf.ini.get('UI', 'avatar_size'))
         if file_path is not None and os.path.exists(file_path):
             file_path = file_path
         elif os.path.exists('./img/stu/default.jpeg'):
@@ -291,16 +287,16 @@ class Widget(QWidget):
         if not screen:
             screen = QApplication.primaryScreen()
         screen_geometry = screen.geometry()
-        edge_distance = int(conf.get_ini('UI', 'edge_distance'))
-        hidden_width = int(conf.get_ini('UI', 'hidden_width'))
+        edge_distance = int(conf.ini.get('UI', 'edge_distance'))
+        hidden_width = int(conf.ini.get('UI', 'hidden_width'))
         window_geometry = self.geometry()
-        if event.button() == Qt.MouseButton.LeftButton and conf.get_ini('UI',
+        if event.button() == Qt.MouseButton.LeftButton and conf.ini.get('UI',
                                                                         'edge_hide') == 'true' and self.r_Position is not None:
             # 检测是否靠近屏幕边缘
             if window_geometry.left() < screen_geometry.left() + edge_distance:
                 # 靠左边缘
                 self.animation = QPropertyAnimation(self, b"geometry")
-                elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
+                elastic_enabled = conf.ini.get('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
                     self.animation.setDuration(300)
                     self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
@@ -317,7 +313,7 @@ class Widget(QWidget):
             elif window_geometry.right() > screen_geometry.right() - edge_distance:
                 # 靠右边缘
                 self.animation = QPropertyAnimation(self, b"geometry")
-                elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
+                elastic_enabled = conf.ini.get('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
                     self.animation.setDuration(300)
                     self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
@@ -334,7 +330,7 @@ class Widget(QWidget):
             elif window_geometry.top() < screen_geometry.top() + edge_distance:
                 # 靠上边缘
                 self.animation = QPropertyAnimation(self, b"geometry")
-                elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
+                elastic_enabled = conf.ini.get('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
                     self.animation.setDuration(300)
                     self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
@@ -351,7 +347,7 @@ class Widget(QWidget):
             elif window_geometry.bottom() > screen_geometry.bottom() - edge_distance:
                 # 靠下边缘
                 self.animation = QPropertyAnimation(self, b"geometry")
-                elastic_enabled = conf.get_ini('UI', 'elastic_animation') == 'true'
+                elastic_enabled = conf.ini.get('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
                     self.animation.setDuration(300)
                     self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
@@ -375,7 +371,7 @@ class Widget(QWidget):
         self.systemTrayIcon.deleteLater()
         last_result = self.student
         last_pos = self.pos()
-        conf.write_ini('Last', 'x', last_pos.x(),
+        conf.ini.write('Last', 'x', last_pos.x(),
                        'Last', 'y', last_pos.y())
         self.themeListener.terminate()
         self.themeListener.deleteLater()
@@ -412,9 +408,9 @@ def reload_widget():
 def init():
     global widget
     if isDarkTheme():
-        setThemeColor(conf.get_ini('Color', 'dark'))
+        setThemeColor(conf.ini.get('Color', 'dark'))
     else:
-        setThemeColor(conf.get_ini('Color', 'light'))
+        setThemeColor(conf.ini.get('Color', 'light'))
     widget = Widget()
     widget.show()
     widget.raise_()
@@ -429,7 +425,7 @@ def stop():
 
 @logger.catch
 def main():
-    os.environ['QT_SCALE_FACTOR'] = str(float(conf.get_ini('General', 'scale')))
+    os.environ['QT_SCALE_FACTOR'] = str(float(conf.ini.get('General', 'scale')))
     app = QApplication(sys.argv)
     translator = FluentTranslator(QLocale(QLocale.Language.Chinese, QLocale.Country.China))
     app.installTranslator(translator)
@@ -452,9 +448,9 @@ def main():
     logger.info("欢迎。")
     conf.check_config()
     # 设置主题
-    if conf.get_ini('General', 'theme') == '0':
+    if conf.ini.get('General', 'theme') == '0':
         setTheme(Theme.LIGHT)
-    elif conf.get_ini('General', 'theme') == '1':
+    elif conf.ini.get('General', 'theme') == '1':
         setTheme(Theme.DARK)
     else:
         setTheme(Theme.AUTO)

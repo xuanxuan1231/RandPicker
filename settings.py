@@ -122,8 +122,8 @@ class Settings(FluentWindow):
         table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         table.setHorizontalHeaderLabels(['', '姓名', '学号', '权重'])
 
-        students = conf.get_all_students()
-        table.setRowCount(conf.get_students_num())
+        students = conf.stu.get_all()
+        table.setRowCount(len(students))
 
         for row, student in enumerate(students):
             table.setItem(row, 1, QTableWidgetItem(student['name']))
@@ -290,9 +290,9 @@ class Settings(FluentWindow):
         try:
             # 导入
             if file_type.lower() == 'excel':
-                students = conf.excel2json(file_path)
+                students = conf.imp.excel2json(file_path)
             else:
-                students = conf.csv2json(file_path)
+                students = conf.imp.csv2json(file_path)
 
             if not students or 'students' not in students or not students['students']:
                 MessageBox(
@@ -390,13 +390,13 @@ class Settings(FluentWindow):
         QScroller.grabGesture(scroll_area.viewport(), QScroller.ScrollerGestureType.LeftMouseButtonGesture)
         
         # 从配置文件加载设置
-        avatar_size = int(conf.get_ini('UI', 'avatar_size'))
-        edge_hide = conf.get_ini('UI', 'edge_hide') == 'true'
-        edge_distance = int(conf.get_ini('UI', 'edge_distance'))
-        hidden_width = int(conf.get_ini('UI', 'hidden_width'))
-        avatar = conf.get_ini('UI', 'avatar') == 'true'
-        scale = int(float(conf.get_ini('General', 'scale')) * 100)
-        elastic_animation = conf.get_ini('UI', 'elastic_animation') == 'true'
+        avatar_size = int(conf.ini.get('UI', 'avatar_size'))
+        edge_hide = conf.ini.get('UI', 'edge_hide') == 'true'
+        edge_distance = int(conf.ini.get('UI', 'edge_distance'))
+        hidden_width = int(conf.ini.get('UI', 'hidden_width'))
+        avatar = conf.ini.get('UI', 'avatar') == 'true'
+        scale = int(float(conf.ini.get('General', 'scale')) * 100)
+        elastic_animation = conf.ini.get('UI', 'elastic_animation') == 'true'
 
         slider_avatar_size = self.findChild(Slider, 'avatar_size')
         label_avatar_size = self.findChild(BodyLabel, 'avatar_size_label')
@@ -422,7 +422,7 @@ class Settings(FluentWindow):
         slider_hidden_width.setValue(hidden_width)
         slider_scale.setValue(scale)
         combo_theme.addItems(['浅色', '深色', '跟随系统'])
-        combo_theme.setCurrentIndex(int(conf.get_ini('General', 'theme')))
+        combo_theme.setCurrentIndex(int(conf.ini.get('General', 'theme')))
 
         # 设置标签初始值
         label_avatar_size.setText(str(avatar_size))
@@ -431,7 +431,7 @@ class Settings(FluentWindow):
         label_scale.setText(str(scale))
 
         # 设置颜色标签和预览
-        current_color = conf.get_ini('Color', 'dark' if isDarkTheme() else 'light')
+        current_color = conf.ini.get('Color', 'dark' if isDarkTheme() else 'light')
         label_color.setText(current_color.lower())
         color_obj = QColor(current_color)
         label_color.setStyleSheet(
@@ -476,7 +476,7 @@ class Settings(FluentWindow):
         theme = self.findChild(ComboBox, 'theme')
         color = self.findChild(BodyLabel, 'color_label')
 
-        conf.write_ini('UI', 'avatar_size', str(avatar_size),
+        conf.ini.write('UI', 'avatar_size', str(avatar_size),
                        'UI', 'edge_hide', edge_hide,
                        'UI', 'edge_distance', str(edge_distance),
                        'UI', 'hidden_width', str(hidden_width),
@@ -494,7 +494,7 @@ class Settings(FluentWindow):
             tg_theme = Theme.AUTO
         setTheme(tg_theme)
 
-        setThemeColor(conf.get_ini('Color', 'dark' if isDarkTheme() else 'light'))
+        setThemeColor(conf.ini.get('Color', 'dark' if isDarkTheme() else 'light'))
 
         # 显示保存成功提示
         Flyout.create(
@@ -508,7 +508,7 @@ class Settings(FluentWindow):
         )
 
         # 更新颜色标签和预览
-        current_color = conf.get_ini('Color', 'dark' if isDarkTheme() else 'light')
+        current_color = conf.ini.get('Color', 'dark' if isDarkTheme() else 'light')
         color.setText(current_color)
         color_obj = QColor(current_color)
         color.setStyleSheet(
@@ -554,13 +554,13 @@ class Settings(FluentWindow):
 
         btn_save.clicked.connect(lambda: self.save_groups())
 
-        students = conf.get_students_name()
+        students = conf.stu.get_all_name()
         global_card = GroupCard(students=students)
 
-        groups = conf.get_group_len()
+        groups = len(conf.group.get_all())
         for i in range(groups):
-            group = conf.get_group(i)
-            stu = conf.get_students_name_in_group(group)
+            group = conf.group.get_single(i)
+            stu = conf.group.get_stu_name(group)
             card = GroupCard(title=group['name'],
                              students=stu,
                              is_global=False,
@@ -587,13 +587,13 @@ class Settings(FluentWindow):
                 item.widget().deleteLater()
         logger.success('清空了分组卡片所在的布局。')
 
-        students = conf.get_students_name()
+        students = conf.stu.get_all_name()
         global_card = GroupCard(students=students)
 
-        groups = conf.get_group_len()
+        groups = len(conf.group.get_all())
         for i in range(groups):
-            group = conf.get_group(i)
-            stu = conf.get_students_name_in_group(group)
+            group = conf.group.get_single(i)
+            stu = conf.group.get_stu_name(group)
             card = GroupCard(title=group['name'],
                              students=stu,
                              is_global=False,
@@ -607,7 +607,7 @@ class Settings(FluentWindow):
         group_enabled_edit.exec()
 
     def new_group(self):  # 新建分组
-        students = conf.get_students_name()
+        students = conf.stu.get_all_name()
         layout = self.findChild(QGridLayout, 'group_card_layout')
         group_edit = GroupEditBox(parent=self,
                                   new=True,
@@ -638,7 +638,7 @@ class Settings(FluentWindow):
                 stu_list = card.stuList
                 stu_count = stu_list.count()
                 for i in range(stu_count):
-                    stu.append(conf.get_index_with_name(stu_list.item(i).text()))
+                    stu.append(conf.stu.get_index_4name(stu_list.item(i).text()))
                 group = {"name": title, "stu": stu}
                 groups.append(group)
         conf.write_conf(groups=groups)
@@ -743,7 +743,7 @@ class GroupCard(CardWidget):  # 分组卡片
         self.hBoxLayout_Title.addWidget(self.moreButton, 0, Qt.AlignmentFlag.AlignRight)
 
     def set_group(self):
-        students = conf.get_students_name()
+        students = conf.stu.get_all_name()
         stu_count = self.stuList.count()
         self.exist_students = []
         for i in range(stu_count):
@@ -863,7 +863,7 @@ class GroupEditBox(MessageBoxBase):
                                  is_global=False,
                                  parent=self.parent)
                 row = self.target.rowCount() - 1
-                students = conf.get_students_name()
+                students = conf.stu.get_all_name()
                 global_card = GroupCard(students=students)
                 for column in range(1, 3):
                     if not self.target.itemAtPosition(row, column):
@@ -902,7 +902,7 @@ class GroupEnablePolicyBox(MessageBoxBase):
         self.group_btn_global.addButton(self.btn_global, 0)
         self.group_btn_global.addButton(self.btn_group, 1)
 
-        if conf.get_ini('Group', 'global') == 'true':
+        if conf.ini.get('Group', 'global') == 'true':
             self.btn_global.setChecked(True)
         else:
             self.btn_group.setChecked(True)
@@ -912,10 +912,10 @@ class GroupEnablePolicyBox(MessageBoxBase):
         self.groupList = ListWidget()
         self.groupList.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
-        enabled_group = conf.get_ini('Group', 'group').split(', ')
+        enabled_group = conf.ini.get('Group', 'group').split(', ')
 
-        for group_num in range(conf.get_group_len()):
-            group = conf.get_group(group_num)
+        for group_num in range(len(conf.group.get_all())):
+            group = conf.group.get_single(group_num)
 
             checkbox = CheckBox(text=group['name'])  # 创建复选框
             if enabled_group is None:
@@ -949,7 +949,7 @@ class GroupEnablePolicyBox(MessageBoxBase):
             if widget.isChecked():
                 enable_group.append(group)
 
-        conf.write_ini('Group', 'global', str(self.btn_global.isChecked()),
+        conf.ini.write('Group', 'global', str(self.btn_global.isChecked()),
                        'Group', 'group', str(enable_group).replace('[', '').replace(']', ''))
 
 

@@ -4,11 +4,21 @@
 """
 
 import json
+import os
 
 from configparser import ConfigParser
 from loguru import logger
 
 _config = ConfigParser()
+
+def check_config():
+    if not os.path.exists('./config.ini'):
+        with open('./default_config.json', 'r', encoding='utf-8') as json_file:
+            default = json.load(json_file)
+        _config.read_dict(default)
+        with open('./config.ini', 'w', encoding='utf-8') as ini:
+            # noinspection PyTypeChecker
+            _config.write(ini)
 
 def get(section: str = 'General', key: str = '') -> str:
     """
