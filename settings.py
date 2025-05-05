@@ -16,7 +16,7 @@ from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableW
     InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme, \
     ToolButton, ColorDialog, setThemeColor, isDarkTheme, CheckBox, ListWidget, SubtitleLabel, CardWidget, CaptionLabel, \
     RoundMenu, Action, TransparentDropDownToolButton, PrimaryPushButton, MessageBoxBase, \
-    StrongBodyLabel, SmoothScrollArea, RadioButton
+    StrongBodyLabel, SmoothScrollArea, RadioButton, ElevatedCardWidget
 
 import conf
 
@@ -641,7 +641,7 @@ class Settings(FluentWindow):
                     stu.append(conf.stu.get_index_4name(stu_list.item(i).text()))
                 group = {"name": title, "stu": stu}
                 groups.append(group)
-        conf.write_conf(groups=groups)
+        conf.write_conf(students=None, groups=groups)
 
         # 显示保存成功提示
         Flyout.create(
@@ -663,11 +663,11 @@ class Settings(FluentWindow):
         event.accept()
 
 
-class GroupCard(CardWidget):  # 分组卡片
+class GroupCard(ElevatedCardWidget):  # 分组卡片
     """
     一个表示学生分组的小部件，包含标题、学生列表和管理选项。
 
-    该类继承自 `CardWidget`，提供了一个用于管理学生分组的用户界面。它包括一个标题、学生姓名列表以及一个菜单，
+    该类继承自 `ElevatedCardWidget`，提供了一个用于管理学生分组的用户界面。它包括一个标题、学生姓名列表以及一个菜单，
     菜单中包含编辑分组、删除分组和撤销删除的操作。该小部件设计用于需要管理学生分组的大型应用程序中。
 
     :param title: 分组名称，默认为 '所有学生'。

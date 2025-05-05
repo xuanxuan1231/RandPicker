@@ -73,7 +73,7 @@
           </widget>
          </item>
          <item>
-          <widget class="CardWidget" name="CardWidget_7">
+          <widget class="ElevatedCardWidget" name="CardWidget_7">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -145,7 +145,7 @@
           </widget>
          </item>
          <item>
-          <widget class="CardWidget" name="CardWidget_8">
+          <widget class="ElevatedCardWidget" name="CardWidget_8">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -233,7 +233,7 @@
           </widget>
          </item>
          <item>
-          <widget class="CardWidget" name="CardWidget_6">
+          <widget class="ElevatedCardWidget" name="CardWidget_6">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -349,7 +349,7 @@
           </widget>
          </item>
          <item>
-          <widget class="CardWidget" name="CardWidget_11">
+          <widget class="ElevatedCardWidget" name="CardWidget_11">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -421,7 +421,7 @@
           </widget>
          </item>
          <item>
-          <widget class="CardWidget" name="CardWidget_4">
+          <widget class="ElevatedCardWidget" name="CardWidget_4">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -534,7 +534,7 @@
           </widget>
          </item>
          <item>
-          <widget class="CardWidget" name="CardWidget_9">
+          <widget class="ElevatedCardWidget" name="CardWidget_9">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -603,7 +603,7 @@
           </widget>
          </item>
          <item>
-          <widget class="CardWidget" name="CardWidget_10">
+          <widget class="ElevatedCardWidget" name="CardWidget_10">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -709,7 +709,7 @@
           </widget>
          </item>
          <item>
-          <widget class="CardWidget" name="CardWidget_5">
+          <widget class="ElevatedCardWidget" name="CardWidget_5">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -818,7 +818,7 @@
           </widget>
          </item>
          <item>
-          <widget class="CardWidget" name="CardWidget_5">
+          <widget class="ElevatedCardWidget" name="CardWidget_5">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -978,7 +978,7 @@
    <header>qfluentwidgets</header>
   </customwidget>
   <customwidget>
-   <class>CardWidget</class>
+   <class>ElevatedCardWidget</class>
    <extends>QFrame</extends>
    <header>qfluentwidgets</header>
    <container>1</container>
