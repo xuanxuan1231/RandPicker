@@ -148,11 +148,12 @@ class Widget(QWidget):
         """
         students = []
 
-        if conf.ini.get('Group', 'global') == 'true' or conf.ini.get('Group', 'group') == '':
+        group_setting = conf.ini.get('Group', 'group')
+        if conf.ini.get('Group', 'global') == 'true' or not group_setting:
             logger.debug('使用全局分组。')
             students = conf.stu.get_active_index()
         else:
-            groups = conf.ini.get('Group', 'group').split(', ')
+            groups = group_setting.split(', ')
             logger.debug(f'使用分组 {groups}。')
             for group in groups:
                 students.extend(conf.group.get_stu_index(int(group)))
@@ -230,6 +231,11 @@ class Widget(QWidget):
 
     def show_avatar(self, file_path='./img/stu/default.jpeg'):
         avatar = self.findChild(PixmapLabel, 'avatar')
+        # 如果没有找到avatar组件（在无头像UI模式下），直接返回
+        if avatar is None:
+            logger.warning("没有找到头像组件，可能是使用了无头像UI模式。")
+            return
+            
         avatar_size = int(conf.ini.get('UI', 'avatar_size'))
         if file_path is not None and os.path.exists(file_path):
             file_path = file_path
@@ -299,9 +305,9 @@ class Widget(QWidget):
                 elastic_enabled = conf.ini.get('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
                     self.animation.setDuration(300)
-                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutQuint)
                 else:
-                    self.animation.setDuration(150)
+                    self.animation.setDuration(300)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
                 logger.debug(
                     f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
@@ -316,9 +322,9 @@ class Widget(QWidget):
                 elastic_enabled = conf.ini.get('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
                     self.animation.setDuration(300)
-                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutQuint)
                 else:
-                    self.animation.setDuration(150)
+                    self.animation.setDuration(300)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
                 logger.debug(
                     f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
@@ -333,9 +339,9 @@ class Widget(QWidget):
                 elastic_enabled = conf.ini.get('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
                     self.animation.setDuration(300)
-                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutQuint)
                 else:
-                    self.animation.setDuration(150)
+                    self.animation.setDuration(300)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
                 logger.debug(
                     f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
@@ -350,9 +356,9 @@ class Widget(QWidget):
                 elastic_enabled = conf.ini.get('UI', 'elastic_animation') == 'true'
                 if elastic_enabled:
                     self.animation.setDuration(300)
-                    self.animation.setEasingCurve(QEasingCurve.Type.OutBounce)
+                    self.animation.setEasingCurve(QEasingCurve.Type.OutQuint)
                 else:
-                    self.animation.setDuration(150)
+                    self.animation.setDuration(300)
                     self.animation.setEasingCurve(QEasingCurve.Type.Linear)
                 logger.debug(
                     f'弹性动画状态: {elastic_enabled}, 持续时间: {self.animation.duration()}ms, 缓动曲线: {self.animation.easingCurve().type()}')
