@@ -65,6 +65,10 @@ class Widget(QWidget):
         logger.info(f"设置主题：{"深色" if isDarkTheme() else "浅色"}")
 
         # 设置窗口无边框和透明背景
+        # 设置窗口透明度，范围为 0.0（完全透明）到 1.0（完全不透明）
+        # 设置窗口透明度，从配置读取或使用默认值0.8
+        opacity = float(conf.get_ini('UI', 'translucent') or '0.8')
+        self.setWindowOpacity(opacity)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         if sys.platform == 'darwin':
@@ -72,6 +76,23 @@ class Widget(QWidget):
                 Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint |
                 Qt.WindowType.Widget
             )
+            # 添加毛玻璃效果
+            translucent_enabled = conf.get_ini('UI', 'translucent') == 'true'
+            if translucent_enabled:
+                from PyQt6.QtGui import QWindow
+                win = self.windowHandle()
+                if win:
+                    win.setTranslucentBackground(True)
+                    win.setBackgroundMaterial(QWindow.BackgroundMaterial.Acrylic)
+                    # 添加模糊效果
+                    blur_effect = QGraphicsBlurEffect()
+                    blur_effect.setBlurRadius(10) # 可调整模糊半径
+                    self.setGraphicsEffect(blur_effect)
+                    # 调整颜色相关属性，让颜色更突出
+                    if isDarkTheme():
+                        setThemeColor(conf.get_ini('Color', 'dark').lighter(120)) # 颜色变亮20%
+                    else:
+                        setThemeColor(conf.get_ini('Color', 'light').darker(120)) # 颜色变暗20%
         else:
             self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint |
                                 Qt.WindowType.Tool)

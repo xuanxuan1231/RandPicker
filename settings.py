@@ -437,6 +437,7 @@ class Settings(FluentWindow):
         label_color.setStyleSheet(
             f"background-color: {current_color}; color: {'white' if color_obj.lightness() < 128 else 'black'}; padding: 2px; border-radius: 5px")
 
+
         # 绑定滑块值变化事件
         slider_avatar_size.valueChanged.connect(lambda value: label_avatar_size.setText(str(value)))
         slider_edge_distance.valueChanged.connect(lambda value: label_edge_distance.setText(str(value)))
@@ -475,6 +476,7 @@ class Settings(FluentWindow):
         scale = self.uiInterface.scale.value() / 100
         theme = self.findChild(ComboBox, 'theme')
         color = self.findChild(BodyLabel, 'color_label')
+        translucent = 'true' if self.uiInterface.translucentSwitch.isChecked() else 'false'
 
         conf.ini.write('UI', 'avatar_size', str(avatar_size),
                        'UI', 'edge_hide', edge_hide,
@@ -482,6 +484,7 @@ class Settings(FluentWindow):
                        'UI', 'hidden_width', str(hidden_width),
                        'UI', 'avatar', avatar,
                        'UI', 'elastic_animation', 'true' if self.uiInterface.elastic_animation.isChecked() else 'false',
+                       'UI', 'translucent', translucent,
                        'General', 'scale', str(scale),
                        'General', 'theme', str(theme.currentIndex()),
                        'Color', 'dark' if isDarkTheme() else 'light', color.text())
