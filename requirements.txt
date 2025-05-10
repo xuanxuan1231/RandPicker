@@ -2,3 +2,4 @@ PyQt6~=6.8.1
 PyQt6-Fluent-Widgets~=1.7.6
 pandas[excel]~=2.2.3
 loguru~=0.7.3
+requests~=2.31.0

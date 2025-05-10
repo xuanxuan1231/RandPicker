@@ -18,6 +18,7 @@ from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Acti
 
 import conf
 from settings import open_settings, share, restart
+import updater
 
 # 适配高DPI缩放
 QApplication.setHighDpiScaleFactorRoundingPolicy(
@@ -395,7 +396,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         ])
         self.menu.addSeparator()
         self.menu.addActions([
-            Action(fIcon.SYNC, '重新启动', triggered=lambda: restart()),  # 添加重启选项
+            Action(fIcon.UPDATE, '检查更新', triggered=lambda: updater.check_for_updates(parent)),
+            Action(fIcon.SYNC, '重新启动', triggered=lambda: restart()),
             Action(fIcon.CLOSE, '关闭', triggered=lambda: stop()),
         ])
         self.setContextMenu(self.menu)
@@ -461,6 +463,9 @@ if __name__ == "__main__":
     init()
 
     app.setQuitOnLastWindowClosed(False)
+    
+    # 启动时自动检查更新（静默模式）
+    updater.check_for_updates(widget, silent=True)
 
     sys.exit(app.exec())
 
