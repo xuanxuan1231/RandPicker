@@ -726,12 +726,13 @@ class Settings(FluentWindow):
         )
         caption_app = self.findChild(BodyLabel, 'caption_app')
         title_app = self.findChild(TitleLabel, 'title_app')
+        btn_update_app = self.findChild(PrimaryPushButton, 'update_app')
         caption_app.setText(f"当前版本：{APP_VERSION}。最新版本：{updates['version']}。")
         if updates['is_latest']:
             title_app.setText('已是最新版本。')
+            btn_update_app.setEnabled(False)
         else:
             title_app.setText('有可用更新。')
-            btn_update_app = self.findChild(PrimaryPushButton, 'update_app')
             btn_update_app.setEnabled(True)
 
 
@@ -761,12 +762,13 @@ class Settings(FluentWindow):
         )
         caption_updater = self.findChild(BodyLabel, 'caption_updater')
         title_updater = self.findChild(TitleLabel, 'title_updater')
+        btn_update_updater = self.findChild(PrimaryPushButton, 'update_updater')
         caption_updater.setText(f"当前版本：{UPDATER_VERSION}。最新版本：{updates['version']}。")
         if updates['is_latest']:
             title_updater.setText('已是最新版本。')
+            btn_update_updater.setEnabled(False)
         else:
             title_updater.setText('有可用更新。')
-            btn_update_updater = self.findChild(PrimaryPushButton, 'update_updater')
             btn_update_updater.setEnabled(True)
 
     def update_app(self):
@@ -774,8 +776,11 @@ class Settings(FluentWindow):
         w.exec()
 
     def update_updater(self):
+        global UPDATER_VERSION
         w = UpdateConfirmBox(self, app=False)
         w.exec()
+        UPDATER_VERSION = str(update.UPDATER_VERSION)
+        self.check_update_updater()
 
     @override
     def closeEvent(self, event):  # 重写 closeEvent
