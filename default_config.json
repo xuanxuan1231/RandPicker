@@ -17,5 +17,9 @@
     "Color": {
         "dark": "#29f1ff",
         "light": "#009faa"
+    },
+    "Update": {
+        "app": "0",
+        "updater": "0"
     }
 }

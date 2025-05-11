@@ -218,6 +218,7 @@ cython_debug/
 /students.json
 /.idea
 /*.ini
+/*.exe
 
 # Backup Files
 /*.bak

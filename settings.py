@@ -5,6 +5,7 @@ import os
 import sys
 from math import floor
 from typing import override
+from time import sleep
 
 from PyQt6 import uic
 from PyQt6.QtCore import QUrl, pyqtSignal, QSharedMemory, Qt
@@ -16,13 +17,17 @@ from qfluentwidgets import FluentWindow, FluentIcon as fIcon, PushButton, TableW
     InfoBarIcon, FlyoutAnimationType, SwitchButton, Slider, MessageBox, BodyLabel, LineEdit, setTheme, ComboBox, Theme, \
     ToolButton, ColorDialog, setThemeColor, isDarkTheme, CheckBox, ListWidget, SubtitleLabel, CardWidget, CaptionLabel, \
     RoundMenu, Action, TransparentDropDownToolButton, PrimaryPushButton, MessageBoxBase, \
-    StrongBodyLabel, SmoothScrollArea, RadioButton
+    StrongBodyLabel, SmoothScrollArea, RadioButton, TitleLabel, InfoBar, InfoBarPosition
 
 import conf
+import update
 
 settings = None
 
 share = QSharedMemory('RandPicker')
+
+APP_VERSION = str(update.APP_VERSION)
+UPDATER_VERSION = str(update.UPDATER_VERSION)
 
 
 def open_settings():
@@ -67,6 +72,7 @@ class Settings(FluentWindow):
         self.uiInterface.setObjectName('uiInterface')
         self.groupEditInterface = uic.loadUi('./ui/settings/group.ui')
         self.groupEditInterface.setObjectName('groupEditInterface')
+        self.updateInterface = uic.loadUi('./ui/settings/update.ui')
 
         self.init_nav()
         self.setup_ui()
@@ -75,6 +81,8 @@ class Settings(FluentWindow):
         self.addSubInterface(self.stuEditInterface, fIcon.EDIT, '学生编辑')
         self.addSubInterface(self.groupEditInterface, fIcon.PEOPLE, '小组编辑')
         self.navigationInterface.addSeparator(NavigationItemPosition.BOTTOM)
+        if sys.platform == 'win32':
+            self.addSubInterface(self.updateInterface, fIcon.UPDATE, '更新', NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.uiInterface, fIcon.SETTING, '界面设置', NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.aboutInterface, fIcon.INFO, '关于', NavigationItemPosition.BOTTOM)
 
@@ -103,6 +111,7 @@ class Settings(FluentWindow):
         self.setup_student_edit_interface()
         self.setup_ui_interface()
         self.setup_group_edit_interface()
+        self.setup_update_interface()
 
     def setup_about_interface(self):  # 设置 关于 页面
         btn_github = self.findChild(PushButton, 'btn_github')
@@ -111,6 +120,9 @@ class Settings(FluentWindow):
         btn_license = self.findChild(PushButton, 'btn_license')
         btn_license.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl('https://github.com/xuanxuan1231/RandPicker/blob/main/LICENSE')))
+        if sys.platform != 'win32':
+            caption_update = self.findChild(BodyLabel, 'caption_update')
+            caption_update.setText('您的系统不支持应用内更新。')
 
     def setup_student_edit_interface(self):  # 设置 学生编辑 页面
         table = self.findChild(TableWidget, 'student_list')
@@ -656,11 +668,167 @@ class Settings(FluentWindow):
 
         # 重载页面
         self.reload_group_edit()
+    
+    def setup_update_interface(self):  # 设置 更新 页面
+        global APP_VERSION, UPDATER_VERSION
+        caption_app = self.findChild(BodyLabel, 'caption_app')
+        caption_app.setText(f"当前版本：{APP_VERSION}。没有获取到最新版本。")
+
+        if UPDATER_VERSION:
+            caption_updater = self.findChild(BodyLabel, 'caption_updater')
+            caption_updater.setText(f"当前版本：{UPDATER_VERSION}。没有获取到最新版本。")
+
+        btn_check_app = self.findChild(PushButton, 'check_app')
+        btn_check_app.clicked.connect(lambda: self.check_update_app())
+        btn_check_updater = self.findChild(PushButton, 'check_updater')
+        btn_check_updater.clicked.connect(lambda: self.check_update_updater())
+
+        btn_update_app = self.findChild(PrimaryPushButton, 'update_app')
+        btn_update_app.setEnabled(False)
+        btn_update_app.clicked.connect(lambda: self.update_app())
+        btn_update_updater = self.findChild(PrimaryPushButton, 'update_updater')
+        btn_update_updater.setEnabled(False)
+        btn_update_updater.clicked.connect(lambda: self.update_updater())
+
+        combo_origin_app = self.findChild(ComboBox, 'app_origin')
+        combo_origin_app.addItems(['GitHub', 'OSS (不可用)'])
+        combo_origin_app.setCurrentIndex(int(conf.ini.get('Update', 'app')))
+        combo_origin_app.currentIndexChanged.connect(lambda index: conf.ini.write('Update', 'app', str(index)))
+
+        combo_origin_updater = self.findChild(ComboBox, 'updater_origin')
+        combo_origin_updater.addItems(['GitHub', 'OSS (不可用)'])
+        combo_origin_updater.setCurrentIndex(int(conf.ini.get('Update', 'updater')))
+        combo_origin_updater.currentIndexChanged.connect(lambda index: conf.ini.write('Update', 'updater', str(index)))
+
+    def check_update_app(self):
+        try:
+            updates = update.check_update_app(conf.ini.get('Update', 'app'))
+        except Exception as e:
+            InfoBar.error(
+                title='检查更新失败',
+                content=f"检查更新失败：{str(e)}",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
+            return
+        
+        InfoBar.success(
+            title='检查更新成功',
+            content="RandPicker 有新更新" if not updates['is_latest'] else "RandPicker 已是最新版本",
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=2000,
+            parent=self
+        )
+        caption_app = self.findChild(BodyLabel, 'caption_app')
+        title_app = self.findChild(TitleLabel, 'title_app')
+        caption_app.setText(f"当前版本：{APP_VERSION}。最新版本：{updates['version']}。")
+        if updates['is_latest']:
+            title_app.setText('已是最新版本。')
+        else:
+            title_app.setText('有可用更新。')
+            btn_update_app = self.findChild(PrimaryPushButton, 'update_app')
+            btn_update_app.setEnabled(True)
+
+
+    def check_update_updater(self):
+        try:
+            updates = update.check_update_updater(conf.ini.get('Update', 'updater'))
+        except Exception as e:
+            InfoBar.error(
+                title='检查更新失败',
+                content=f"检查更新失败：{str(e)}",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
+            return
+        
+        InfoBar.success(
+            title='检查更新成功',
+            content="更新助理有新更新" if not updates['is_latest'] else "更新助理已是最新版本",
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=2000,
+            parent=self
+        )
+        caption_updater = self.findChild(BodyLabel, 'caption_updater')
+        title_updater = self.findChild(TitleLabel, 'title_updater')
+        caption_updater.setText(f"当前版本：{UPDATER_VERSION}。最新版本：{updates['version']}。")
+        if updates['is_latest']:
+            title_updater.setText('已是最新版本。')
+        else:
+            title_updater.setText('有可用更新。')
+            btn_update_updater = self.findChild(PrimaryPushButton, 'update_updater')
+            btn_update_updater.setEnabled(True)
+
+    def update_app(self):
+        w = UpdateConfirmBox(self, app=True)
+        w.exec()
+
+    def update_updater(self):
+        w = UpdateConfirmBox(self, app=False)
+        w.exec()
 
     @override
     def closeEvent(self, event):  # 重写 closeEvent
         self.closed.emit()
         event.accept()
+
+
+class UpdateConfirmBox(MessageBoxBase):
+    """
+    更新确认框。
+
+    :param parent: 父控件。
+    :type parent: QWidget | None
+    :param title: 标题。
+    :type title: str
+    :param content: 内容。
+    :type content: str
+    :param target: 目标控件。
+    :type target: QWidget | None
+
+    :raises: None
+
+    :returns: None
+    """
+
+    def __init__(self, parent=None, app: bool = False):
+        super().__init__(parent)
+        self.app = app
+        if self.app:
+            self.title = '确实要更新 RandPicker？'
+            self.content = '将使用 RandPicker 更新助理更新 RandPicker。\n' \
+                          '更新助理会要求您关闭 RandPicker。请在操作前保存您的更改。'
+        else:
+            self.title = '确实要更新 RandPicker 更新助理？'
+            self.content = '将更新 RandPicker 更新助理。\n' \
+                          'RandPicker 不会被关闭。'
+            
+        self.titleLabel = TitleLabel(self.title, self)
+        self.contentLabel = BodyLabel(self.content, self)
+
+        self.viewLayout.addWidget(self.titleLabel)
+        self.viewLayout.addWidget(self.contentLabel)
+
+        self.yesButton.clicked.connect(self.update)
+
+    def update(self):
+        self.yesButton.setEnabled(False)
+        self.cancelButton.setEnabled(False)
+        if self.app:
+            update.update_app()
+        else:
+            update.update_updater(parent=self)
+        self.close()
 
 
 class GroupCard(CardWidget):  # 分组卡片

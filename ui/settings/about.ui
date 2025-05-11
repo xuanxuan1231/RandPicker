@@ -54,9 +54,6 @@
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
-       <property name="rightMargin">
-        <number>14</number>
-       </property>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout">
          <property name="leftMargin">
@@ -228,6 +225,13 @@
           </layout>
          </item>
         </layout>
+       </item>
+       <item alignment="Qt::AlignHCenter">
+        <widget class="CaptionLabel" name="caption_update">
+         <property name="text">
+          <string>您的系统支持应用内更新。转到“更新”查看更多。</string>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer">
