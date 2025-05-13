@@ -1,10 +1,13 @@
 import sys
+import os
 
 from packaging.version import Version
 import requests
 from loguru import logger
 import zipfile
 from qfluentwidgets import ProgressBar
+
+import conf
 
 
 if sys.platform == 'win32':
@@ -127,11 +130,16 @@ def check_update_updater(origin: int = 0) -> dict:
     return result
 
 
-def update_app(parent=None):
+def update_app(parent=None,):
     """
     更新应用程序。
     """
     logger.info('开始更新应用程序。')
+    origin = conf.ini.get('Update', 'app')
+    if os.path.exists('Updater.exe'):
+        os.system(f'start Updater.exe -l=false -origin={origin}')
+        sys.exit(0)
+    logger.error('未找到更新器。')
 
 def update_updater(parent=None):
     """

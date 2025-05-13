@@ -812,7 +812,8 @@ class UpdateConfirmBox(MessageBoxBase):
         if self.app:
             self.title = '确实要更新 RandPicker？'
             self.content = '将使用 RandPicker 更新助理更新 RandPicker。\n' \
-                          '更新助理会要求您关闭 RandPicker。请在操作前保存您的更改。'
+                          'RandPicker 将会退出。请在操作前保存您的更改。\n' \
+                          '如果更新助理没有打开，请先更新它。'
         else:
             self.title = '确实要更新 RandPicker 更新助理？'
             self.content = '将更新 RandPicker 更新助理。\n' \
