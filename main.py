@@ -138,9 +138,10 @@ class Widget(QWidget):
     @override
     def mouseMoveEvent(self, event: QMouseEvent):
         if event.buttons() == Qt.MouseButton.LeftButton:
-            self.move(event.globalPosition().toPoint() - self.m_Position)  # 更改窗口位置
-            self.r_Position = event.globalPosition().toPoint()  # 记录鼠标释放位置
-            event.accept()
+            if self.m_Position is not None:
+                self.move(event.globalPosition().toPoint() - self.m_Position)  # 更改窗口位置
+                self.r_Position = event.globalPosition().toPoint()  # 记录鼠标释放位置
+                event.accept()
 
     def pick_person(self):
         """
@@ -226,7 +227,8 @@ class Widget(QWidget):
 
         name.setText(group['name'])
         id_.setText(students)
-        self.show_avatar()
+        if self.is_avatar:
+            self.show_avatar()
 
     def show_avatar(self, file_path='./img/stu/default.jpeg'):
         avatar = self.findChild(PixmapLabel, 'avatar')
@@ -407,11 +409,11 @@ def reload_widget():
 
 def init():
     global widget
+    widget = Widget()
     if isDarkTheme():
         setThemeColor(conf.ini.get('Color', 'dark'))
     else:
         setThemeColor(conf.ini.get('Color', 'light'))
-    widget = Widget()
     widget.show()
     widget.raise_()
 
