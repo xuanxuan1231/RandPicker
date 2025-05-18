@@ -18,6 +18,8 @@ from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Acti
 
 import conf
 from settings import open_settings, share, restart
+from settings.interfaces.history_interface import add_history_entry
+from datetime import datetime
 
 # 适配高DPI缩放
 QApplication.setHighDpiScaleFactorRoundingPolicy(
@@ -185,6 +187,9 @@ class Widget(QWidget):
             self.student['avatar'] = avatar_path
             self.show_avatar(avatar_path)
 
+        # 记录历史
+        add_history_entry({'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'type': 'person', 'result': f'{self.student['id']} {self.student['name']}'})
+
     def clear(self):
         global last_result
         name = self.findChild(QLabel, 'name')
@@ -229,6 +234,9 @@ class Widget(QWidget):
         id_.setText(students)
         if self.is_avatar:
             self.show_avatar()
+
+        # 记录历史
+        add_history_entry({'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'type': 'group', 'result': f'{group['name']} ({students})'})
 
     def show_avatar(self, file_path='./img/stu/default.jpeg'):
         avatar = self.findChild(PixmapLabel, 'avatar')
@@ -455,6 +463,9 @@ if __name__ == "__main__":
     else:
         setTheme(Theme.AUTO)
     init()
+    
+    # 直接打开设置窗口以测试历史记录界面
+    open_settings()
 
     app.setQuitOnLastWindowClosed(False)
 

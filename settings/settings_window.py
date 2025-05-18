@@ -18,6 +18,7 @@ from .interfaces.group_interface import setup_group_edit_interface, setup_group_
 from .interfaces.ui_interface import setup_ui_interface
 from .interfaces.about_interface import setup_about_interface
 from .interfaces.update_interface import setup_update_interface
+from .interfaces.history_interface import setup_history_interface
 
 # 全局变量
 settings = None
@@ -70,6 +71,7 @@ class Settings(FluentWindow):
         self.groupEditInterface = uic.loadUi('./ui/settings/group.ui')
         self.groupEditInterface.setObjectName('groupEditInterface')
         self.updateInterface = uic.loadUi('./ui/settings/update.ui')
+        self.historyInterface = uic.loadUi('./ui/settings/history.ui')
 
         self.init_nav()
         self.setup_ui()
@@ -77,6 +79,7 @@ class Settings(FluentWindow):
     def init_nav(self):  # 设置侧边栏
         self.addSubInterface(self.stuEditInterface, fIcon.EDIT, '学生编辑')
         self.addSubInterface(self.groupEditInterface, fIcon.PEOPLE, '小组编辑')
+        self.addSubInterface(self.historyInterface, fIcon.HISTORY, '历史记录')
         self.navigationInterface.addSeparator(NavigationItemPosition.BOTTOM)
         if sys.platform == 'win32':
             self.addSubInterface(self.updateInterface, fIcon.UPDATE, '更新', NavigationItemPosition.BOTTOM)
@@ -109,6 +112,7 @@ class Settings(FluentWindow):
         setup_ui_interface(self)
         setup_group_edit_interface(self)
         setup_update_interface(self)
+        setup_history_interface(self)
 
     def closeEvent(self, event):  # 重写 closeEvent
         self.closed.emit()
