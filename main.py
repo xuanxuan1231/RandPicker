@@ -1,5 +1,7 @@
 """
-RandPicker 主程序。
+RandPicker 主程序 (LTS版本)。
+
+此版本专注于稳定性和可靠性，适合长期支持使用。
 """
 
 import os
@@ -31,7 +33,20 @@ last_result = {}
 last_pos = QPoint()
 
 # 记录日志
-logger.add("./log/RandPicker_{time}.log", rotation="1 MB", encoding="utf-8", retention="1 minute")
+# LTS版本使用更可靠的日志配置，增加保留时间和错误捕获
+try:
+    # 确保日志目录存在
+    os.makedirs("./log", exist_ok=True)
+    logger.add("./log/RandPicker_{time}.log", 
+              rotation="1 MB", 
+              encoding="utf-8", 
+              retention="7 days",
+              backtrace=True, 
+              diagnose=True,
+              catch=True)
+    logger.info("LTS版本日志系统初始化成功")
+except Exception as e:
+    print(f"日志系统初始化失败: {e}")
 
 # 自动切换主题
 qconfig.themeChanged.connect(lambda: reload_widget())
@@ -148,47 +163,101 @@ class Widget(QWidget):
     def pick_person(self):
         """
         随机选人。
-        """
-        students = []
-
-        if conf.ini.get('Group', 'global') == 'true' or conf.ini.get('Group', 'group') == '':
-            logger.debug('使用全局分组。')
-            students = conf.stu.get_active_index()
-        else:
-            groups = conf.ini.get('Group', 'groups').split(', ')
-            logger.debug(f'使用分组 {groups}。')
-            for group in groups:
-                students.extend(conf.group.get_stu_index(int(group)))
         
-        name = self.findChild(QLabel, 'name')
-        id_ = self.findChild(QLabel, 'id')
+        LTS版本增强了错误处理和边缘情况处理。
+        """
+        try:
+            students = []
 
-        if not students:
-            name.setText('无结果')
-            id_.setText('000000')
+            if conf.ini.get('Group', 'global') == 'true' or conf.ini.get('Group', 'group') == '':
+                logger.debug('使用全局分组。')
+                students = conf.stu.get_active_index()
+            else:
+                group_str = conf.ini.get('Group', 'groups')
+                if group_str and group_str.strip():
+                    groups = group_str.split(', ')
+                    logger.debug(f'使用分组 {groups}。')
+                    for group in groups:
+                        try:
+                            group_index = int(group)
+                            students.extend(conf.group.get_stu_index(group_index))
+                        except (ValueError, TypeError) as e:
+                            logger.error(f'分组转换错误: {e}，跳过此分组')
+                else:
+                    logger.warning('分组字符串为空，使用全局分组')
+                    students = conf.stu.get_active_index()
+            
+            name = self.findChild(QLabel, 'name')
+            id_ = self.findChild(QLabel, 'id')
 
-        num = choices(students, weights=conf.stu.get_weight(students), k=1)[0]
-        logger.info(f'随机数已生成。JSON 索引是 {num}。它的选择权重是 {conf.stu.get_all_weight()[num]}。')
-        self.student = conf.stu.get_single(num)
-        logger.debug(f'已获取 JSON 索引是 {num} 的学生信息。{self.student}')
-        name.setText(f'{str(self.student['id'])[-2:]} {self.student['name']}')
-        id_.setText(str(self.student['id']))
+            if not students:
+                logger.warning('没有可用的学生数据')
+                name.setText('无结果')
+                id_.setText('000000')
+                if self.is_avatar:
+                    self.show_avatar()
+                return
 
-        if self.is_avatar:
-            # 设置头像
-            avatar_path = None
-            # 尝试不同的图片格式
-            for ext in ['png', 'jpg', 'jpeg']:
-                temp_path = f'./img/stu/{self.student['id']}.{ext}'
-                if os.path.exists(temp_path):
-                    avatar_path = temp_path
-                    logger.success(f"找到了学生 {self.student['id']} 的头像 {self.student['id']}.{ext}。")
-                    break
-            self.student['avatar'] = avatar_path
-            self.show_avatar(avatar_path)
+            # 确保权重列表长度与学生列表一致
+            weights = conf.stu.get_weight(students)
+            if len(weights) != len(students):
+                logger.error(f'权重列表长度({len(weights)})与学生列表长度({len(students)})不匹配，使用均等权重')
+                weights = [1] * len(students)
+            
+            # 安全地选择学生
+            try:
+                num = choices(students, weights=weights, k=1)[0]
+                logger.info(f'随机数已生成。JSON 索引是 {num}。它的选择权重是 {conf.stu.get_all_weight()[num]}。')
+                self.student = conf.stu.get_single(num)
+                logger.debug(f'已获取 JSON 索引是 {num} 的学生信息。{self.student}')
+                
+                # 确保学生数据完整
+                if not self.student or 'name' not in self.student or 'id' not in self.student:
+                    logger.error(f'学生数据不完整: {self.student}')
+                    name.setText('数据错误')
+                    id_.setText('000000')
+                    if self.is_avatar:
+                        self.show_avatar()
+                    return
+                
+                name.setText(f'{str(self.student["id"])[-2:]} {self.student["name"]}')
+                id_.setText(str(self.student["id"]))
 
-        # 记录历史
-        add_history_entry({'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'type': 'person', 'result': f'{self.student['id']} {self.student['name']}'})
+                if self.is_avatar:
+                    # 设置头像
+                    avatar_path = None
+                    # 尝试不同的图片格式
+                    for ext in ['png', 'jpg', 'jpeg']:
+                        temp_path = f'./img/stu/{self.student["id"]}.{ext}'
+                        if os.path.exists(temp_path):
+                            avatar_path = temp_path
+                            logger.success(f"找到了学生 {self.student["id"]} 的头像 {self.student["id"]}.{ext}。")
+                            break
+                    self.student['avatar'] = avatar_path
+                    self.show_avatar(avatar_path)
+
+                # 记录历史
+                try:
+                    add_history_entry({'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
+                                      'type': 'person', 
+                                      'result': f'{self.student["id"]} {self.student["name"]}'})
+                except Exception as e:
+                    logger.error(f'记录历史失败: {e}')
+            except IndexError:
+                logger.error('选择学生时发生索引错误，可能是空列表或权重问题')
+                name.setText('选择错误')
+                id_.setText('000000')
+                if self.is_avatar:
+                    self.show_avatar()
+        except Exception as e:
+            logger.exception(f'随机选人过程中发生错误: {e}')
+            name = self.findChild(QLabel, 'name')
+            id_ = self.findChild(QLabel, 'id')
+            if name and id_:
+                name.setText('系统错误')
+                id_.setText('000000')
+            if self.is_avatar:
+                self.show_avatar()
 
     def clear(self):
         global last_result
@@ -211,85 +280,204 @@ class Widget(QWidget):
     def pick_group(self):
         """
         随机选小组。
-
+        
+        LTS版本增强了错误处理和边缘情况处理。
         """
+        try:
+            # 获取所有小组
+            all_groups = conf.group.get_all()
+            groups = len(all_groups)
+            
+            if groups < 1:
+                logger.warning('没有可用的小组数据，切换到选人模式')
+                self.pick_person()
+                return
+                
+            # 安全地生成随机数
+            try:
+                num = random.randint(0, groups - 1)
+                logger.debug(f'随机数已生成。小组的 JSON 索引是 {num}。')
+                
+                # 获取小组信息
+                group = conf.group.get_single(num)
+                if not group or 'name' not in group:
+                    logger.error(f'小组数据不完整: {group}')
+                    name = self.findChild(QLabel, 'name')
+                    id_ = self.findChild(QLabel, 'id')
+                    if name and id_:
+                        name.setText('小组数据错误')
+                        id_.setText('请检查小组配置')
+                    if self.is_avatar:
+                        self.show_avatar()
+                    return
+                    
+                logger.debug(f'已获取 JSON 索引是 {num} 的小组信息。{group}')
+                
+                # 获取小组成员名称
+                try:
+                    student_names = conf.group.get_stu_name(group)
+                    students = ', '.join(student_names) if student_names else '(空小组)'
+                except Exception as e:
+                    logger.error(f'获取小组成员名称失败: {e}')
+                    students = '(获取成员失败)'
+                
+                # 更新UI
+                name = self.findChild(QLabel, 'name')
+                id_ = self.findChild(QLabel, 'id')
+                if name and id_:
+                    logger.debug(f"信息已解析。名称：{group['name']}；学生：{students}。")
+                    name.setText(group['name'])
+                    id_.setText(students)
+                
+                if self.is_avatar:
+                    self.show_avatar()
 
-        groups = len(conf.group.get_all())
-        if groups < 1:
-            self.pick_person()
-            return
-        num = random.randint(0, groups - 1)
-        logger.debug(f'随机数已生成。小组的 JSON 索引是 {num}。')
-        group = conf.group.get_single(num)
-        logger.debug(f'已获取 JSON 索引是 {num} 的小组信息。{group}')
-        student_names = conf.group.get_stu_name(group)
-
-        students = ', '.join(student_names)
-
-        name = self.findChild(QLabel, 'name')
-        id_ = self.findChild(QLabel, 'id')
-        logger.debug(f"信息已解析。名称：{group['name']}；学生：{students}。")
-
-        name.setText(group['name'])
-        id_.setText(students)
-        if self.is_avatar:
-            self.show_avatar()
-
-        # 记录历史
-        add_history_entry({'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'type': 'group', 'result': f'{group['name']} ({students})'})
+                # 记录历史
+                try:
+                    add_history_entry({'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
+                                      'type': 'group', 
+                                      'result': f'{group["name"]} ({students})'})
+                except Exception as e:
+                    logger.error(f'记录历史失败: {e}')
+                    
+            except ValueError as e:
+                logger.error(f'生成随机数时发生错误: {e}')
+                name = self.findChild(QLabel, 'name')
+                id_ = self.findChild(QLabel, 'id')
+                if name and id_:
+                    name.setText('随机选择错误')
+                    id_.setText('请检查小组配置')
+                if self.is_avatar:
+                    self.show_avatar()
+                    
+        except Exception as e:
+            logger.exception(f'随机选组过程中发生错误: {e}')
+            name = self.findChild(QLabel, 'name')
+            id_ = self.findChild(QLabel, 'id')
+            if name and id_:
+                name.setText('系统错误')
+                id_.setText('请检查日志')
+            if self.is_avatar:
+                self.show_avatar()
 
     def show_avatar(self, file_path='./img/stu/default.jpeg'):
-        avatar = self.findChild(PixmapLabel, 'avatar')
-        avatar_size = int(conf.ini.get('UI', 'avatar_size'))
-        if file_path is not None and os.path.exists(file_path):
-            file_path = file_path
-        elif os.path.exists('./img/stu/default.jpeg'):
-            logger.warning(f"没有找到头像。使用默认头像。")
-            file_path = './img/stu/default.jpeg'
-        else:
-            avatar.setPixmap(QPixmap())
-            avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
-            logger.warning(f"没有找到头像 {file_path} 和默认头像。使用空白。")
-            return
+        """
+        显示头像
+        
+        LTS版本增强了错误处理和资源管理
+        """
+        try:
+            avatar = self.findChild(PixmapLabel, 'avatar')
+            if not avatar:
+                logger.error('未找到头像控件')
+                return
+                
+            # 安全地获取头像大小
+            try:
+                avatar_size = int(conf.ini.get('UI', 'avatar_size'))
+                if avatar_size <= 0:
+                    logger.warning(f'头像大小配置异常: {avatar_size}，使用默认值60')
+                    avatar_size = 60
+            except (ValueError, TypeError) as e:
+                logger.error(f'头像大小配置错误: {e}，使用默认值60')
+                avatar_size = 60
+            
+            # 检查文件路径
+            if file_path is not None and os.path.exists(file_path):
+                # 文件路径有效，不需要修改
+                pass
+            elif os.path.exists('./img/stu/default.jpeg'):
+                logger.warning(f"没有找到头像 {file_path}。使用默认头像。")
+                file_path = './img/stu/default.jpeg'
+            else:
+                logger.warning(f"没有找到头像 {file_path} 和默认头像。使用空白。")
+                avatar.setPixmap(QPixmap())
+                avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
+                return
 
-        # 使用复合缓存键，避免重复创建
-        final_cache_key = f"final_{file_path}_{avatar_size}"
-        final_pixmap = QPixmapCache.find(final_cache_key)
+            # 使用复合缓存键，避免重复创建
+            try:
+                final_cache_key = f"final_{file_path}_{avatar_size}"
+                final_pixmap = QPixmapCache.find(final_cache_key)
 
-        if not final_pixmap:
-            # 原始图片缓存
-            cache_key = f"{file_path}_{avatar_size}"
-            pixmap = QPixmapCache.find(cache_key)
-            if not pixmap:
-                pixmap = QPixmap(file_path)
-                scaled_pixmap = pixmap.scaled(avatar_size, avatar_size,
-                                              Qt.AspectRatioMode.KeepAspectRatio,
-                                              Qt.TransformationMode.SmoothTransformation)
-                QPixmapCache.insert(cache_key, scaled_pixmap)
-                pixmap = scaled_pixmap
+                if not final_pixmap:
+                    # 原始图片缓存
+                    cache_key = f"{file_path}_{avatar_size}"
+                    pixmap = QPixmapCache.find(cache_key)
+                    
+                    if not pixmap:
+                        # 加载并缩放图片
+                        try:
+                            pixmap = QPixmap(file_path)
+                            if pixmap.isNull():
+                                logger.error(f'无法加载图片: {file_path}')
+                                avatar.setPixmap(QPixmap())
+                                avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
+                                return
+                                
+                            scaled_pixmap = pixmap.scaled(avatar_size, avatar_size,
+                                                        Qt.AspectRatioMode.KeepAspectRatio,
+                                                        Qt.TransformationMode.SmoothTransformation)
+                            QPixmapCache.insert(cache_key, scaled_pixmap)
+                            pixmap = scaled_pixmap
+                        except Exception as e:
+                            logger.error(f'图片处理错误: {e}')
+                            avatar.setPixmap(QPixmap())
+                            avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
+                            return
 
-            # 创建最终带圆形遮罩的图片
-            final_pixmap = QPixmap(avatar_size, avatar_size)
-            final_pixmap.fill(Qt.GlobalColor.transparent)
+                    # 创建最终带圆形遮罩的图片
+                    final_pixmap = QPixmap(avatar_size, avatar_size)
+                    final_pixmap.fill(Qt.GlobalColor.transparent)
 
-            with QPainter(final_pixmap) as painter:
-                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                    try:
+                        with QPainter(final_pixmap) as painter:
+                            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-                # 先设置圆形裁剪区域
-                path = QPainterPath()
-                path.addEllipse(0, 0, avatar_size, avatar_size)
-                painter.setClipPath(path)
+                            # 先设置圆形裁剪区域
+                            path = QPainterPath()
+                            path.addEllipse(0, 0, avatar_size, avatar_size)
+                            painter.setClipPath(path)
 
-                # 然后在裁剪区域内绘制图片
-                x = (avatar_size - pixmap.width()) // 2
-                y = (avatar_size - pixmap.height()) // 2
-                painter.drawPixmap(x, y, pixmap)
+                            # 然后在裁剪区域内绘制图片
+                            x = (avatar_size - pixmap.width()) // 2
+                            y = (avatar_size - pixmap.height()) // 2
+                            painter.drawPixmap(x, y, pixmap)
+                    except Exception as e:
+                        logger.error(f'绘制圆形头像错误: {e}')
+                        avatar.setPixmap(pixmap)  # 退回到使用原始图片
+                        avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
+                        return
 
-            QPixmapCache.insert(final_cache_key, final_pixmap)
+                    QPixmapCache.insert(final_cache_key, final_pixmap)
 
-        avatar.setPixmap(final_pixmap)
-        logger.success(f"显示头像 {file_path}。")
-        avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
+                avatar.setPixmap(final_pixmap)
+                logger.success(f"显示头像 {file_path}。")
+                avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
+            except Exception as e:
+                logger.error(f'缓存处理错误: {e}')
+                # 尝试直接设置图片作为备选方案
+                try:
+                    direct_pixmap = QPixmap(file_path)
+                    if not direct_pixmap.isNull():
+                        avatar.setPixmap(direct_pixmap.scaled(avatar_size, avatar_size))
+                        avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
+                    else:
+                        avatar.setPixmap(QPixmap())
+                        avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
+                except:
+                    avatar.setPixmap(QPixmap())
+                    avatar.setStyleSheet(f'border-radius: {avatar_size // 2}px; background-color: transparent;')
+        except Exception as e:
+            logger.exception(f'显示头像过程中发生错误: {e}')
+            # 尝试重置头像控件
+            try:
+                avatar = self.findChild(PixmapLabel, 'avatar')
+                if avatar:
+                    avatar.setPixmap(QPixmap())
+                    avatar.setStyleSheet('background-color: transparent;')
+            except:
+                pass
 
     @override
     def mouseReleaseEvent(self, event: QMouseEvent):
@@ -434,40 +622,101 @@ def stop():
 
 
 if __name__ == "__main__":
-    os.environ['QT_SCALE_FACTOR'] = str(float(conf.ini.get('General', 'scale')))
-    app = QApplication(sys.argv)
-    translator = FluentTranslator(QLocale(QLocale.Language.Chinese, QLocale.Country.China))
-    app.installTranslator(translator)
-    logger.info(f"RandPicker 启动。缩放系数 {os.environ['QT_SCALE_FACTOR']}。")
-    if share.isAttached():
-        logger.warning("有一个实例正在运行，或者上次没有正常退出。")
-        logger.error("不欢迎。")
-        msg_box = Dialog(
-            'RandPicker 正在运行',
-            'RandPicker 正在运行！请勿打开多个实例，否则将会出现不可预知的问题。'
-        )
-        msg_box.yesButton.setText('好')
-        msg_box.cancelButton.hide()
-        msg_box.buttonLayout.insertStretch(0, 1)
-        msg_box.setFixedWidth(550)
-        msg_box.exec()
-        logger.info("退出。")
+    # LTS版本增强了启动过程的错误处理和资源管理
+    try:
+        # 确保配置目录存在
+        os.makedirs("./img/stu", exist_ok=True)
+        
+        # 安全地获取缩放系数
+        try:
+            scale_factor = float(conf.ini.get('General', 'scale'))
+            if scale_factor <= 0:
+                logger.warning(f'缩放系数异常: {scale_factor}，使用默认值1.0')
+                scale_factor = 1.0
+        except (ValueError, TypeError) as e:
+            logger.error(f'缩放系数配置错误: {e}，使用默认值1.0')
+            scale_factor = 1.0
+            
+        os.environ['QT_SCALE_FACTOR'] = str(scale_factor)
+        
+        # 初始化应用
+        app = QApplication(sys.argv)
+        translator = FluentTranslator(QLocale(QLocale.Language.Chinese, QLocale.Country.China))
+        app.installTranslator(translator)
+        logger.info(f"RandPicker LTS版本启动。缩放系数 {os.environ['QT_SCALE_FACTOR']}。")
+        
+        # 检查是否已有实例运行
+        if share.isAttached():
+            logger.warning("有一个实例正在运行，或者上次没有正常退出。")
+            logger.error("不欢迎。")
+            msg_box = Dialog(
+                'RandPicker 正在运行',
+                'RandPicker 正在运行！请勿打开多个实例，否则将会出现不可预知的问题。'
+            )
+            msg_box.yesButton.setText('好')
+            msg_box.cancelButton.hide()
+            msg_box.buttonLayout.insertStretch(0, 1)
+            msg_box.setFixedWidth(550)
+            msg_box.exec()
+            logger.info("退出。")
+            sys.exit(-1)
+            
+        # 创建共享内存
+        try:
+            share.create(1)
+        except Exception as e:
+            logger.error(f"创建共享内存失败: {e}")
+            msg_box = Dialog(
+                'RandPicker 启动错误',
+                f'创建共享内存失败: {e}\n请尝试重新启动应用。'
+            )
+            msg_box.yesButton.setText('退出')
+            msg_box.cancelButton.hide()
+            msg_box.exec()
+            sys.exit(-1)
+            
+        logger.info("欢迎使用RandPicker LTS版本。")
+        
+        # 设置主题
+        try:
+            theme_setting = conf.ini.get('General', 'theme')
+            if theme_setting == '0':
+                setTheme(Theme.LIGHT)
+            elif theme_setting == '1':
+                setTheme(Theme.DARK)
+            else:
+                setTheme(Theme.AUTO)
+        except Exception as e:
+            logger.error(f"设置主题失败: {e}，使用默认主题")
+            setTheme(Theme.AUTO)
+            
+        # 初始化主窗口
+        init()
+        
+        # LTS版本移除测试代码
+        # open_settings()  # 移除直接打开设置窗口的测试代码
+
+        app.setQuitOnLastWindowClosed(False)
+        sys.exit(app.exec())
+        
+    except Exception as e:
+        # 捕获所有未处理的异常
+        error_msg = f"启动过程中发生严重错误: {e}"
+        print(error_msg)
+        try:
+            logger.exception(error_msg)
+            # 尝试显示错误对话框
+            app = QApplication.instance()
+            if not app:
+                app = QApplication(sys.argv)
+            msg_box = Dialog(
+                'RandPicker 启动失败',
+                f'启动过程中发生严重错误:\n{e}\n\n请查看日志获取详细信息。'
+            )
+            msg_box.yesButton.setText('退出')
+            msg_box.cancelButton.hide()
+            msg_box.exec()
+        except:
+            pass
         sys.exit(-1)
-    share.create(1)
-    logger.info("欢迎。")
-    # 设置主题
-    if conf.ini.get('General', 'theme') == '0':
-        setTheme(Theme.LIGHT)
-    elif conf.ini.get('General', 'theme') == '1':
-        setTheme(Theme.DARK)
-    else:
-        setTheme(Theme.AUTO)
-    init()
-    
-    # 直接打开设置窗口以测试历史记录界面
-    open_settings()
-
-    app.setQuitOnLastWindowClosed(False)
-
-    sys.exit(app.exec())
 

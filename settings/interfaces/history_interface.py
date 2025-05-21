@@ -12,6 +12,9 @@ from loguru import logger
 from qfluentwidgets import (Flyout, InfoBarIcon, FlyoutAnimationType, PrimaryPushButton, 
                            ScrollArea, ExpandLayout, CardWidget, isDarkTheme)
 
+# 全局变量，用于保存历史记录滚动区域的引用
+history_scroll_area = None
+
 import conf
 
 HISTORY_FILE = './history.json'
@@ -39,6 +42,12 @@ def add_history_entry(entry):
     history.append(entry)
     save_history(history)
     logger.info(f'已添加历史记录条目：{entry}')
+    
+    # 如果历史记录滚动区域存在，则更新显示
+    global history_scroll_area
+    if history_scroll_area:
+        logger.info('更新历史记录显示')
+        display_history(history_scroll_area)
 
 def setup_history_interface(window):
     """设置历史记录页面。
@@ -75,6 +84,10 @@ def setup_history_interface(window):
     
     clear_button = window.findChild(PrimaryPushButton, 'clearHistoryButton')
 
+    # 保存滚动区域的全局引用
+    global history_scroll_area
+    history_scroll_area = scroll_area
+    
     # 加载并显示历史记录
     display_history(scroll_area)
 
