@@ -50,6 +50,43 @@ def setup_update_interface(window):
     combo_origin_updater.setCurrentIndex(int(conf.ini.get('Update', 'updater')))
     combo_origin_updater.currentIndexChanged.connect(lambda index: conf.ini.write('Update', 'updater', str(index)))
 
+    # 添加更新通道选择
+    from qfluentwidgets import BodyLabel, ComboBox
+    channel_label = window.updateInterface.findChild(BodyLabel, 'channel_label')
+    channel_combo = window.updateInterface.findChild(ComboBox, 'channel_combo')
+    if channel_label is None:
+        from qfluentwidgets import BodyLabel, ComboBox
+        from PyQt6.QtWidgets import QVBoxLayout
+        layout = window.updateInterface.layout() if hasattr(window.updateInterface, 'layout') else None
+        if layout is None:
+            layout = QVBoxLayout(window.updateInterface)
+            window.updateInterface.setLayout(layout)
+        channel_label = BodyLabel('更新通道')
+        channel_label.setObjectName('channel_label')
+        channel_combo = ComboBox()
+        channel_combo.setObjectName('channel_combo')
+        channel_combo.addItems([
+            'M 主版本(Main)',
+            'L 稳定版(Long time support)',
+            'T 测试版(Test)',
+            'D 开发版(Developer)',
+            'E 实验版(Experimental)'
+        ])
+        # 默认选L
+        channel_combo.setCurrentIndex(1)
+        layout.insertWidget(0, channel_label)
+        layout.insertWidget(1, channel_combo)
+    # 绑定选择事件，保存到配置
+    def on_channel_changed(idx):
+        conf.ini.write('Update', 'channel', str(idx))
+    channel_combo.currentIndexChanged.connect(on_channel_changed)
+    # 初始化时同步配置
+    try:
+        idx = int(conf.ini.get('Update', 'channel'))
+        channel_combo.setCurrentIndex(idx)
+    except Exception:
+        channel_combo.setCurrentIndex(1)
+
 
 def check_update_app(window):
     """检查应用更新

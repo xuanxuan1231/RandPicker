@@ -30,24 +30,40 @@ if sys.platform == 'win32':
         UPDATER_VERSION = Version('0.0.0')
 
 
+def get_channel_name(idx):
+    # 0:M, 1:L, 2:T, 3:D, 4:E
+    return ['main', 'lts', 'test', 'dev', 'exp'][idx] if 0 <= idx <= 4 else 'lts'
+
+
 def check_update_app(origin: int = 0) -> dict:
     """
     检查更新并返回最新版本信息。
-
     :param origin: 更新源。
-                   '1' 表示使用 OSS 源，'0' 表示使用 GitHub 源。
-                   默认值为 '0'。
-    :type origin: int
     :return: 包含最新版本号和是否是最新版本的字典
     """
 
     logger.info('开始检查更新。')
     result = {}
+    # 获取通道
+    try:
+        import conf
+        channel_idx = int(conf.ini.get('Update', 'channel', fallback='1'))
+    except Exception:
+        channel_idx = 1
+    channel = get_channel_name(channel_idx)
 
     if origin == 1:
-        MANIFEST_URL = 'https://oss.may.pp.ua/RandPicker/latest.json'
+        # OSS源可根据实际情况扩展
+        MANIFEST_URL = f'https://oss.may.pp.ua/RandPicker/{channel}/latest.json'
     else:
-        MANIFEST_URL = f'https://api.github.com/repos/{REPO}/releases/latest'
+        # GitHub不同通道对应不同release/tag
+        if channel == 'main':
+            MANIFEST_URL = f'https://api.github.com/repos/{REPO}/releases/latest'
+        else:
+            # 其它通道用tag名区分
+            MANIFEST_URL = f'https://api.github.com/repos/{REPO}/releases/tags/{channel}'
+
+    logger.info(f'使用更新通道: {channel}，请求URL: {MANIFEST_URL}')
 
     try:
         response = requests.get(MANIFEST_URL, timeout=5)
@@ -131,16 +147,67 @@ def check_update_updater(origin: int = 0) -> dict:
     return result
 
 
-def update_app(parent=None,):
-    """
-    更新应用程序。
-    """
-    logger.info('开始更新应用程序。')
+def download_asset_with_progress(url, save_path, parent=None):
+    """下载release asset并显示进度条"""
+    import requests
+    from qfluentwidgets import ProgressBar, InfoBar, InfoBarPosition
+    try:
+        resp = requests.get(url, stream=True, timeout=10)
+        resp.raise_for_status()
+        total = int(resp.headers.get('content-length', 0))
+        chunk_size = 8192
+        downloaded = 0
+        with open(save_path, 'wb') as f:
+            pb = None
+            if parent:
+                pb = ProgressBar(parent)
+                pb.setRange(0, 100)
+                pb.setValue(0)
+                parent.layout().addWidget(pb)
+            for chunk in resp.iter_content(chunk_size=chunk_size):
+                if chunk:
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    if pb and total:
+                        pb.setValue(int(downloaded / total * 100))
+            if pb:
+                pb.setValue(100)
+        return True
+    except Exception as e:
+        logger.error(f'下载更新包失败: {e}')
+        if parent:
+            InfoBar.error(title='下载失败', content=str(e), parent=parent, position=InfoBarPosition.TOP)
+        return False
+
+
+def update_app(parent=None):
+    """自动下载并提示安装新版应用（参考ClassIsland逻辑）"""
+    logger.info('开始自动更新应用程序。')
     origin = conf.ini.get('Update', 'app')
-    if os.path.exists('Updater.exe'):
-        os.system(f'start Updater.exe -l=false -origin={origin}')
-        QApplication.quit()
-    logger.error('未找到更新器。')
+    update_info = check_update_app(origin)
+    url = update_info.get('url')
+    if not url:
+        logger.error('未找到可用的更新包下载链接。')
+        from qfluentwidgets import InfoBar, InfoBarPosition
+        if parent:
+            InfoBar.error(title='下载失败', content='未找到可用的更新包下载链接。', parent=parent, position=InfoBarPosition.TOP)
+        return
+    filename = url.split('/')[-1]
+    save_path = os.path.join(os.path.expanduser('~'), 'Downloads', filename)
+    ok = download_asset_with_progress(url, save_path, parent)
+    from qfluentwidgets import InfoBar, InfoBarPosition
+    if ok:
+        logger.info(f'更新包已下载到: {save_path}')
+        InfoBar.success(title='下载完成', content=f'更新包已下载到: {save_path}', parent=parent, position=InfoBarPosition.TOP)
+        # macOS: 打开Finder定位文件，Windows: 可自动运行
+        import platform, subprocess
+        if platform.system() == 'Darwin':
+            subprocess.run(['open', '-R', save_path])
+        elif platform.system() == 'Windows':
+            os.startfile(save_path)
+    else:
+        logger.error('更新包下载失败。')
+
 
 def update_updater(parent=None):
     """

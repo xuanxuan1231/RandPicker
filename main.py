@@ -5,19 +5,23 @@ RandPicker 主程序。
 import os
 import random
 import sys
+import glob
+import json
+from datetime import datetime
 from random import choices
 from typing import override
 
 from PyQt6 import uic
 from PyQt6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, QLocale
 from PyQt6.QtGui import QColor, QMouseEvent, QIcon, QPixmap, QPainter, QPainterPath, QPixmapCache
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGraphicsDropShadowEffect, QSystemTrayIcon, QFrame, QLayout
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QGraphicsDropShadowEffect, QSystemTrayIcon, QFrame, QLayout, QFileDialog, QTextEdit, QVBoxLayout, QDialog, QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView
 from loguru import logger
 from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Action, Dialog, PrimaryPushButton, \
     isDarkTheme, setTheme, Theme, qconfig, PixmapLabel, FluentTranslator, setThemeColor, SystemThemeListener
 
 import conf
 from settings import open_settings, share, restart
+from settings.settings_window import open_settings, Settings
 
 # 适配高DPI缩放
 QApplication.setHighDpiScaleFactorRoundingPolicy(
@@ -33,6 +37,131 @@ logger.add("./log/RandPicker_{time}.log", rotation="1 MB", encoding="utf-8", ret
 
 # 自动切换主题
 qconfig.themeChanged.connect(lambda: reload_widget())
+
+
+def get_latest_log_file():
+    log_files = glob.glob('./log/RandPicker_*.log')
+    if not log_files:
+        return None
+    return max(log_files, key=os.path.getmtime)
+
+
+def parse_log_for_human(log_path):
+    """将日志内容翻译为普通人可读的摘要"""
+    if not log_path or not os.path.exists(log_path):
+        return "未找到日志文件。"
+    lines = []
+    with open(log_path, 'r', encoding='utf-8') as f:
+        for l in f:
+            if any(x in l for x in ["ERROR", "EXCEPTION", "CRITICAL", "Traceback"]):
+                lines.append(l.strip())
+    if not lines:
+        return "未检测到异常信息，程序可能正常退出。"
+    # 简单翻译
+    result = ["检测到程序异常退出，以下为主要错误信息："]
+    for l in lines:
+        if "Traceback" in l:
+            result.append("发生了程序崩溃（Traceback），请联系开发者。"); continue
+        if "ERROR" in l or "CRITICAL" in l:
+            # 只保留关键信息
+            msg = l.split("-", 1)[-1].strip() if "-" in l else l
+            result.append("错误：" + msg)
+        elif "EXCEPTION" in l:
+            result.append("异常：" + l)
+    return "\n".join(result)
+
+
+HISTORY_FILE = 'history.json'
+
+def add_history_entry(entry):
+    """添加历史记录条目到history.json"""
+    try:
+        if os.path.exists(HISTORY_FILE):
+            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+        else:
+            history = []
+        history.append(entry)
+        with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f'写入历史记录失败: {e}')
+
+
+class HistoryTableWidget(QTableWidget):
+    """历史记录表格控件，专为设置页集成优化"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setColumnCount(3)
+        self.setHorizontalHeaderLabels(['时间', '类型', '结果'])
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.setAlternatingRowColors(True)
+        self.load_history()
+
+    def load_history(self):
+        self.setRowCount(0)
+        try:
+            if os.path.exists(HISTORY_FILE):
+                with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    history = json.load(f)
+                for row, entry in enumerate(reversed(history)):
+                    self.insertRow(row)
+                    self.setItem(row, 0, QTableWidgetItem(entry.get('time', '')))
+                    self.setItem(row, 1, QTableWidgetItem(entry.get('type', '')))
+                    self.setItem(row, 2, QTableWidgetItem(entry.get('result', '')))
+        except Exception as e:
+            QMessageBox.warning(self, '错误', f'加载历史记录失败: {e}')
+
+    def clear_history(self):
+        try:
+            with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
+                json.dump([], f)
+            self.load_history()
+        except Exception as e:
+            QMessageBox.warning(self, '错误', f'清空失败: {e}')
+
+    def export_history(self):
+        path, _ = QFileDialog.getSaveFileName(self, '导出历史记录', f'history_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json', 'JSON 文件 (*.json)')
+        if path:
+            try:
+                with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    data = f.read()
+                with open(path, 'w', encoding='utf-8') as f:
+                    f.write(data)
+                QMessageBox.information(self, '导出成功', f'历史记录已导出到 {path}')
+            except Exception as e:
+                QMessageBox.warning(self, '错误', f'导出失败: {e}')
+
+
+def setup_history_interface(window):
+    """在设置页集成历史记录界面"""
+    from qfluentwidgets import PrimaryPushButton, PushButton, StrongBodyLabel, CaptionLabel
+    from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
+    history_widget = QWidget()
+    history_widget.setObjectName('historyInterface')
+    layout = QVBoxLayout(history_widget)
+    layout.setContentsMargins(32, 32, 32, 32)
+    layout.setSpacing(18)
+    layout.addWidget(StrongBodyLabel('历史记录'))
+    layout.addWidget(CaptionLabel('每次选人/组选项结果都会自动记录在此。可清空或导出。'))
+    table = HistoryTableWidget()
+    layout.addWidget(table)
+    btn_layout = QHBoxLayout()
+    btn_clear = PushButton('清空')
+    btn_export = PrimaryPushButton('导出')
+    btn_layout.addWidget(btn_clear)
+    btn_layout.addWidget(btn_export)
+    btn_layout.addStretch(1)
+    layout.addLayout(btn_layout)
+    def do_clear():
+        if QMessageBox.question(window, '确认', '确定要清空所有历史记录吗？') == QMessageBox.StandardButton.Yes:
+            table.clear_history()
+    btn_clear.clicked.connect(do_clear)
+    btn_export.clicked.connect(table.export_history)
+    # 添加到设置窗口
+    window.addSubInterface(history_widget, fIcon.HISTORY, '历史记录')
 
 
 class Widget(QWidget):
@@ -164,12 +293,12 @@ class Widget(QWidget):
         if not students:
             name.setText('无结果')
             id_.setText('000000')
-
+            return
         num = choices(students, weights=conf.stu.get_weight(students), k=1)[0]
         logger.info(f'随机数已生成。JSON 索引是 {num}。它的选择权重是 {conf.stu.get_all_weight()[num]}。')
         self.student = conf.stu.get_single(num)
         logger.debug(f'已获取 JSON 索引是 {num} 的学生信息。{self.student}')
-        name.setText(f'{str(self.student['id'])[-2:]} {self.student['name']}')
+        name.setText(f'{str(self.student["id"])[-2:]} {self.student["name"]}')
         id_.setText(str(self.student['id']))
 
         if self.is_avatar:
@@ -177,13 +306,19 @@ class Widget(QWidget):
             avatar_path = None
             # 尝试不同的图片格式
             for ext in ['png', 'jpg', 'jpeg']:
-                temp_path = f'./img/stu/{self.student['id']}.{ext}'
+                temp_path = f'./img/stu/{self.student["id"]}.{ext}'
                 if os.path.exists(temp_path):
                     avatar_path = temp_path
                     logger.success(f"找到了学生 {self.student['id']} 的头像 {self.student['id']}.{ext}。")
                     break
             self.student['avatar'] = avatar_path
             self.show_avatar(avatar_path)
+        # 写入历史记录
+        add_history_entry({
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'type': 'person',
+            'result': f'{self.student["id"]} {self.student["name"]}'
+        })
 
     def clear(self):
         global last_result
@@ -229,6 +364,12 @@ class Widget(QWidget):
         id_.setText(students)
         if self.is_avatar:
             self.show_avatar()
+        # 写入历史记录
+        add_history_entry({
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'type': 'group',
+            'result': f'{group["name"]} ({students})'
+        })
 
     def show_avatar(self, file_path='./img/stu/default.jpeg'):
         avatar = self.findChild(PixmapLabel, 'avatar')
@@ -381,7 +522,6 @@ class Widget(QWidget):
 
 
 class SystemTrayIcon(QSystemTrayIcon):
-
     def __init__(self, parent):
         super().__init__(parent=parent)
         self.setIcon(parent.windowIcon())
@@ -391,7 +531,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         ])
         self.menu.addSeparator()
         self.menu.addActions([
-            Action(fIcon.SYNC, '重新启动', triggered=lambda: restart()),  # 添加重启选项
+            Action(fIcon.SYNC, '重新启动', triggered=lambda: restart()),
             Action(fIcon.CLOSE, '关闭', triggered=lambda: stop()),
         ])
         self.setContextMenu(self.menu)
@@ -455,6 +595,19 @@ if __name__ == "__main__":
     else:
         setTheme(Theme.AUTO)
     init()
+
+    # 检查上次是否异常退出
+    latest_log = get_latest_log_file()
+    if latest_log:
+        with open(latest_log, 'r', encoding='utf-8') as f:
+            content = f.read()
+            if any(x in content for x in ["ERROR", "EXCEPTION", "CRITICAL", "Traceback"]):
+                # 弹窗显示友好日志
+                msg = parse_log_for_human(latest_log)
+                dlg = Dialog('检测到上次程序异常退出', msg)
+                dlg.yesButton.setText('我知道了')
+                dlg.cancelButton.hide()
+                dlg.exec()
 
     app.setQuitOnLastWindowClosed(False)
 

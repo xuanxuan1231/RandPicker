@@ -73,13 +73,19 @@ class Settings(FluentWindow):
 
         self.init_nav()
         self.setup_ui()
+        # 延迟导入，避免循环依赖
+        try:
+            from main import setup_history_interface
+            setup_history_interface(self)
+        except ImportError:
+            pass
 
     def init_nav(self):  # 设置侧边栏
         self.addSubInterface(self.stuEditInterface, fIcon.EDIT, '学生编辑')
         self.addSubInterface(self.groupEditInterface, fIcon.PEOPLE, '小组编辑')
         self.navigationInterface.addSeparator(NavigationItemPosition.BOTTOM)
-        if sys.platform == 'win32':
-            self.addSubInterface(self.updateInterface, fIcon.UPDATE, '更新', NavigationItemPosition.BOTTOM)
+        # 让更新功能在所有平台都显示
+        self.addSubInterface(self.updateInterface, fIcon.UPDATE, '更新', NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.uiInterface, fIcon.SETTING, '界面设置', NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.aboutInterface, fIcon.INFO, '关于', NavigationItemPosition.BOTTOM)
 
