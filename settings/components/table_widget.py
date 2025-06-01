@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QListWidget, QAbs
 from loguru import logger
 from qfluentwidgets import CardWidget, SubtitleLabel, TransparentDropDownToolButton, RoundMenu, Action, \
     ListWidget, CheckBox, MessageBoxBase, StrongBodyLabel, CaptionLabel, LineEdit, TitleLabel, BodyLabel, \
-    RadioButton, FluentIcon as fIcon
+    RadioButton, FluentIcon as fIcon, Dialog
 
 import conf
 import update
@@ -309,43 +309,76 @@ class GroupEnablePolicyBox(MessageBoxBase):
                        'Group', 'group', str(enable_group).replace('[', '').replace(']', ''))
 
 
-class UpdateConfirmBox(MessageBoxBase):
+class UpdateConfirmBox(Dialog):
     """更新确认框
-    
-    :param parent: 父控件。
-    :type parent: QWidget | None
-    :param app: 是否更新应用程序。
-    :type app: bool
+
+    :param parent: 父窗口
+    :param app: 是否为应用更新
     """
 
-    def __init__(self, parent=None, app: bool = False):
+    def __init__(self, parent=None, app=True):
         super().__init__(parent)
         self.app = app
-        if self.app:
-            self.title = '确实要更新 RandPicker？'
-            self.content = '将使用 RandPicker 更新助理更新 RandPicker。\n' \
-                          'RandPicker 将会退出。请在操作前保存您的更改。\n' \
-                          '如果更新助理没有打开，请先更新它。'
+        self.setTitleBarVisible(False)
+        self.setResizeEnabled(False)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
+        self.setWindowTitle('更新确认')
+        self.setFixedSize(400, 200)
+        self.setStyleSheet('background-color: white;')
+        self.setObjectName('updateConfirmBox')
+
+        self.title = TitleLabel('更新确认', self)
+        self.title.move(20, 20)
+
+        self.content = BodyLabel('是否确认更新？', self)
+        self.content.move(20, 60)
+
+        self.btn_cancel = PushButton('取消', self)
+        self.btn_cancel.move(200, 150)
+        self.btn_cancel.clicked.connect(self.close)
+
+        self.btn_confirm = PrimaryPushButton('确认', self)
+        self.btn_confirm.move(300, 150)
+        self.btn_confirm.clicked.connect(self.update)
+
+        if app:
+            self.title.setText('更新 RandPicker')
+            self.content.setText('是否确认更新 RandPicker？')
         else:
-            self.title = '确实要更新 RandPicker 更新助理？'
-            self.content = '将更新 RandPicker 更新助理。\n' \
-                          'RandPicker 不会被关闭，但会暂时停止响应。正常情况下，停止响应不会超过 40 秒。\n' \
-                          '如果停止响应的时间过长，请检查您的网络环境。'
-            
-        self.titleLabel = TitleLabel(self.title, self)
-        self.contentLabel = BodyLabel(self.content, self)
-
-        self.viewLayout.addWidget(self.titleLabel)
-        self.viewLayout.addWidget(self.contentLabel)
-
-        self.yesButton.clicked.connect(self.update)
+            self.title.setText('更新更新助理')
+            self.content.setText('是否确认更新更新助理？')
 
     def update(self):
-        """执行更新"""
-        self.yesButton.setEnabled(False)
-        self.cancelButton.setEnabled(False)
+        """更新"""
         if self.app:
-            update.update_app()
+            from lithe_updater import update_app
+            try:
+                update_app(int(conf.ini.get('Update', 'app')))
+            except Exception as e:
+                logger.error(f"更新失败：{str(e)}")
+                InfoBar.error(
+                    title='更新失败',
+                    content=f"更新失败：{str(e)}",
+                    orient=Qt.Orientation.Horizontal,
+                    isClosable=True,
+                    position=InfoBarPosition.TOP,
+                    duration=2000,
+                    parent=self.parent()
+                )
         else:
-            update.update_updater(parent=self)
+            import update
+            try:
+                update.update_updater(conf.ini.get('Update', 'updater'))
+            except Exception as e:
+                logger.error(f"更新失败：{str(e)}")
+                InfoBar.error(
+                    title='更新失败',
+                    content=f"更新失败：{str(e)}",
+                    orient=Qt.Orientation.Horizontal,
+                    isClosable=True,
+                    position=InfoBarPosition.TOP,
+                    duration=2000,
+                    parent=self.parent()
+                )
         self.close()

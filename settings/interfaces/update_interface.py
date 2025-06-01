@@ -9,6 +9,7 @@ from qfluentwidgets import PushButton, PrimaryPushButton, BodyLabel, TitleLabel,
 
 import conf
 import update
+from lithe_updater import get_current_version, check_update, update_app as lithe_update_app, get_channel_list
 from ..components.table_widget import UpdateConfirmBox
 from .base_interface import SettingsInterface
 
@@ -21,8 +22,11 @@ def setup_update_interface(window):
     global APP_VERSION, UPDATER_VERSION
     from ..settings_window import APP_VERSION, UPDATER_VERSION
 
+    # 使用LitheNum版本获取当前版本
+    current_version = get_current_version()
+    
     caption_app = window.updateInterface.caption_app
-    caption_app.setText(f"当前版本：{APP_VERSION}。没有获取到最新版本。")
+    caption_app.setText(f"当前版本：{current_version}。没有获取到最新版本。")
 
     if UPDATER_VERSION:
         caption_updater = window.updateInterface.caption_updater
@@ -65,13 +69,8 @@ def setup_update_interface(window):
         channel_label.setObjectName('channel_label')
         channel_combo = ComboBox()
         channel_combo.setObjectName('channel_combo')
-        channel_combo.addItems([
-            'M 主版本(Main)',
-            'L 稳定版(Long time support)',
-            'T 测试版(Test)',
-            'D 开发版(Developer)',
-            'E 实验版(Experimental)'
-        ])
+        # 使用lithe_updater中的函数获取通道列表
+        channel_combo.addItems(get_channel_list())
         # 默认选L
         channel_combo.setCurrentIndex(1)
         layout.insertWidget(0, channel_label)
@@ -94,7 +93,8 @@ def check_update_app(window):
     :param window: 设置窗口实例
     """
     try:
-        updates = update.check_update_app(conf.ini.get('Update', 'app'))
+        # 使用lithe_updater中的check_update函数
+        updates = check_update(int(conf.ini.get('Update', 'app')))
     except Exception as e:
         InfoBar.error(
             title='检查更新失败',
@@ -119,7 +119,11 @@ def check_update_app(window):
     caption_app = window.updateInterface.caption_app
     title_app = window.updateInterface.title_app
     btn_update_app = window.updateInterface.update_app
-    caption_app.setText(f"当前版本：{APP_VERSION}。最新版本：{updates['version']}。")
+    
+    # 获取当前版本
+    current_version = get_current_version()
+    
+    caption_app.setText(f"当前版本：{current_version}。最新版本：{updates['version']}。")
     if updates['is_latest']:
         title_app.setText('已是最新版本。')
         btn_update_app.setEnabled(False)

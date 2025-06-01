@@ -20,6 +20,8 @@ from qfluentwidgets import PushButton, SystemTrayMenu, FluentIcon as fIcon, Acti
     isDarkTheme, setTheme, Theme, qconfig, PixmapLabel, FluentTranslator, setThemeColor, SystemThemeListener
 
 import conf
+import crash_handler
+from lithe_updater import get_current_version, check_update
 from settings import open_settings, share, restart
 from settings.settings_window import open_settings, Settings
 
@@ -596,18 +598,9 @@ if __name__ == "__main__":
         setTheme(Theme.AUTO)
     init()
 
-    # 检查上次是否异常退出
-    latest_log = get_latest_log_file()
-    if latest_log:
-        with open(latest_log, 'r', encoding='utf-8') as f:
-            content = f.read()
-            if any(x in content for x in ["ERROR", "EXCEPTION", "CRITICAL", "Traceback"]):
-                # 弹窗显示友好日志
-                msg = parse_log_for_human(latest_log)
-                dlg = Dialog('检测到上次程序异常退出', msg)
-                dlg.yesButton.setText('我知道了')
-                dlg.cancelButton.hide()
-                dlg.exec()
+    # 检查崩溃日志并设置全局异常处理器
+    crash_handler.check_crash_on_startup()
+    crash_handler.setup_exception_handler()
 
     app.setQuitOnLastWindowClosed(False)
 
