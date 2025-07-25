@@ -1,0 +1,70 @@
+name: Build RandPicker
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Test
+      run: dotnet test --no-build --configuration Release --verbosity normal
+      
+    - name: Publish (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        dotnet publish RandPicker/RandPicker.csproj -c Release -r win-x64 --self-contained true -o ./publish/win-x64
+        dotnet publish RandPicker/RandPicker.csproj -c Release -r win-x86 --self-contained true -o ./publish/win-x86
+        
+    - name: Publish (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        dotnet publish RandPicker/RandPicker.csproj -c Release -r linux-x64 --self-contained true -o ./publish/linux-x64
+        
+    - name: Publish (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        dotnet publish RandPicker/RandPicker.csproj -c Release -r osx-x64 --self-contained true -o ./publish/osx-x64
+        dotnet publish RandPicker/RandPicker.csproj -c Release -r osx-arm64 --self-contained true -o ./publish/osx-arm64
+        
+    - name: Upload Build Artifacts (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-builds
+        path: ./publish/
+        
+    - name: Upload Build Artifacts (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-builds
+        path: ./publish/
+        
+    - name: Upload Build Artifacts (macOS)
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-builds
+        path: ./publish/

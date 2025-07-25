@@ -1,0 +1,62 @@
+name: Release RandPicker
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build and Publish for all platforms
+      run: |
+        # Windows builds
+        dotnet publish RandPicker/RandPicker.csproj -c Release -r win-x64 --self-contained true -o ./release/win-x64
+        dotnet publish RandPicker/RandPicker.csproj -c Release -r win-x86 --self-contained true -o ./release/win-x86
+        
+        # Linux build
+        dotnet publish RandPicker/RandPicker.csproj -c Release -r linux-x64 --self-contained true -o ./release/linux-x64
+        
+        # macOS builds
+        dotnet publish RandPicker/RandPicker.csproj -c Release -r osx-x64 --self-contained true -o ./release/osx-x64
+        dotnet publish RandPicker/RandPicker.csproj -c Release -r osx-arm64 --self-contained true -o ./release/osx-arm64
+        
+    - name: Create release packages
+      run: |
+        cd release
+        
+        # Create Windows packages
+        zip -r ../RandPicker-win-x64.zip win-x64/
+        zip -r ../RandPicker-win-x86.zip win-x86/
+        
+        # Create Linux package
+        tar -czf ../RandPicker-linux-x64.tar.gz linux-x64/
+        
+        # Create macOS packages
+        tar -czf ../RandPicker-macos-x64.tar.gz osx-x64/
+        tar -czf ../RandPicker-macos-arm64.tar.gz osx-arm64/
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          RandPicker-win-x64.zip
+          RandPicker-win-x86.zip
+          RandPicker-linux-x64.tar.gz
+          RandPicker-macos-x64.tar.gz
+          RandPicker-macos-arm64.tar.gz
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
