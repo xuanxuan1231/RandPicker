@@ -65,7 +65,7 @@ public static class StudentService
     /// </summary>
     /// <param name="students">学生列表</param>
     /// <param name="filepath">保存路径</param>
-    public static async Task<bool> SaveToJsonAsync(List<Student> students, string filepath)
+    public static async Task<bool> SaveToJson(List<Student> students, string filepath)
     {
         try
         {

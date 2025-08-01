@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace RandPicker.Views;
 
-public partial class Settings : Window
+public partial class TestView : UserControl
 {
-    public Settings()
+    public TestView()
     {
         AvaloniaXamlLoader.Load(this);
     }

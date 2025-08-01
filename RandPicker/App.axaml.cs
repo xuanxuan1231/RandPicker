@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
+using System;
 using System.Linq;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
@@ -16,6 +17,8 @@ public partial class App : Application
 {
     public static ICommand ExitCommand { get; } = new RelayCommand(Exit);
     public static ICommand SettingsCommand { get; } = new RelayCommand(Settings);
+
+    private static SettingsWindow? _settingsWindow = null;
 
     public override void Initialize()
     {
@@ -61,7 +64,15 @@ public partial class App : Application
 
     private static void Settings()
     {
-        Settings settings = new Settings();
-        settings.Show();
+        // 设置防多开设置
+        if (_settingsWindow != null)
+        {
+            _settingsWindow.Activate();
+            _settingsWindow.Focus();
+            return;
+        }
+        _settingsWindow = new SettingsWindow();
+        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.Show();
     }
 }
