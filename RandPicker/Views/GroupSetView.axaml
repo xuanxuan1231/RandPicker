@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="RandPicker.Views.GroupSetView">
+    <StackPanel Margin="20">
+        <controls:Card Margin="16">
+            <StackPanel Margin="16">
+                <TextBlock Classes="Headline5" Text="测试页面" Margin="0,0,0,16"/>
+                <TextBlock Classes="Body1" Text="这是一个测试页面内容" Margin="0,0,0,8"/>
+                <TextBlock Classes="Body2" Text="您可以在这里添加更多设置选项"/>
+            </StackPanel>
+        </controls:Card>
+        
+        <controls:Card Margin="16">
+            <StackPanel Margin="16">
+                <TextBlock Classes="Headline6" Text="示例设置" Margin="0,0,0,16"/>
+                <CheckBox Content="启用功能 1" Margin="0,0,0,8"/>
+                <CheckBox Content="启用功能 2" Margin="0,0,0,8"/>
+                <CheckBox Content="启用功能 3" Margin="0,0,0,16"/>
+                
+                <TextBlock Classes="Subtitle1" Text="数值设置" Margin="0,0,0,8"/>
+                <Slider Minimum="0" Maximum="100" Value="50" Margin="0,0,0,16"/>
+                
+                <Button Classes="Flat" Content="保存设置" HorizontalAlignment="Left"/>
+            </StackPanel>
+        </controls:Card>
+    </StackPanel>
+</UserControl>

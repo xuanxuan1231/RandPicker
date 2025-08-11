@@ -22,42 +22,6 @@
                 <StackPanel Margin="0,72,0,0">
                     <!-- 导航菜单 -->
                     <ScrollViewer>
-                        <StackPanel>
-                            <Button Classes="Flat"
-                                    Name="GeneralSettingsButton"
-                                    Padding="16,12"
-                                    HorizontalAlignment="Stretch"
-                                    HorizontalContentAlignment="Left"
-                                    Background="{DynamicResource PrimaryHueLightBrush}"
-                                    Margin="8,4"
-                                    Tag="General">
-                                <StackPanel Orientation="Horizontal">
-                                    <icons:MaterialIcon Kind="Settings"
-                                                        Margin="0,0,32,0"
-                                                        Width="24" Height="24"
-                                                        Foreground="{DynamicResource PrimaryHueLightForegroundBrush}" />
-                                    <TextBlock Text="��用设置"
-                                               VerticalAlignment="Center"
-                                               Foreground="{DynamicResource PrimaryHueLightForegroundBrush}"
-                                               FontWeight="Medium" />
-                                </StackPanel>
-                            </Button>
-
-                            <Button Classes="Flat"
-                                    Name="ThemeSettingsButton"
-                                    Padding="16,12"
-                                    HorizontalAlignment="Stretch"
-                                    HorizontalContentAlignment="Left"
-                                    Background="Transparent"
-                                    Margin="8,4"
-                                    Tag="Theme">
-                                <StackPanel Orientation="Horizontal">
-                                    <icons:MaterialIcon Kind="Palette"
-                                                        Margin="0,0,32,0"
-                                                        Width="24" Height="24" />
-                                    <TextBlock Text="主题设置" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
                             <ListBox SelectionMode="AlwaysSelected" x:Name="NavList"
                                      Focusable="{Binding ElementName=NavToggle, Path=IsChecked}"
                                      ItemsSource="{Binding SettingsItems}">
@@ -72,7 +36,6 @@
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
-                        </StackPanel>
                     </ScrollViewer>
                 </StackPanel>
             </controls:NavigationDrawer.LeftDrawerContent>
@@ -88,7 +51,13 @@
                             </Setter>
                         </Style>
                     </Carousel.Styles>
-                    >
+                    
+                    <views:StuSetView />
+                    <views:GroupSetView />
+                    <views:UiSetView />
+                    
+                    
+                    <!-- 这里放页面 放完了到vm那去 -->
                     <views:TestView />
                 </Carousel>
             </ScrollViewer>
@@ -132,7 +101,7 @@
                 </ToggleButton>
 
                 <!-- 标题 -->
-                <TextBlock Text="RandPicker 设置"
+                <TextBlock Text="设置"
                            FontSize="20"
                            FontWeight="Medium"
                            VerticalAlignment="Center"

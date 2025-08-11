@@ -12,7 +12,8 @@ public class SettingsWindowViewModel : ViewModelBase
     
     public ObservableCollection<SettingsItem> SettingsItems { get; } = new ObservableCollection<SettingsItem>
     {
+        // IMPORTANT: 在这里改完之后看看App.axaml.cs
         new SettingsItem { Title = "通用设置", Icon = "Settings" },
-        new SettingsItem { Title = "主题设置", Icon = "" }
+        new SettingsItem { Title = "关于", Icon = "About" } // 关于
     };
 }

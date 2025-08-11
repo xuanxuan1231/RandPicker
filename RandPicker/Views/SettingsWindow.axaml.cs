@@ -29,7 +29,7 @@ public partial class SettingsWindow : Window
             return;
         try
         {
-            PageCarousel.SelectedIndex = listBox.SelectedIndex;
+            Turn2Page(listBox.SelectedIndex);
             Scroller.Offset = Vector.Zero;
             Scroller.VerticalScrollBarVisibility =
                 ((Control)PageCarousel.SelectedItem!).GetValue(ScrollViewer.VerticalScrollBarVisibilityProperty);
@@ -42,5 +42,17 @@ public partial class SettingsWindow : Window
 
         NavDrawer.OptionalCloseLeftDrawer();
         NavToggle.IsChecked = false;
+    }
+
+    public void Turn2Page(int index)
+    {
+        NavList.SelectedIndex = index;
+        PageCarousel.SelectedIndex = index;
+        Scroller.Offset = Vector.Zero;
+        Scroller.VerticalScrollBarVisibility =
+            ((Control)PageCarousel.SelectedItem!).GetValue(ScrollViewer.VerticalScrollBarVisibilityProperty);
+        NavDrawer.OptionalCloseLeftDrawer();
+        NavToggle.IsChecked = false;
+        Log.Information("翻到第 {index} 页。", index);
     }
 }

@@ -10,15 +10,18 @@ using RandPicker.ViewModels;
 using RandPicker.Views;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using Serilog;
 
 namespace RandPicker;
 
 public partial class App : Application
 {
-    public static ICommand ExitCommand { get; } = new RelayCommand(Exit);
-    public static ICommand SettingsCommand { get; } = new RelayCommand(Settings);
+    public static ICommand ExitComm { get; } = new RelayCommand(Exit);
+    public static ICommand StuSetCom { get; } = new RelayCommand(StudentSettings);
+    public static ICommand GroupSetCom { get; } = new RelayCommand(GroupSettings);
+    public static ICommand UiSetCom { get; } = new RelayCommand(UiSettings);
 
-    private static SettingsWindow? _settingsWindow = null;
+    private static SettingsWindow? _settingsWindow;
 
     public override void Initialize()
     {
@@ -61,18 +64,54 @@ public partial class App : Application
             desktop.Shutdown();
         }
     }
+    
+    private static void StudentSettings()
+    {
+        Settings();
+        if (_settingsWindow != null)
+        {
+            _settingsWindow.Turn2Page(0);
+            return;
+        }
+        Log.Error("打开学生设置失败。");
+    }
+
+    private static void GroupSettings()
+    {
+        Settings();
+        if (_settingsWindow != null)
+        {
+            _settingsWindow.Turn2Page(1);
+            return;
+        }
+        Log.Error("打开学生设置失败。");
+    }
+
+    private static void UiSettings()
+    {
+        Settings();
+        if (_settingsWindow != null)
+        {
+            _settingsWindow.Turn2Page(2);
+            return;
+        }
+        Log.Error("打开学生设置失败。");
+    }
 
     private static void Settings()
     {
-        // 设置防多开设置
+        Log.Debug("打开设置。");
+        // 设置防多开
         if (_settingsWindow != null)
         {
             _settingsWindow.Activate();
             _settingsWindow.Focus();
+            Log.Debug("已存在设置窗口。");
             return;
         }
         _settingsWindow = new SettingsWindow();
         _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
+        Log.Debug("打开新的设置窗口。");
     }
 }

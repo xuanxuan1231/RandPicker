@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="RandPicker.Views.UiSetView">
+    <StackPanel Margin="20, 0">
+        <StackPanel Margin="16">
+            <TextBlock Classes="Headline5" Text="选项" Margin="0,0,0,8" />
+            <TextBlock Classes="Body1" Text="您可在此设置 RandPicker 的行为。" Margin="0,0,0,8" />
+        </StackPanel>
+        <StackPanel Margin="16">
+            <DockPanel Margin="0,0,0,10">
+                <Button Classes="Flat" Content="保存这部分的设置" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                <TextBlock Classes="Headline6" Text="通用" VerticalAlignment="Center" />
+            </DockPanel>
+            <controls:Card>
+                <WrapPanel>
+                    <DockPanel Margin="12,6">
+                        <ToggleSwitch x:Name="SwitchLoginStart" DockPanel.Dock="Bottom" />
+                        <StackPanel Margin="0,0,0,8">
+                            <TextBlock Classes="Subtitle1" Text="自启动" />
+                            <TextBlock Classes="Caption" Text="开机时自动启动" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+                    <DockPanel Margin="12,6">
+                        <ToggleSwitch x:Name="SwitchAvatar" DockPanel.Dock="Bottom" />
+                        <StackPanel Margin="0,0,0,8">
+                            <TextBlock Classes="Subtitle1" Text="自启动" />
+                            <TextBlock Classes="Caption" Text="开机时自动启动" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+                </WrapPanel>
+            </controls:Card>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

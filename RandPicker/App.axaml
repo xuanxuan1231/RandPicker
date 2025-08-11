@@ -28,13 +28,14 @@
                     <NativeMenu>
                         <NativeMenuItem Header="设置">
                             <NativeMenu>
-                                <NativeMenuItem Header="学生设置" />
-                                <NativeMenuItem Header="小组设置" />
+                                <NativeMenuItem Header="学生设置" Command="{x:Static local:App.StuSetCom}" />
+                                <NativeMenuItem Header="小组设置" Command="{x:Static local:App.GroupSetCom}" />
                                 <NativeMenuItemSeparator />
-                                <NativeMenuItem Header="界面设置" Command="{x:Static local:App.SettingsCommand}" />
+                                <NativeMenuItem Header="界面设置" Command="{x:Static local:App.UiSetCom}" />
                             </NativeMenu>
                         </NativeMenuItem>
-                        <NativeMenuItem Header="退出" Command="{x:Static local:App.ExitCommand}" />
+                        <NativeMenuItem Header="重新启动" />
+                        <NativeMenuItem Header="退出" Command="{x:Static local:App.ExitComm}" />
                     </NativeMenu>
                 </TrayIcon.Menu>
             </TrayIcon>
