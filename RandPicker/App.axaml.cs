@@ -84,7 +84,7 @@ public partial class App : Application
             _settingsWindow.Turn2Page(1);
             return;
         }
-        Log.Error("打开学生设置失败。");
+        Log.Error("打开小组设置失败。");
     }
 
     private static void UiSettings()
