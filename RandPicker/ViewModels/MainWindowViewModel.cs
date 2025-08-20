@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using RandPicker.Config;
+using RandPicker.Models;
 using Serilog;
 
 namespace RandPicker.ViewModels;

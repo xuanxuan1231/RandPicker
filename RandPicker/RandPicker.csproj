@@ -38,10 +38,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\RandPicker.Config\RandPicker.Config.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
         <Compile Update="Views\SettingsWindow.axaml.cs">
             <DependentUpon>SettingsWindow.axaml</DependentUpon>
             <SubType>Code</SubType>
