@@ -43,7 +43,7 @@
 
     <ItemGroup>
         <Compile Update="Views\SettingsWindow.axaml.cs">
-            <DependentUpon>Settings.axaml</DependentUpon>
+            <DependentUpon>SettingsWindow.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
     </ItemGroup>
