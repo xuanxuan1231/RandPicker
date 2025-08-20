@@ -28,7 +28,8 @@
                         <ToggleSwitch x:Name="SwitchAvatar" DockPanel.Dock="Bottom" />
                         <StackPanel Margin="0,0,0,8">
                             <TextBlock Classes="Subtitle1" Text="自启动" />
-                            <TextBlock Classes="Caption" Text="开机时自动启动" Margin="0,2,0,0" />
+                            <TextBlock Classes="Subtitle1" Text="头像显示" />
+                            <TextBlock Classes="Caption" Text="在界面中显示头像" Margin="0,2,0,0" />
                         </StackPanel>
                     </DockPanel>
                 </WrapPanel>
