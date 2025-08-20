@@ -95,7 +95,7 @@ public partial class App : Application
             _settingsWindow.Turn2Page(2);
             return;
         }
-        Log.Error("打开学生设置失败。");
+        Log.Error("打开界面设置失败。");
     }
 
     private static void Settings()
