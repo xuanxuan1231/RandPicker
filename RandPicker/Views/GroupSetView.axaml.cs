@@ -4,10 +4,10 @@ using Avalonia.Markup.Xaml;
 
 namespace RandPicker.Views;
 
-public partial class Settings : Window
+public partial class GroupSetView : UserControl
 {
-    public Settings()
+    public GroupSetView()
     {
-        AvaloniaXamlLoader.Load(this);
+        InitializeComponent();
     }
 }

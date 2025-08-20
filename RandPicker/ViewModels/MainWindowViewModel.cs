@@ -61,6 +61,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             ResultName = "无结果";
             ResultId = "000000";
+            Log.Warning("没有启用的学生。");
             return;
         }
 

@@ -21,8 +21,8 @@ sealed class Program
         try
         {
             Log.Information(
-                $"RandPicker 启动。版本 \v{System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}。");
-            Log.Information(AppDomain.CurrentDomain.BaseDirectory);
+                $"RandPicker 启动。版本 v{System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}。");
+            // Log.Information(AppDomain.CurrentDomain.BaseDirectory);
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
@@ -47,7 +47,7 @@ sealed class Program
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console()
-            .WriteTo.File("logs/app-.log",
+            .WriteTo.File("logs/RandPicker.log",
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7,
                 fileSizeLimitBytes: 10 * 1024 * 1024) // 10MB

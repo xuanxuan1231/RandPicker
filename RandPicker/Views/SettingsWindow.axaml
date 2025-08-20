@@ -1,0 +1,113 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:RandPicker.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+        xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:views="clr-namespace:RandPicker.Views"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="RandPicker.Views.SettingsWindow"
+        x:DataType="vm:SettingsWindowViewModel"
+        Title="RandPicker 设置"
+        Width="800" Height="600">
+
+    <Grid>
+        <controls:NavigationDrawer Name="NavDrawer"
+                                   LeftDrawerOpened="{Binding ElementName=NavToggle, Path=IsChecked}"
+                                   LeftDrawerWidth="240">
+
+            <!-- 侧边栏内容 -->
+            <controls:NavigationDrawer.LeftDrawerContent>
+                <StackPanel Margin="0,72,0,0">
+                    <!-- 导航菜单 -->
+                    <ScrollViewer>
+                            <ListBox SelectionMode="AlwaysSelected" x:Name="NavList"
+                                     Focusable="{Binding ElementName=NavToggle, Path=IsChecked}"
+                                     ItemsSource="{Binding SettingsItems}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="8,4">
+                                            <icons:MaterialIcon Kind="{Binding Icon}"
+                                                                Margin="0,0,32,0"
+                                                                Width="24" Height="24" />
+                                            <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                    </ScrollViewer>
+                </StackPanel>
+            </controls:NavigationDrawer.LeftDrawerContent>
+
+            <!-- 主内容 -->
+            <ScrollViewer DockPanel.Dock="Bottom" Margin="0,72,0,0" x:Name="Scroller">
+                <Carousel x:Name="PageCarousel" HorizontalAlignment="Stretch">
+                    <Carousel.Styles>
+                        <Style Selector="Carousel#PageCarousel:not(.no-transitions)">
+                            <Setter Property="PageTransition">
+                                <PageSlide Duration="0.25" SlideOutEasing="CircularEaseOut"
+                                           SlideInEasing="CircularEaseOut" />
+                            </Setter>
+                        </Style>
+                    </Carousel.Styles>
+                    
+                    <views:StuSetView />
+                    <views:GroupSetView />
+                    <views:UiSetView />
+                    
+                    
+                    <!-- 这里放页面 放完了到vm那去 -->
+                    <views:TestView />
+                </Carousel>
+            </ScrollViewer>
+        </controls:NavigationDrawer>
+
+        <!-- 标题栏-->
+        <controls:ColorZone Mode="PrimaryMid"
+                            Height="64"
+                            VerticalAlignment="Top"
+                            ZIndex="1000">
+            <DockPanel>
+                <!-- 菜单 -->
+                <ToggleButton Name="NavToggle"
+                              DockPanel.Dock="Left"
+                              BorderThickness="0"
+                              Margin="8,0,0,0"
+                              Width="48" Height="48"
+                              IsChecked="False"
+                              Theme="{StaticResource MaterialFlatButton}"
+                              Padding="4">
+                    <ToggleButton.Styles>
+                        <Style Selector="ToggleButton">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <icons:MaterialIcon Kind="MenuClose" Width="24" Height="24" Foreground="White" />
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <Style Selector="ToggleButton:checked">
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <icons:MaterialIcon Kind="MenuOpen" Width="24" Height="24" Foreground="White" />
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ToggleButton.Styles>
+                </ToggleButton>
+
+                <!-- 标题 -->
+                <TextBlock Text="设置"
+                           FontSize="20"
+                           FontWeight="Medium"
+                           VerticalAlignment="Center"
+                           Margin="16,0,0,0"
+                           Foreground="White" />
+            </DockPanel>
+        </controls:ColorZone>
+    </Grid>
+</Window>
