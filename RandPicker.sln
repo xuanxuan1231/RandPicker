@@ -1,8 +1,5 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandPicker", "RandPicker\RandPicker.csproj", "{51A18F76-4510-41DA-8926-CEA31D19E8AB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandPicker.Config", "RandPicker.Config\RandPicker.Config.csproj", "{BBE1A030-551E-4836-9AA6-5F1BB0C8EAE0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,9 +11,5 @@ Global
 		{51A18F76-4510-41DA-8926-CEA31D19E8AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51A18F76-4510-41DA-8926-CEA31D19E8AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51A18F76-4510-41DA-8926-CEA31D19E8AB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BBE1A030-551E-4836-9AA6-5F1BB0C8EAE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BBE1A030-551E-4836-9AA6-5F1BB0C8EAE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BBE1A030-551E-4836-9AA6-5F1BB0C8EAE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BBE1A030-551E-4836-9AA6-5F1BB0C8EAE0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
