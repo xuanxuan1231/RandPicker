@@ -1,0 +1,197 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:RandPicker.ViewModels"
+             xmlns:models="using:RandPicker.Models"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="RandPicker.Views.AttendanceManagementView">
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- 工具栏 -->
+    <Border Grid.Row="0" Background="#F5F5F5" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 筛选区域 -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="日期范围：" VerticalAlignment="Center"/>
+          <DatePicker Name="StartDatePicker" Width="150"/>
+          <TextBlock Text="至" VerticalAlignment="Center"/>
+          <DatePicker Name="EndDatePicker" Width="150"/>
+          
+          <TextBlock Text="学生：" VerticalAlignment="Center" Margin="20,0,0,0"/>
+          <ComboBox Name="StudentComboBox" Width="150" PlaceholderText="选择学生"/>
+          
+          <Button Content="查询" Classes="accent"/>
+          <Button Content="重置"/>
+        </StackPanel>
+
+        <!-- 操作按钮 -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+          <Button Content="签到" Classes="accent"/>
+          <Button Content="批量考勤"/>
+          <Button Content="导出报表"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- 主内容区域 -->
+    <TabView Grid.Row="1">
+      
+      <!-- 考勤记录标签页 -->
+      <TabViewItem Header="考勤记录">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="200"/>
+          </Grid.RowDefinitions>
+
+          <!-- 考勤记录列表 -->
+          <DataGrid Grid.Row="0"
+                    Name="AttendanceDataGrid"
+                    AutoGenerateColumns="False"
+                    GridLinesVisibility="All"
+                    HeadersVisibility="Column"
+                    CanUserReorderColumns="True"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="日期" 
+                                  Binding="{Binding Date, StringFormat=yyyy-MM-dd}" 
+                                  Width="100"/>
+              <DataGridTextColumn Header="学号" 
+                                  Binding="{Binding StudentId}" 
+                                  Width="100"/>
+              <DataGridTextColumn Header="姓名" 
+                                  Binding="{Binding StudentName}" 
+                                  Width="80"/>
+              <DataGridTextColumn Header="考勤状态" 
+                                  Binding="{Binding StatusText}" 
+                                  Width="80"/>
+              <DataGridTextColumn Header="签到时间" 
+                                  Binding="{Binding CheckInTime, StringFormat=HH:mm}" 
+                                  Width="80"/>
+              <DataGridTextColumn Header="签退时间" 
+                                  Binding="{Binding CheckOutTime, StringFormat=HH:mm}" 
+                                  Width="80"/>
+              <DataGridTextColumn Header="备注" 
+                                  Binding="{Binding Remarks}" 
+                                  Width="*"/>
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <!-- 考勤统计 -->
+          <Border Grid.Row="1" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Padding="10">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+
+              <Border Grid.Column="0" Background="#E8F5E8" Padding="15" Margin="5" CornerRadius="5">
+                <StackPanel HorizontalAlignment="Center">
+                  <TextBlock Text="出勤" FontWeight="Bold" HorizontalAlignment="Center"/>
+                  <TextBlock Name="PresentCount" Text="0" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Green"/>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="1" Background="#FFE8E8" Padding="15" Margin="5" CornerRadius="5">
+                <StackPanel HorizontalAlignment="Center">
+                  <TextBlock Text="缺勤" FontWeight="Bold" HorizontalAlignment="Center"/>
+                  <TextBlock Name="AbsentCount" Text="0" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Red"/>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="2" Background="#FFF8E8" Padding="15" Margin="5" CornerRadius="5">
+                <StackPanel HorizontalAlignment="Center">
+                  <TextBlock Text="迟到" FontWeight="Bold" HorizontalAlignment="Center"/>
+                  <TextBlock Name="LateCount" Text="0" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Orange"/>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="3" Background="#E8F0FF" Padding="15" Margin="5" CornerRadius="5">
+                <StackPanel HorizontalAlignment="Center">
+                  <TextBlock Text="请假" FontWeight="Bold" HorizontalAlignment="Center"/>
+                  <TextBlock Name="LeaveCount" Text="0" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Blue"/>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="4" Background="#F0E8FF" Padding="15" Margin="5" CornerRadius="5">
+                <StackPanel HorizontalAlignment="Center">
+                  <TextBlock Text="病假" FontWeight="Bold" HorizontalAlignment="Center"/>
+                  <TextBlock Name="SickCount" Text="0" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Purple"/>
+                </StackPanel>
+              </Border>
+            </Grid>
+          </Border>
+        </Grid>
+      </TabViewItem>
+
+      <!-- 考勤分析标签页 -->
+      <TabViewItem Header="考勤分析">
+        <ScrollViewer>
+          <StackPanel Spacing="20" Margin="20">
+            
+            <!-- 出勤率统计 -->
+            <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5" Padding="15">
+              <StackPanel>
+                <TextBlock Text="出勤率统计" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+
+                  <StackPanel Grid.Column="0">
+                    <TextBlock Text="今日出勤率" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <TextBlock Name="TodayAttendanceRate" Text="0%" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Green"/>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="1">
+                    <TextBlock Text="本周出勤率" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <TextBlock Name="WeekAttendanceRate" Text="0%" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Blue"/>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="2">
+                    <TextBlock Text="本月出勤率" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <TextBlock Name="MonthAttendanceRate" Text="0%" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Orange"/>
+                  </StackPanel>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- 迟到统计 -->
+            <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5" Padding="15">
+              <StackPanel>
+                <TextBlock Text="迟到情况分析" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                <TextBlock Text="本周迟到次数最多的学生将在此显示..." Foreground="#666"/>
+              </StackPanel>
+            </Border>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabViewItem>
+
+    </TabView>
+
+    <!-- 状态栏 -->
+    <Border Grid.Row="2" Background="#F0F0F0" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+      <TextBlock Name="StatusText" Text="就绪" VerticalAlignment="Center"/>
+    </Border>
+  </Grid>
+</UserControl>

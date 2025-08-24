@@ -1,0 +1,259 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:RandPicker.ViewModels"
+             xmlns:models="using:RandPicker.Models"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="RandPicker.Views.StudentManagementView"
+             x:DataType="vm:StudentManagementViewModel">
+
+  <Design.DataContext>
+    <vm:StudentManagementViewModel/>
+  </Design.DataContext>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- 工具栏 -->
+    <Border Grid.Row="0" Background="#F5F5F5" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 搜索区域 -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+          <TextBox Name="SearchBox" 
+                   Text="{Binding SearchKeyword}" 
+                   Watermark="搜索学生姓名、学号、班级..."
+                   Width="300"
+                   VerticalAlignment="Center"/>
+          <Button Content="搜索" 
+                  Command="{Binding SearchCommand}"
+                  Classes="accent"/>
+          <Button Content="刷新" 
+                  Command="{Binding RefreshCommand}"/>
+        </StackPanel>
+
+        <!-- 操作按钮 -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+          <Button Content="添加学生" 
+                  Command="{Binding AddStudentCommand}"
+                  Classes="accent"/>
+          <Button Content="编辑学生" 
+                  Command="{Binding EditStudentCommand}"
+                  IsEnabled="{Binding SelectedStudent, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+          <Button Content="删除学生" 
+                  Command="{Binding DeleteStudentCommand}"
+                  IsEnabled="{Binding SelectedStudent, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  Classes="danger"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- 主内容区域 -->
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="2*"/>
+        <ColumnDefinition Width="5"/>
+        <ColumnDefinition Width="3*"/>
+      </Grid.ColumnDefinitions>
+
+      <!-- 学生列表 -->
+      <Border Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+
+          <TextBlock Grid.Row="0" 
+                     Text="学生列表" 
+                     FontSize="16" 
+                     FontWeight="Bold" 
+                     Margin="10"
+                     Foreground="#333"/>
+
+          <DataGrid Grid.Row="1"
+                    ItemsSource="{Binding StudentProfiles}"
+                    SelectedItem="{Binding SelectedStudent}"
+                    AutoGenerateColumns="False"
+                    GridLinesVisibility="Horizontal"
+                    HeadersVisibility="Column"
+                    CanUserReorderColumns="True"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="学号" 
+                                  Binding="{Binding StudentId}" 
+                                  Width="100"/>
+              <DataGridTextColumn Header="姓名" 
+                                  Binding="{Binding Name}" 
+                                  Width="80"/>
+              <DataGridTextColumn Header="性别" 
+                                  Binding="{Binding Gender}" 
+                                  Width="50"/>
+              <DataGridTextColumn Header="班级" 
+                                  Binding="{Binding ClassName}" 
+                                  Width="80"/>
+              <DataGridTextColumn Header="年级" 
+                                  Binding="{Binding Grade}" 
+                                  Width="60"/>
+              <DataGridTextColumn Header="年龄" 
+                                  Binding="{Binding Age}" 
+                                  Width="50"/>
+              <DataGridCheckBoxColumn Header="在校" 
+                                      Binding="{Binding IsActive}" 
+                                      Width="50"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </Grid>
+      </Border>
+
+      <!-- 分隔线 -->
+      <GridSplitter Grid.Column="1" 
+                    Background="#E0E0E0" 
+                    ResizeDirection="Columns"/>
+
+      <!-- 详细信息面板 -->
+      <Border Grid.Column="2" Padding="10">
+        <ScrollViewer>
+          <StackPanel Spacing="15" IsVisible="{Binding SelectedStudent, Converter={x:Static ObjectConverters.IsNotNull}}">
+            
+            <!-- 基本信息 -->
+            <Expander Header="基本信息" IsExpanded="True">
+              <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="学号：" VerticalAlignment="Center" Margin="0,5"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SelectedStudent.StudentId}" Margin="5"/>
+
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="姓名：" VerticalAlignment="Center" Margin="10,5,0,5"/>
+                <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding SelectedStudent.Name}" Margin="5"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="性别：" VerticalAlignment="Center" Margin="0,5"/>
+                <ComboBox Grid.Row="1" Grid.Column="1" SelectedItem="{Binding SelectedStudent.Gender}" Margin="5">
+                  <ComboBoxItem Content="男"/>
+                  <ComboBoxItem Content="女"/>
+                </ComboBox>
+
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="出生日期：" VerticalAlignment="Center" Margin="10,5,0,5"/>
+                <DatePicker Grid.Row="1" Grid.Column="3" SelectedDate="{Binding SelectedStudent.BirthDate}" Margin="5"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="班级：" VerticalAlignment="Center" Margin="0,5"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SelectedStudent.ClassName}" Margin="5"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="年级：" VerticalAlignment="Center" Margin="10,5,0,5"/>
+                <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding SelectedStudent.Grade}" Margin="5"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="联系电话：" VerticalAlignment="Center" Margin="0,5"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding SelectedStudent.ContactPhone}" Margin="5"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="2" Text="入学日期：" VerticalAlignment="Center" Margin="10,5,0,5"/>
+                <DatePicker Grid.Row="3" Grid.Column="3" SelectedDate="{Binding SelectedStudent.EnrollmentDate}" Margin="5"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="在校状态：" VerticalAlignment="Center" Margin="0,5"/>
+                <CheckBox Grid.Row="4" Grid.Column="1" IsChecked="{Binding SelectedStudent.IsActive}" Content="在校" Margin="5"/>
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="备注：" VerticalAlignment="Top" Margin="0,5"/>
+                <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" 
+                         Text="{Binding SelectedStudent.Remarks}" 
+                         AcceptsReturn="True" 
+                         TextWrapping="Wrap" 
+                         Height="60" 
+                         Margin="5"/>
+              </Grid>
+            </Expander>
+
+            <!-- 家长信息 -->
+            <Expander Header="家长信息">
+              <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="家长姓名：" VerticalAlignment="Center" Margin="0,5"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SelectedStudent.ParentName}" Margin="5"/>
+
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="家长电话：" VerticalAlignment="Center" Margin="10,5,0,5"/>
+                <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding SelectedStudent.ParentPhone}" Margin="5"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="紧急联系人：" VerticalAlignment="Center" Margin="0,5"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedStudent.EmergencyContact}" Margin="5"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="紧急电话：" VerticalAlignment="Center" Margin="10,5,0,5"/>
+                <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding SelectedStudent.EmergencyPhone}" Margin="5"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="家庭地址：" VerticalAlignment="Top" Margin="0,5"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" 
+                         Text="{Binding SelectedStudent.Address}" 
+                         AcceptsReturn="True" 
+                         TextWrapping="Wrap" 
+                         Height="60" 
+                         Margin="5"/>
+              </Grid>
+            </Expander>
+
+            <!-- 操作按钮 -->
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+              <Button Content="保存修改" Classes="accent"/>
+              <Button Content="取消修改"/>
+            </StackPanel>
+
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+
+    <!-- 状态栏 -->
+    <Border Grid.Row="2" Background="#F0F0F0" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Column="0" 
+                   Text="{Binding StatusMessage}" 
+                   VerticalAlignment="Center"/>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+          <ProgressBar IsVisible="{Binding IsLoading}" 
+                       IsIndeterminate="True" 
+                       Width="100" 
+                       Height="4"/>
+          <TextBlock Text="{Binding StudentProfiles.Count, StringFormat='共 {0} 名学生'}" 
+                     VerticalAlignment="Center"
+                     Foreground="#666"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

@@ -1,0 +1,305 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:RandPicker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="RandPicker.Views.GradeManagementView">
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- 工具栏 -->
+    <Border Grid.Row="0" Background="#F5F5F5" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 筛选区域 -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="学期：" VerticalAlignment="Center"/>
+          <ComboBox Name="SemesterComboBox" Width="120" PlaceholderText="选择学期">
+            <ComboBoxItem Content="2024春季"/>
+            <ComboBoxItem Content="2024秋季"/>
+            <ComboBoxItem Content="2025春季"/>
+          </ComboBox>
+          
+          <TextBlock Text="科目：" VerticalAlignment="Center" Margin="20,0,0,0"/>
+          <ComboBox Name="SubjectComboBox" Width="120" PlaceholderText="选择科目">
+            <ComboBoxItem Content="语文"/>
+            <ComboBoxItem Content="数学"/>
+            <ComboBoxItem Content="英语"/>
+            <ComboBoxItem Content="物理"/>
+            <ComboBoxItem Content="化学"/>
+            <ComboBoxItem Content="生物"/>
+          </ComboBox>
+          
+          <TextBlock Text="考试类型：" VerticalAlignment="Center" Margin="20,0,0,0"/>
+          <ComboBox Name="ExamTypeComboBox" Width="120" PlaceholderText="考试类型">
+            <ComboBoxItem Content="期中考试"/>
+            <ComboBoxItem Content="期末考试"/>
+            <ComboBoxItem Content="月考"/>
+            <ComboBoxItem Content="单元测试"/>
+          </ComboBox>
+          
+          <Button Content="查询" Classes="accent"/>
+          <Button Content="重置"/>
+        </StackPanel>
+
+        <!-- 操作按钮 -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+          <Button Content="录入成绩" Classes="accent"/>
+          <Button Content="批量导入"/>
+          <Button Content="成绩分析"/>
+          <Button Content="导出报表"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- 主内容区域 -->
+    <TabView Grid.Row="1">
+      
+      <!-- 成绩录入标签页 -->
+      <TabViewItem Header="成绩录入">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="3*"/>
+          </Grid.ColumnDefinitions>
+
+          <!-- 成绩列表 -->
+          <DataGrid Grid.Column="0"
+                    Name="GradeDataGrid"
+                    AutoGenerateColumns="False"
+                    GridLinesVisibility="All"
+                    HeadersVisibility="Column"
+                    CanUserReorderColumns="True"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="学号" 
+                                  Binding="{Binding StudentId}" 
+                                  Width="100"/>
+              <DataGridTextColumn Header="姓名" 
+                                  Binding="{Binding StudentName}" 
+                                  Width="80"/>
+              <DataGridTextColumn Header="科目" 
+                                  Binding="{Binding Subject}" 
+                                  Width="80"/>
+              <DataGridTextColumn Header="考试类型" 
+                                  Binding="{Binding ExamType}" 
+                                  Width="100"/>
+              <DataGridTextColumn Header="成绩" 
+                                  Binding="{Binding Score}" 
+                                  Width="60"/>
+              <DataGridTextColumn Header="满分" 
+                                  Binding="{Binding FullScore}" 
+                                  Width="60"/>
+              <DataGridTextColumn Header="百分比" 
+                                  Binding="{Binding Percentage, StringFormat=F1}" 
+                                  Width="70"/>
+              <DataGridTextColumn Header="等级" 
+                                  Binding="{Binding Grade}" 
+                                  Width="60"/>
+              <DataGridTextColumn Header="排名" 
+                                  Binding="{Binding Ranking}" 
+                                  Width="60"/>
+              <DataGridTextColumn Header="考试日期" 
+                                  Binding="{Binding ExamDate, StringFormat=yyyy-MM-dd}" 
+                                  Width="100"/>
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <!-- 分隔线 -->
+          <GridSplitter Grid.Column="1" 
+                        Background="#E0E0E0" 
+                        ResizeDirection="Columns"/>
+
+          <!-- 成绩录入表单 -->
+          <Border Grid.Column="2" Padding="15">
+            <ScrollViewer>
+              <StackPanel Spacing="15">
+                <TextBlock Text="成绩录入" FontSize="18" FontWeight="Bold"/>
+
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                  </Grid.RowDefinitions>
+
+                  <TextBlock Grid.Row="0" Grid.Column="0" Text="学生：" VerticalAlignment="Center" Margin="0,5"/>
+                  <ComboBox Grid.Row="0" Grid.Column="1" Name="StudentSelectComboBox" Margin="5" PlaceholderText="选择学生"/>
+
+                  <TextBlock Grid.Row="1" Grid.Column="0" Text="科目：" VerticalAlignment="Center" Margin="0,5"/>
+                  <TextBox Grid.Row="1" Grid.Column="1" Name="SubjectTextBox" Margin="5" Watermark="输入科目名称"/>
+
+                  <TextBlock Grid.Row="2" Grid.Column="0" Text="考试类型：" VerticalAlignment="Center" Margin="0,5"/>
+                  <ComboBox Grid.Row="2" Grid.Column="1" Name="ExamTypeSelectComboBox" Margin="5">
+                    <ComboBoxItem Content="期中考试"/>
+                    <ComboBoxItem Content="期末考试"/>
+                    <ComboBoxItem Content="月考"/>
+                    <ComboBoxItem Content="单元测试"/>
+                    <ComboBoxItem Content="随堂测验"/>
+                  </ComboBox>
+
+                  <TextBlock Grid.Row="3" Grid.Column="0" Text="成绩：" VerticalAlignment="Center" Margin="0,5"/>
+                  <NumericUpDown Grid.Row="3" Grid.Column="1" Name="ScoreNumericUpDown" Margin="5" Minimum="0" Maximum="200" Value="0"/>
+
+                  <TextBlock Grid.Row="4" Grid.Column="0" Text="满分：" VerticalAlignment="Center" Margin="0,5"/>
+                  <NumericUpDown Grid.Row="4" Grid.Column="1" Name="FullScoreNumericUpDown" Margin="5" Minimum="1" Maximum="200" Value="100"/>
+
+                  <TextBlock Grid.Row="5" Grid.Column="0" Text="考试日期：" VerticalAlignment="Center" Margin="0,5"/>
+                  <DatePicker Grid.Row="5" Grid.Column="1" Name="ExamDatePicker" Margin="5"/>
+
+                  <TextBlock Grid.Row="6" Grid.Column="0" Text="学期：" VerticalAlignment="Center" Margin="0,5"/>
+                  <TextBox Grid.Row="6" Grid.Column="1" Name="SemesterTextBox" Margin="5" Watermark="如：2024春季"/>
+
+                  <TextBlock Grid.Row="7" Grid.Column="0" Text="排名：" VerticalAlignment="Center" Margin="0,5"/>
+                  <NumericUpDown Grid.Row="7" Grid.Column="1" Name="RankingNumericUpDown" Margin="5" Minimum="1" Value="1"/>
+
+                  <TextBlock Grid.Row="8" Grid.Column="0" Text="备注：" VerticalAlignment="Top" Margin="0,5"/>
+                  <TextBox Grid.Row="8" Grid.Column="1" Name="RemarksTextBox" Margin="5" AcceptsReturn="True" TextWrapping="Wrap" Height="60"/>
+
+                  <StackPanel Grid.Row="9" Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="5,15,5,5">
+                    <Button Content="保存成绩" Classes="accent"/>
+                    <Button Content="清空表单"/>
+                  </StackPanel>
+                </Grid>
+              </StackPanel>
+            </ScrollViewer>
+          </Border>
+        </Grid>
+      </TabViewItem>
+
+      <!-- 成绩分析标签页 -->
+      <TabViewItem Header="成绩分析">
+        <ScrollViewer>
+          <StackPanel Spacing="20" Margin="20">
+            
+            <!-- 班级成绩概览 -->
+            <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5" Padding="15">
+              <StackPanel>
+                <TextBlock Text="班级成绩概览" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+                
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+
+                  <StackPanel Grid.Column="0">
+                    <TextBlock Text="平均分" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <TextBlock Name="AverageScore" Text="0" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Blue"/>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="1">
+                    <TextBlock Text="最高分" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <TextBlock Name="MaxScore" Text="0" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Green"/>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="2">
+                    <TextBlock Text="最低分" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <TextBlock Name="MinScore" Text="0" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Red"/>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="3">
+                    <TextBlock Text="及格率" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                    <TextBlock Name="PassRate" Text="0%" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Orange"/>
+                  </StackPanel>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- 成绩分布 -->
+            <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5" Padding="15">
+              <StackPanel>
+                <TextBlock Text="成绩分布" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+                
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+
+                  <Border Grid.Column="0" Background="#E8F5E8" Padding="10" Margin="5" CornerRadius="3">
+                    <StackPanel HorizontalAlignment="Center">
+                      <TextBlock Text="优秀(90-100)" FontSize="12" HorizontalAlignment="Center"/>
+                      <TextBlock Name="ExcellentCount" Text="0人" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Green"/>
+                    </StackPanel>
+                  </Border>
+
+                  <Border Grid.Column="1" Background="#E8F0FF" Padding="10" Margin="5" CornerRadius="3">
+                    <StackPanel HorizontalAlignment="Center">
+                      <TextBlock Text="良好(80-89)" FontSize="12" HorizontalAlignment="Center"/>
+                      <TextBlock Name="GoodCount" Text="0人" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Blue"/>
+                    </StackPanel>
+                  </Border>
+
+                  <Border Grid.Column="2" Background="#FFF8E8" Padding="10" Margin="5" CornerRadius="3">
+                    <StackPanel HorizontalAlignment="Center">
+                      <TextBlock Text="中等(70-79)" FontSize="12" HorizontalAlignment="Center"/>
+                      <TextBlock Name="AverageCount" Text="0人" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Orange"/>
+                    </StackPanel>
+                  </Border>
+
+                  <Border Grid.Column="3" Background="#F0F8FF" Padding="10" Margin="5" CornerRadius="3">
+                    <StackPanel HorizontalAlignment="Center">
+                      <TextBlock Text="及格(60-69)" FontSize="12" HorizontalAlignment="Center"/>
+                      <TextBlock Name="PassCount" Text="0人" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Gray"/>
+                    </StackPanel>
+                  </Border>
+
+                  <Border Grid.Column="4" Background="#FFE8E8" Padding="10" Margin="5" CornerRadius="3">
+                    <StackPanel HorizontalAlignment="Center">
+                      <TextBlock Text="不及格(<60)" FontSize="12" HorizontalAlignment="Center"/>
+                      <TextBlock Name="FailCount" Text="0人" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Red"/>
+                    </StackPanel>
+                  </Border>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+            <!-- 学科对比 -->
+            <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5" Padding="15">
+              <StackPanel>
+                <TextBlock Text="学科成绩对比" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                <TextBlock Text="各学科平均分对比图表将在此显示..." Foreground="#666"/>
+              </StackPanel>
+            </Border>
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabViewItem>
+
+    </TabView>
+
+    <!-- 状态栏 -->
+    <Border Grid.Row="2" Background="#F0F0F0" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+      <TextBlock Name="StatusText" Text="就绪" VerticalAlignment="Center"/>
+    </Border>
+  </Grid>
+</UserControl>
