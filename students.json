@@ -1,0 +1,9 @@
+{
+    "students": [
+        {
+            "name": "张三",
+            "weight": 1,
+            "enabled": true
+        }
+    ]
+}
