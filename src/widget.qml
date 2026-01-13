@@ -14,7 +14,7 @@ QQW.Window {
     property int screenPadding: 10  // 恢复到屏幕内时的边距
 
     width: 75
-    height: 153
+    height: 157
     visible: true
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Widget | Qt.X11BypassWindowManagerHint
     color: "transparent"
@@ -188,7 +188,7 @@ QQW.Window {
         // 功能按钮组
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 6
+            spacing: 10
 
             IconButton {
                 id: pickButton
