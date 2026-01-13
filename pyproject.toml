@@ -3,11 +3,12 @@ name = "randpicker"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12,<3.15"
 dependencies = [
-    "dbus-python>=1.4.0",
+    "dbus-python>=1.4.0; sys_platform == 'linux'",
     "loguru>=0.7.3",
     "plyer>=2.1.0",
     "pyside6>=6.10.1",
     "rinui>=0.1.9.1",
 ]
+
