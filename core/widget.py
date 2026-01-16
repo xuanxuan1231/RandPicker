@@ -2,9 +2,9 @@
 浮窗后端：加载并控制 QML 窗口。
 """
 
-from pathlib import Path
 from loguru import logger
 from RinUI.core.launcher import RinUIWindow
+from .config.dirs import *
 
 
 class RPWidget(RinUIWindow):
@@ -14,9 +14,9 @@ class RPWidget(RinUIWindow):
         # parent is kept for signature compatibility with existing callers
         self.parent = parent
 
-        qml_path = Path(__file__).resolve().parent.parent / "src" / "widget.qml"
+        qml_path = QML_DIR / "widget.qml"
         if not qml_path.exists():
-            logger.error(f"Widget QML 文件不存在: {qml_path}")
+            logger.exception(f"Widget QML 文件不存在: {qml_path}")
             self.window = None
             return
         super().__init__(qml_path)

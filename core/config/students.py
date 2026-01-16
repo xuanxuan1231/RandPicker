@@ -13,10 +13,13 @@ DEFAULT_CONFIG = {
         {
             "name": "张三",
             "weight": 1,
-            "enabled": True
+            "enabled": True,
+            "avatar": "",
+            "properties": []
         }
     ]
 }
+
 
 class StudentsConfig(QObject):
     def __init__(self, parent=None):
@@ -75,33 +78,33 @@ class StudentsConfig(QObject):
                 enabled_students.append(index)
         return enabled_students
 
-    def get_partof_students_weights(self, students_ids: list) -> list:
+    def get_partof_students_weights(self, stuIds: list) -> list:
         """
         获取部分学生的权重列表。
         这个只应被 Python 调用，因此只返回权重列表。
 
-        :param students_ids: 学生 ID 列表
+        :param stuIds: 学生 ID 列表
         :return: 请求的学生权重
         """
         weights = []
-        for student in students_ids:
+        for student in stuIds:
             s = self.get_single_student(student)
             weights.append(s.get("weight", 1))
         return weights
 
     @Slot(int, result=dict)
-    def get_single_student(self, id: int) -> dict:
+    def get_single_student(self, stuId: int) -> dict:
         """
         获取单个学生的信息。
 
-        :param id: 学生 ID
+        :param stuId: 学生 ID
         :return: 学生信息
         """
         s = self.get_students()
-        if id < 0 or id >= len(s):
-            logger.error(f"学生 ID {id} 超出范围。")
+        if stuId < 0 or stuId >= len(s):
+            logger.error(f"学生 ID {stuId} 超出范围。")
             return {}
-        return s[id]
+        return s[stuId]
 
     @Slot(str, int, bool)
     def add_student(self, name: str, weight: int = 1, enabled: bool = True) -> None:
@@ -114,12 +117,42 @@ class StudentsConfig(QObject):
         logger.success(f"在缓冲区添加学生 {name}。")
 
     @Slot(int)
-    def remove_student(self, id: int) -> None:
+    def remove_student(self, stuId: int) -> None:
         s = self.get_students()
-        name = self.get_single_student(id)["name"]
-        if id < 0 or id >= len(s):
-            logger.error(f"学生 ID {id} 超出范围, 无法删除。")
+        name = self.get_single_student(stuId)["name"]
+        if stuId < 0 or stuId >= len(s):
+            logger.error(f"学生 ID {stuId} 超出范围, 无法删除。")
             return
-        self.config["students"].pop(id)
-        logger.success(f"在缓冲区已删除学生 {name}。ID: {id}")
+        self.config["students"].pop(stuId)
+        logger.success(f"在缓冲区已删除学生 {name}。ID: {stuId}")
 
+    @Slot(int)
+    def getAvatarPath(self, stuId: int):
+        """
+        获取学生头像路径。
+        因为这个需要检验路径是否存在，所以要单开一个 function。
+
+        """
+        if not isinstance(stuId, int):
+            logger.error(f"学生 ID 类型错误: {type(stuId)}，应为 int。")
+            return ""
+        if stuId == -1:
+            logger.info("ID 是保留的 -1。返回空路径。")
+            return ""
+        student = self.get_single_student(stuId)
+        avatar_path = student.get("avatar", "")
+        if avatar_path == "":
+            return ""
+        avatar_file = Path(avatar_path)
+        if not avatar_file.exists():
+            logger.warning(f"学生 ID {stuId} 的头像文件不存在: {avatar_path}")
+            return ""
+        return str(avatar_file.resolve())
+
+    @Slot(int, result=list)
+    def getProperty(self, stuId: int) -> list:
+        if stuId == -1:
+            logger.info("ID 是保留的 -1。返回示例。")
+            return [{"name": "没有附加属性", "value": "没有附加属性值"}]
+        student = self.get_single_student(stuId)
+        return student.get("properties", [{"name": "没有附加属性", "value": "没有附加属性值"}])

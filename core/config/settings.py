@@ -1,5 +1,5 @@
 """
-[TODO] 管理“设置”中的配置
+TODO)) 管理“设置”中的配置
 """
 
 from PySide6.QtCore import QObject

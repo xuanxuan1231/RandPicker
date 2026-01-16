@@ -1,16 +1,18 @@
 """
-系统托盘菜单：提供显示/隐藏与退出控制。
+系统托盘菜单。
 """
 
+import subprocess
+import sys
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication, QMenu, QStyle, QSystemTrayIcon
 from loguru import logger
 
 
 class RPTray(QObject):
-    def __init__(self, main):
+    def __init__(self, parent):
         super().__init__()
-        self.main = main
+        self.main = parent
         self.tray = None
         self.menu = None
         self.toggle_action = None
@@ -27,7 +29,9 @@ class RPTray(QObject):
 
         self.menu = QMenu()
         self.toggle_action = self.menu.addAction("隐藏窗口", self.toggle_visibility)
+        self.menu.addAction("设置", self.open_settings)
         self.menu.addSeparator()
+        self.menu.addAction("重启", self.restart_app)
         self.menu.addAction("退出", self.quit_app)
 
         self.tray.setContextMenu(self.menu)
@@ -63,3 +67,22 @@ class RPTray(QObject):
         if widget:
             widget.close()
         QApplication.quit()
+
+    def restart_app(self):
+        widget = getattr(self.main, "widget", None)
+        if widget:
+            widget.close()
+        try:
+            subprocess.Popen([sys.executable, *sys.argv])
+        except Exception as exc:
+            logger.exception("重启失败：{}", exc)
+            return
+        QApplication.quit()
+
+    def open_settings(self):
+        handler = getattr(self.main, "open_settings", None)
+        if callable(handler):
+            handler()
+            logger.info("打开设置")
+            return
+        logger.error("打开设置失败")
