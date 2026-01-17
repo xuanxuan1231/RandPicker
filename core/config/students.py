@@ -78,9 +78,10 @@ class StudentsConfig(QObject):
             if not stu.get("id"):
                 stu["id"] = str(uuid4())
 
-    def _find_index_by_guid(self, guid: str) -> int:
-        """根据 GUID 查找学生索引，找不到返回 -1。"""
-        s = self.get_students()
+    def _find_index_by_guid(self, guid: str, use_write: bool = False) -> int:
+        """根据 GUID 查找学生索引，找不到返回 -1。use_write=True 时使用写缓冲。"""
+        source = self.config_write if use_write else self.config_read
+        s = (source or {}).get("students", []) if source else []
         for idx, stu in enumerate(s):
             if stu.get("id") == guid:
                 return idx
@@ -115,6 +116,7 @@ class StudentsConfig(QObject):
             return []
         return s
 
+    @Slot(result=list)
     def get_enabled_students(self) -> list:
         """返回启用学生的 GUID 列表。"""
         s = self.get_students()
@@ -124,31 +126,15 @@ class StudentsConfig(QObject):
                 ids.append(stu.get("id"))
         return ids
 
-    @Slot(result=list)
-    def get_enabled_students_ids(self) -> list:
-        """返回启用学生的 GUID 列表。"""
-        s = self.get_students()
-        ids = []
-        for stu in s:
-            if stu.get("enabled", False):
-                ids.append(stu.get("id"))
-        return ids
-
+    @Slot(list, result=list)
     def get_partof_students_weights(self, guids: list) -> list:
         """根据 GUID 列表返回对应学生的权重。"""
+        if not guids:
+            return []
         weights = []
-        for guid in guids or []:
-            s = self.get_single_student(guid)
-            weights.append(s.get("weight", 1))
-        return weights
-
-    @Slot(list, result=list)
-    def get_partof_students_weights_by_ids(self, guids: list) -> list:
-        """根据 GUID 列表返回对应学生的权重。"""
-        weights = []
-        for guid in guids or []:
-            stu = self.get_single_student(guid)
-            weights.append(stu.get("weight", 1))
+        for guid in guids:
+            student = self.get_single_student(guid)
+            weights.append(student.get("weight", 1))
         return weights
 
     @Slot(str, result=dict)
@@ -181,7 +167,7 @@ class StudentsConfig(QObject):
     @Slot(str)
     def remove_student(self, guid: str) -> None:
         s = self.config_write.setdefault("students", [])
-        idx = self._find_index_by_guid(guid)
+        idx = self._find_index_by_guid(guid, use_write=True)
         if idx == -1:
             logger.error(f"学生 GUID {guid} 未找到, 无法删除。")
             return
