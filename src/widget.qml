@@ -194,14 +194,14 @@ QQW.Window {
                 id: pickButton
                 text: "人"
                 iconName: "ic_fluent_people_20_regular"
-                onClicked: ChoiceMaker.choosePeople(itemCount)
+                onClicked: ChoiceMaker.choosePeople(itemCount, true)
             }
 
             IconButton {
                 id: itemButton
                 text: "组"
                 iconName: "ic_fluent_group_20_regular"
-                onClicked: console.log("抽组")
+                onClicked: console.log(" [TODO] 抽组")
             }
         }
     }
