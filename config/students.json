@@ -1,0 +1,12 @@
+{
+    "students": [
+        {
+            "guid": "d50936f7-3011-43ed-9580-416f497288c6",
+            "name": "张三",
+            "weight": 1,
+            "enabled": true,
+            "avatar": "",
+            "properties": []
+        }
+    ]
+}

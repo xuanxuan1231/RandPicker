@@ -7,10 +7,12 @@ from loguru import logger
 from .dirs import CONFIG_DIR
 import json
 from pathlib import Path
+import uuid
 
 DEFAULT_CONFIG = {
     "students": [
         {
+            "guid": str(uuid.uuid4()),
             "name": "张三",
             "weight": 1,
             "enabled": True,
@@ -109,6 +111,7 @@ class StudentsConfig(QObject):
     @Slot(str, int, bool)
     def add_student(self, name: str, weight: int = 1, enabled: bool = True) -> None:
         new_student = {
+            "guid": str(uuid.uuid4()),
             "name": name,
             "weight": weight,
             "enabled": enabled

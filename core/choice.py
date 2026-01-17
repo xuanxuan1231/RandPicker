@@ -16,8 +16,13 @@ class ChoiceMaker(QObject):
         self._refresh()
 
     def _refresh(self):
-        self.students = self.studentsConfig.get_enabled_students()
-        self.students_weights = self.studentsConfig.get_partof_students_weights(self.students)
+        students = self.studentsConfig.get_students()
+        self.students = []
+        self.students_weights = []
+        for student in students:
+            if student.get("enabled", False):
+                self.students.append(student.get("guid"))
+                self.students_weights.append(student.get("weight", 1))
 
     @Slot(int, bool, result=list)
     def choosePeople(self, number: int = 1, notify: bool = True) -> list[Any] | None:
@@ -31,19 +36,30 @@ class ChoiceMaker(QObject):
         result = choices(self.students, weights=self.students_weights, k=number)
         logger.info(f"选择结果: {result}")
         if notify:
+            students_list = self.studentsConfig.get_students()
+            names = []
+            for guid in result:
+                for student in students_list:
+                    if student.get("guid") == guid:
+                        names.append(student.get("name", "未知"))
+                        break
             self.notificationManager.send(
                 option="native",
                 title=f"抽选了 {number} 名学生",
-                message=", ".join([self.studentsConfig.get_single_student(s).get("name", "未知") for s in result])
+                message=", ".join(names)
             )
             return None
         else:
             final_result = []
-            for student_id in result:
-                student = self.studentsConfig.get_single_student(student_id).copy()
-                student["properties"] = self.studentsConfig.getProperty(student_id)
-                student["avatar"] = self.studentsConfig.getAvatarPath(student_id)
-                final_result.append(student)
+            students_list = self.studentsConfig.get_students()
+            for guid in result:
+                for student in students_list:
+                    if student.get("guid") == guid:
+                        student_copy = student.copy()
+                        student_copy["properties"] = student.get("properties", [])
+                        student_copy["avatar"] = student.get("avatar", "")
+                        final_result.append(student_copy)
+                        break
             return final_result
 
     def advancedChoose(self):

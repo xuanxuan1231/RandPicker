@@ -1,6 +1,7 @@
 {
     "students": [
         {
+            "guid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
             "name": "张三",
             "weight": 1,
             "enabled": true
