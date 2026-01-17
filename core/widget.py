@@ -11,7 +11,6 @@ class RPWidget(RinUIWindow):
     """Load and manage the floating widget window using RinUIWindow."""
 
     def __init__(self, parent=None):
-        # parent is kept for signature compatibility with existing callers
         self.parent = parent
 
         qml_path = QML_DIR / "widget.qml"
@@ -21,7 +20,7 @@ class RPWidget(RinUIWindow):
             return
         super().__init__(qml_path)
         self.engine.rootContext().setContextProperty("widget", self)
-        self.engine.rootContext().setContextProperty("ChoiceMaker", self.parent.choiceMaker)
+        self.engine.rootContext().setContextProperty("ChoiceMaker", getattr(self.parent, "choiceMaker", None))
         
         self.window = getattr(self, "root_window", None)
 

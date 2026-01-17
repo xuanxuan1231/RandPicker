@@ -11,9 +11,12 @@ class NativeNotifier:
 
     def send(self, title: str, message: str) -> None:
         """发送系统通知"""
-        notification.notify(
-            title=title,
-            message=message,
-            app_name="RandPicker",
-        )
-        print(f"Notification - {title}: {message}")
+        try:
+            notification.notify(
+                title=title,
+                message=message,
+                app_name="RandPicker",
+            )
+            logger.success(f"Native 通知发送成功: {title}: {message}")
+        except Exception as e:
+            logger.error(f"Native 通知发送失败: {e}")
