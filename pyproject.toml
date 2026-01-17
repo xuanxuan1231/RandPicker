@@ -1,7 +1,7 @@
 [project]
 name = "randpicker"
 version = "0.1.0"
-description = "Add your description here"
+description = "RandPicker 2, a random picker application with GUI. Written in Python."
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
 dependencies = [
