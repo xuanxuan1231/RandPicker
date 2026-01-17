@@ -219,4 +219,9 @@ class StudentsConfig(QObject):
 
     @Slot(result=dict)
     def getBuffer(self):
-        return self.config_write
+        """
+        返回写入缓冲区的副本，避免外部代码直接修改内部缓冲区。
+        """
+        if self.config_write is None:
+            return None
+        return deepcopy(self.config_write)
