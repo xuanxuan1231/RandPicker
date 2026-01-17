@@ -78,6 +78,44 @@ class StudentsConfig(QObject):
                 enabled_students.append(index)
         return enabled_students
 
+    def get_filtered_students(self, filters: list[dict] = None) -> list:
+        """
+        获取符合筛选条件的启用状态学生 ID 列表。
+
+        :param filters: 筛选条件列表，例如 [{"name": "bar", "value": "foo"}]
+        :return: 符合条件的启用状态学生 ID 列表
+        """
+        enabled_ids = self.get_enabled_students()
+        if not filters:
+            return enabled_ids
+
+        filtered_ids = []
+        for stu_id in enabled_ids:
+            student = self.get_single_student(stu_id)
+            properties = student.get("properties", [])
+            
+            # 检查是否满足所有筛选条件
+            match_all = True
+            for f in filters:
+                f_name = f.get("name")
+                f_value = f.get("value")
+                
+                # 在学生的 properties 中查找匹配项
+                found = False
+                for p in properties:
+                    if p.get("name") == f_name and p.get("value") == f_value:
+                        found = True
+                        break
+                
+                if not found:
+                    match_all = False
+                    break
+            
+            if match_all:
+                filtered_ids.append(stu_id)
+        
+        return filtered_ids
+
     def get_partof_students_weights(self, stuIds: list) -> list:
         """
         获取部分学生的权重列表。

@@ -13,6 +13,51 @@ FluentPage {
 
     title: qsTr("主页")
 
+    Dialog {
+        id: advancedDialog
+        title: qsTr("高级抽选设置")
+        anchors.centerIn: parent
+        width: 300
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 10
+
+            Label {
+                text: qsTr("筛选属性 (JSON 格式):")
+            }
+
+            TextArea {
+                id: filterInput
+                Layout.fillWidth: true
+                placeholderText: '[{"name":"bar","value":"foo"}]'
+                wrapMode: TextEdit.Wrap
+                selectByMouse: true
+                font.family: "Monospace"
+                implicitHeight: 100
+                text: "[]"
+            }
+            
+            Label {
+                text: qsTr("提示: 输入属性名和对应的值进行筛选")
+                font.pixelSize: 10
+                color: "gray"
+            }
+        }
+
+        onAccepted: {
+            try {
+                let filters = JSON.parse(filterInput.text);
+                const result = ChoiceMaker.advancedChoose(parseInt(stuCount.text), filters, false);
+                homePage.selectedStudents = result && result.length ? result : [];
+            } catch (e) {
+                console.error("JSON 解析错误: " + e);
+            }
+        }
+    }
+
     RowLayout {
         id: rootLayout
 
@@ -105,6 +150,15 @@ FluentPage {
                 onClicked: {
                     const result = ChoiceMaker.choosePeople(stuCount.text.toString(), false);
                     homePage.selectedStudents = result && result.length ? result : [];
+                }
+            }
+            Button {
+                Layout.fillWidth: true
+                implicitHeight: 40
+                text: qsTr("高级抽选")
+
+                onClicked: {
+                    advancedDialog.open();
                 }
             }
             Button {
