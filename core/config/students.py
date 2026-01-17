@@ -194,3 +194,27 @@ class StudentsConfig(QObject):
             return [{"name": "没有附加属性", "value": "没有附加属性值"}]
         student = self.get_single_student(stuId)
         return student.get("properties", [{"name": "没有附加属性", "value": "没有附加属性值"}])
+
+    @Slot(result=dict)
+    def getAllAvailableProperties(self) -> dict:
+        """
+        获取所有学生中存在的属性名及其对应的值列表。
+        用于前端下拉框展示。
+        
+        :return: { "属性名1": ["值1", "值2"], "属性名2": ["值3"] }
+        """
+        all_props = {}
+        students = self.get_students()
+        for s in students:
+            props = s.get("properties", [])
+            for p in props:
+                name = p.get("name")
+                value = p.get("value")
+                if name:
+                    if name not in all_props:
+                        all_props[name] = set()
+                    if value:
+                        all_props[name].add(value)
+        
+        # 转换为列表并排序
+        return {k: sorted(list(v)) for k, v in all_props.items()}

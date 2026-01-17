@@ -17,43 +17,72 @@ FluentPage {
         id: advancedDialog
         title: qsTr("高级抽选设置")
         anchors.centerIn: parent
-        width: 300
+        width: 350
         modal: true
         standardButtons: Dialog.Ok | Dialog.Cancel
 
+        property var allProps: ({})
+        property var propNames: []
+
+        onOpened: {
+            allProps = StudentsConfig.getAllAvailableProperties();
+            propNames = Object.keys(allProps);
+            propNameCombo.model = propNames;
+            updateValueModel();
+        }
+
+        function updateValueModel() {
+            if (propNameCombo.currentText && allProps[propNameCombo.currentText]) {
+                propValueCombo.model = allProps[propNameCombo.currentText];
+            } else {
+                propValueCombo.model = [];
+            }
+        }
+
         ColumnLayout {
             width: parent.width
-            spacing: 10
+            spacing: 15
 
             Label {
-                text: qsTr("筛选属性 (JSON 格式):")
+                text: qsTr("选择筛选属性:")
+                font.bold: true
             }
 
-            TextArea {
-                id: filterInput
+            RowLayout {
                 Layout.fillWidth: true
-                placeholderText: '[{"name":"bar","value":"foo"}]'
-                wrapMode: TextEdit.Wrap
-                selectByMouse: true
-                font.family: "Monospace"
-                implicitHeight: 100
-                text: "[]"
+                spacing: 10
+                Label { text: qsTr("属性名:") }
+                ComboBox {
+                    id: propNameCombo
+                    Layout.fillWidth: true
+                    onCurrentTextChanged: advancedDialog.updateValueModel()
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                Label { text: qsTr("属性值:") }
+                ComboBox {
+                    id: propValueCombo
+                    Layout.fillWidth: true
+                }
             }
             
             Label {
-                text: qsTr("提示: 输入属性名和对应的值进行筛选")
-                font.pixelSize: 10
+                text: qsTr("提示: 系统将只从具有该属性值的学生中进行抽选")
+                font.pixelSize: 11
                 color: "gray"
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
             }
         }
 
         onAccepted: {
-            try {
-                let filters = JSON.parse(filterInput.text);
+            if (propNameCombo.currentText && propValueCombo.currentText) {
+                let filters = [{"name": propNameCombo.currentText, "value": propValueCombo.currentText}];
                 const result = ChoiceMaker.advancedChoose(parseInt(stuCount.text), filters, false);
                 homePage.selectedStudents = result && result.length ? result : [];
-            } catch (e) {
-                console.error("JSON 解析错误: " + e);
             }
         }
     }
