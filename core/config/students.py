@@ -78,11 +78,12 @@ class StudentsConfig(QObject):
                 enabled_students.append(index)
         return enabled_students
 
-    def get_filtered_students(self, filters: list[dict] = None) -> list:
+    def get_filtered_students(self, filters: list[dict] = None, exclude: bool = False) -> list:
         """
         获取符合筛选条件的启用状态学生 ID 列表。
 
         :param filters: 筛选条件列表，例如 [{"name": "bar", "value": "foo"}]
+        :param exclude: 是否为排除模式（即选择不符合条件的学生）
         :return: 符合条件的启用状态学生 ID 列表
         """
         enabled_ids = self.get_enabled_students()
@@ -111,7 +112,8 @@ class StudentsConfig(QObject):
                     match_all = False
                     break
             
-            if match_all:
+            # 根据模式决定是否保留
+            if (match_all and not exclude) or (not match_all and exclude):
                 filtered_ids.append(stu_id)
         
         return filtered_ids

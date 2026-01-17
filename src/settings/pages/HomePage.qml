@@ -68,9 +68,20 @@ FluentPage {
                     Layout.fillWidth: true
                 }
             }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                Label { text: qsTr("筛选模式:") }
+                ComboBox {
+                    id: filterModeCombo
+                    Layout.fillWidth: true
+                    model: [qsTr("包含 (符合条件)"), qsTr("排除 (不符合条件)")]
+                }
+            }
             
             Label {
-                text: qsTr("提示: 系统将只从具有该属性值的学生中进行抽选")
+                text: filterModeCombo.currentIndex === 0 ? qsTr("提示: 系统将只从具有该属性值的学生中进行抽选") : qsTr("提示: 系统将从不具有该属性值的学生中进行抽选")
                 font.pixelSize: 11
                 color: "gray"
                 Layout.fillWidth: true
@@ -81,7 +92,8 @@ FluentPage {
         onAccepted: {
             if (propNameCombo.currentText && propValueCombo.currentText) {
                 let filters = [{"name": propNameCombo.currentText, "value": propValueCombo.currentText}];
-                const result = ChoiceMaker.advancedChoose(parseInt(stuCount.text), filters, false);
+                let exclude = filterModeCombo.currentIndex === 1;
+                const result = ChoiceMaker.advancedChoose(parseInt(stuCount.text), filters, false, exclude);
                 homePage.selectedStudents = result && result.length ? result : [];
             }
         }

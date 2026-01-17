@@ -46,17 +46,18 @@ class ChoiceMaker(QObject):
                 final_result.append(student)
             return final_result
 
-    @Slot(int, list, bool, result=list)
-    def advancedChoose(self, number: int = 1, filters: list[dict] = None, notify: bool = True) -> list[Any] | None:
+    @Slot(int, list, bool, bool, result=list)
+    def advancedChoose(self, number: int = 1, filters: list[dict] = None, notify: bool = True, exclude: bool = False) -> list[Any] | None:
         """
         高级抽选：支持基于属性筛选的随机选择
         
         :param number: 抽选人数
         :param filters: 筛选条件列表，例如 [{"name": "bar", "value": "foo"}]
         :param notify: 是否发送通知
+        :param exclude: 是否为排除模式
         :return: 选中的学生信息列表
         """
-        students = self.studentsConfig.get_filtered_students(filters)
+        students = self.studentsConfig.get_filtered_students(filters, exclude)
         students_weights = self.studentsConfig.get_partof_students_weights(students)
 
         if len(students) == 0:
