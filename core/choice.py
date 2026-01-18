@@ -31,8 +31,9 @@ class ChoiceMaker(QObject):
         result = choices(self.students, weights=self.students_weights, k=number)
         logger.info(f"选择结果: {result}")
         if notify:
+            option = self.parent.settingsConfig.get("notification_type", "native")
             self.notificationManager.send(
-                option="native",
+                option=option,
                 title=f"抽选了 {number} 名学生",
                 message=", ".join([self.studentsConfig.get_single_student(s).get("name", "未知") for s in result])
             )

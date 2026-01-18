@@ -15,8 +15,6 @@ class NotificationManager(QObject):
             notifier = NativeNotifier()
             notifier.send(title, message)
         elif option == "classisland":
-            logger.error(f"不支持的通知方式: {option}")
-            return
             from core.notification.classisland import ClassIslandNotifier
             notifier = ClassIslandNotifier()
             notifier.send(title, message)
