@@ -3,6 +3,7 @@
 """
 
 from RinUI import RinUIWindow
+from .service import SettingsService
 from ..config.dirs import *
 
 class SettingsWindow(RinUIWindow):
@@ -12,10 +13,13 @@ class SettingsWindow(RinUIWindow):
         self.parent = parent
         self.studentsConfig = parent.studentsConfig
         self.config = parent.settingsConfig
+        self.service = SettingsService()
 
+        self.engine.rootContext().setContextProperty("SettingsService", self.service)
         self.engine.rootContext().setContextProperty("SettingsConfig", self.config)
         self.engine.rootContext().setContextProperty("ChoiceMaker", self.parent.choiceMaker)
         self.engine.rootContext().setContextProperty("StudentsConfig", self.studentsConfig)
 
         self.load(QML_DIR / "settings" / "main.qml")
+
 

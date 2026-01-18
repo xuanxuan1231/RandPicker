@@ -8,7 +8,7 @@ from core.choice import ChoiceMaker
 from core.config import SettingsConfig, StudentsConfig
 from core.widget import RPWidget
 from core.tray import RPTray
-from core.notification import NotificationManager
+from core.integration import NotificationManager
 from core.settings import SettingsWindow
 
 

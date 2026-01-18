@@ -11,19 +11,18 @@ class NotificationManager(QObject):
     def send(self, option: str, title: str, message: str) -> None:
         """发送通知"""
         if option == "native":
-            from core.notification.native import NativeNotifier
+            from core.integration.native import NativeNotifier
             notifier = NativeNotifier()
             notifier.send(title, message)
         elif option == "classisland":
             logger.error(f"不支持的通知方式: {option}")
             return
-            from core.notification.classisland import ClassIslandNotifier
-            notifier = ClassIslandNotifier()
-            notifier.send(title, message)
+            from core.integration.classisland import ClassIslandNotifier
+            ciIntegration.send_message(title, message)
         elif option == "classwidgets":
             logger.error(f"不支持的通知方式: {option}")
             return
-            from core.notification.classwidgets import ClassWidgetsNotifier
+            from core.integration.classwidgets import ClassWidgetsNotifier
             notifier = ClassWidgetsNotifier(self.parent)
             notifier.send(title, message)
         else:
