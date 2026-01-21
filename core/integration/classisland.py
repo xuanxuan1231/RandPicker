@@ -4,61 +4,99 @@
 """
 import os
 import sys
+from typing import Optional
+import asyncio
 
 from PySide6.QtCore import QObject, Slot
 from loguru import logger
+import threading
 from ..config.dirs import DLL_DIR
+
+CSHARP_AVAILABLE = False
+try:
+    # import clr
+    from pythonnet import load
+
+    load("coreclr")
+    import clr
+
+    sys.path.append(DLL_DIR.as_posix())
+    clr.AddReference("ClassIsland.Shared.IPC")
+
+    from ClassIsland.Shared.IPC import IpcClient
+
+    print(IpcClient)
+
+    CSHARP_AVAILABLE = True
+    logger.success("成功加载 ClassIsland 集成所需库。")
+
+except Exception as e:
+    logger.error(f"加载 ClassIsland 集成库时发生错误: {e}")
+    logger.warning("ClassIsland 集成在您的系统上不可用。")
 
 
 class ClassIslandIntegration(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.is_available = None
-        self.initialize()
+        self.is_available = CSHARP_AVAILABLE
 
-    def initialize(self):
+        self.ipcClient: Optional[IpcClient] = None
+        self.client_thread: Optional[threading.Thread] = None
+        self.event_loop: Optional[asyncio.AbstractEventLoop] = None
+        self.is_connected = False
+        self.is_running = False
+
+    def start(self):
+        if self.is_running:
+            return
+        if not self.is_available:
+            return
         try:
-            #import clr
-            from pythonnet import load
-            load("coreclr")
-            import clr
-
-            sys.path.append("./lib")
-            clr.AddReference("ClassIsland.Shared.IPC")
-
-            from ClassIsland.Shared.IPC import IpcClient
-            from System.Threading.Tasks import Task
-
-            self.IpcClient = IpcClient
-            self.client = None
-            self.routed_path = "RandPicker.Notify"
-            self.is_available = True
-            logger.info("成功加载 ClassIsland IPC 库")
-            
+            self.client_thread = threading.Thread(target=self._run, daemon=True)
+            self.client_thread.start()
+            self.is_running = True
         except Exception as e:
-            logger.error(f"加载 ClassIsland 集成时发生错误: {e}")
-            logger.warning("ClassIsland 集成在您的系统上可能不可用。")
-            self.is_available = False
+            logger.error(f"启动 ClassIsland 集成客户端时出错: {e}")
+            self.is_running = False
 
-        self._connect_ipc()
+    def _run(self):
+        async def client():
+            self.ipcClient = IpcClient()
 
-    def _connect_ipc(self):
+            # 预留 注册事件处理器
+
+            task = self.ipcClient.Connect()
+            await self.event_loop.run_in_executor(None, task.Wait)
+            self.is_connected = True
+            logger.info("ClassIsland 集成客户端已连接。")
+
+            while self.is_running:
+                await asyncio.sleep(1)
+                # 实时检查连接状态
+                if self._check_alive():
+                    continue
+                else:
+                    self.is_connected = False
+                    logger.warning("ClassIsland 集成客户端连接丢失，正在尝试重新连接...")
+
+                    task = self.ipcClient.Connect()
+                    await self.event_loop.run_in_executor(None, task.Wait)
+                    self.is_connected = True
+                    logger.info("ClassIsland 集成客户端已重新连接。")
+
+        self.event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.event_loop)
         try:
-            if self.client is None:
-                self.client = self.IpcClient()
-
-            task = self.client.Connect()
-            task.Wait()  # 同步等待连接任务完成
-
-            if self.client.IsConnected:
-                self.is_connected = True
-                logger.success("IPC 连接已建立。")
-            else:
-                self.is_connected = False
-                logger.warning("IPC 连接建立失败")
+            self.event_loop.run_until_complete(client())
         except Exception as e:
-            self.is_connected = False
-            logger.error(f"建立 IPC 连接时出错: {e}")
+            logger.exception(f"ClassIsland 集成客户端运行时出错: {e}")
+        finally:
+            self.event_loop.close()
+            self.event_loop = None
+
+    def _check_alive(self) -> bool:
+        return True
+
 
     @Slot(result=str)
     def getStatus(self):
@@ -85,6 +123,13 @@ class ClassIslandIntegration(QObject):
     def get_availability(self):
         return self.is_available
 
-
-
 ciService = ClassIslandIntegration()
+
+def initialize_ci_service():
+    global ciService
+    try:
+        ciService.start()
+    except Exception as e:
+        logger.error(f"初始化 ClassIsland 集成服务时出错: {e}")
+
+initialize_ci_service()
