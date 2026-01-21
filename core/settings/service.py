@@ -3,7 +3,8 @@
 """
 
 from PySide6.QtCore import Slot, QObject
-import os
+
+from ..integration.classisland import ciService
 
 class SettingsService(QObject):
     def __init__(self, parent=None):
@@ -17,7 +18,7 @@ class SettingsService(QObject):
         elif option == "native":
             return True
         elif option == "classisland":
-            return os.name == "nt"
+            return ciService.get_availability() or False
         elif option == "classwidgets":
             return False
         else:
