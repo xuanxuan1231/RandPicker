@@ -102,7 +102,8 @@ class ClassIslandIntegration(QObject):
     def _check_alive(self) -> bool:
         try:
             rpService = GeneratedIpcFactory.CreateIpcProxy[IRPService](self.ipcClient.Provider, self.ipcClient.PeerProxy)
-            return rpService.Ping() == "Pong"
+            result = rpService.Ping()
+            return result == "Pong"
         except Exception as e:
             logger.warning(f"检查 ClassIsland 集成连接状态时出错: {e}")
             return False
