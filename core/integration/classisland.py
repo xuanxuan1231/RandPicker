@@ -21,11 +21,15 @@ try:
     import clr
 
     sys.path.append(DLL_DIR.as_posix())
+    clr.AddReference("RP4CI.Shared")
     clr.AddReference("ClassIsland.Shared.IPC")
 
-    from ClassIsland.Shared.IPC import IpcClient
 
-    print(IpcClient)
+    from ClassIsland.Shared.IPC import IpcClient
+    from dotnetCampus.Ipc.CompilerServices.GeneratedProxies import GeneratedIpcFactory
+    from RP4CI.Shared.Models import NotifyResult, PickType, OverlayType
+    from RP4CI.Shared.Services import IRPService
+
 
     CSHARP_AVAILABLE = True
     logger.success("成功加载 ClassIsland 集成所需库。")
@@ -54,6 +58,7 @@ class ClassIslandIntegration(QObject):
         try:
             self.client_thread = threading.Thread(target=self._run, daemon=True)
             self.client_thread.start()
+            logger.info("ClassIsland 集成线程已启动。")
             self.is_running = True
         except Exception as e:
             logger.error(f"启动 ClassIsland 集成客户端时出错: {e}")
@@ -95,7 +100,12 @@ class ClassIslandIntegration(QObject):
             self.event_loop = None
 
     def _check_alive(self) -> bool:
-        return True
+        try:
+            rpService = GeneratedIpcFactory.CreateIpcProxy[IRPService](self.ipcClient.Provider, self.ipcClient.PeerProxy)
+            return rpService.Ping() == "Pong"
+        except Exception as e:
+            logger.warning(f"检查 ClassIsland 集成连接状态时出错: {e}")
+            return False
 
 
     @Slot(result=str)
