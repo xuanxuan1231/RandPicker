@@ -47,7 +47,6 @@ class SettingsConfig(ConfigManager, QObject):
         """获取通知方式状态"""
         notification = self.config.get("notification", {})
         options = notification.get("options", {})
-        print(option, options.get(option, False))
         return options.get(option, False)
 
     @Slot(str, bool)
