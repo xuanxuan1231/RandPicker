@@ -7,7 +7,7 @@ import sys
 from typing import Optional
 import asyncio
 
-from PySide6.QtCore import QObject, Slot
+from PySide6.QtCore import QObject, Slot, Signal
 from loguru import logger
 import threading
 from ..config.dirs import DLL_DIR
@@ -27,6 +27,7 @@ try:
 
     from ClassIsland.Shared.IPC import IpcClient
     from dotnetCampus.Ipc.CompilerServices.GeneratedProxies import GeneratedIpcFactory
+    from dotnetCampus.Ipc.Exceptions import IpcPeerConnectionBrokenException
     from RP4CI.Shared.Models import NotifyResult, PickType, OverlayType
     from RP4CI.Shared.Services import IRPService
 
@@ -40,20 +41,34 @@ except Exception as e:
 
 
 class ClassIslandIntegration(QObject):
+    connectivityUpdated = Signal(bool)
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.is_available = CSHARP_AVAILABLE
+        self.is_connected: bool = False
 
         self.ipcClient: Optional[IpcClient] = None
         self.client_thread: Optional[threading.Thread] = None
         self.event_loop: Optional[asyncio.AbstractEventLoop] = None
-        self.is_connected = False
+        self._set_connectivity(False)
         self.is_running = False
+
+    def _set_connectivity(self, connected: bool):
+        if self.is_connected == connected:
+            return
+        self.is_connected = connected
+        self.connectivityUpdated.emit(connected)
+
+    @Slot(result=bool)
+    def get_connectivity_status(self) -> bool:
+        return self.is_connected
 
     def start(self):
         if self.is_running:
             return
         if not self.is_available:
+            self._set_connectivity(False)
             return
         try:
             self.client_thread = threading.Thread(target=self._run, daemon=True)
@@ -72,7 +87,7 @@ class ClassIslandIntegration(QObject):
 
             task = self.ipcClient.Connect()
             await self.event_loop.run_in_executor(None, task.Wait)
-            self.is_connected = True
+            self._set_connectivity(True)
             logger.info("ClassIsland 集成客户端已连接。")
 
             while self.is_running:
@@ -81,12 +96,12 @@ class ClassIslandIntegration(QObject):
                 if self._check_alive():
                     continue
                 else:
-                    self.is_connected = False
+                    self._set_connectivity(False)
                     logger.warning("ClassIsland 集成客户端连接丢失，正在尝试重新连接...")
 
                     task = self.ipcClient.Connect()
                     await self.event_loop.run_in_executor(None, task.Wait)
-                    self.is_connected = True
+                    self._set_connectivity(True)
                     logger.info("ClassIsland 集成客户端已重新连接。")
 
         self.event_loop = asyncio.new_event_loop()
@@ -98,26 +113,16 @@ class ClassIslandIntegration(QObject):
         finally:
             self.event_loop.close()
             self.event_loop = None
+            self._set_connectivity(False)
 
     def _check_alive(self) -> bool:
         try:
             rpService = GeneratedIpcFactory.CreateIpcProxy[IRPService](self.ipcClient.Provider, self.ipcClient.PeerProxy)
             return rpService.PingService() == "Pong"
-        except Exception as e:
-            logger.warning(f"检查 ClassIsland 集成连接状态时出错: {e}")
+        except Exception:
+            # 好吵 删了
+            # logger.warning(f"检查 ClassIsland 集成连接状态时出现 {type(e)} 错误: {e}")
             return False
-
-
-    @Slot(result=str)
-    def getStatus(self):
-        try:
-            if self.is_available:
-                return "Connected" if self.is_connected else "NotConnected"
-            else:
-                return "NotAvailable"
-        except Exception as e:
-            logger.warning("获取 ClassIsland 集成连接状态时出错。")
-            return "Unknown"
 
     def send_notification(self, title: str, message: str, url: str):
         """

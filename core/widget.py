@@ -21,7 +21,7 @@ class RPWidget(RinUIWindow):
         super().__init__(qml_path)
         self.engine.rootContext().setContextProperty("widget", self)
         self.engine.rootContext().setContextProperty("ChoiceMaker", getattr(self.parent, "choiceMaker", None))
-        
+
         self.window = getattr(self, "root_window", None)
 
     def show(self) -> None:
