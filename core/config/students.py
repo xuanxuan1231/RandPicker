@@ -155,8 +155,8 @@ class StudentsConfig(QObject):
         new_student = {
             "name": name,
             "weight": weight,
-            "enabled": enabled
-            , "id": str(uuid4())
+            "enabled": enabled,
+            "id": str(uuid4())
         }
         # 写入缓冲区
         if self.config_write is None:
