@@ -205,4 +205,37 @@ QQW.Window {
             }
         }
     }
+
+    Item {
+        id: watermark
+        anchors {
+            left: parent.left
+            bottom: parent.bottom
+            leftMargin: 7
+            bottomMargin: 7
+        }
+        width: watermarkColumn.implicitWidth
+        height: watermarkColumn.implicitHeight
+        enabled: false
+        z: 114514
+        visible: GitInfo.getAvailability()
+
+        Column {
+            id: watermarkColumn
+            spacing: 1
+            Text {
+                text: qsTr("开发预览")
+                color: Colors.get("textColor")
+                opacity: 0.7
+                font.pixelSize: 10
+                font.bold: true
+            }
+            Text {
+                text: "JellyCat"
+                color: Colors.get("textColor")
+                opacity: 0.67
+                font.pixelSize: 9
+            }
+        }
+    }
 }
