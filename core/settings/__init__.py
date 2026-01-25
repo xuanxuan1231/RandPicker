@@ -5,6 +5,7 @@
 from RinUI import RinUIWindow
 from .service import SettingsService
 from ..config.dirs import *
+from ..git_info import gitInfo
 
 class SettingsWindow(RinUIWindow):
     def __init__(self, parent):
@@ -19,6 +20,7 @@ class SettingsWindow(RinUIWindow):
         self.engine.rootContext().setContextProperty("SettingsConfig", self.config)
         self.engine.rootContext().setContextProperty("ChoiceMaker", self.parent.choiceMaker)
         self.engine.rootContext().setContextProperty("StudentsConfig", self.studentsConfig)
+        self.engine.rootContext().setContextProperty("GitInfo", gitInfo)
 
         self.load(QML_DIR / "settings" / "main.qml")
 
