@@ -63,23 +63,6 @@ class RPTray(QObject):
         text = "隐藏窗口" if widget.window.isVisible() else "显示窗口"
         self.toggle_action.setText(text)
 
-    def quit_app(self):
-        widget = getattr(self.main, "widget", None)
-        if widget:
-            widget.close()
-        QApplication.quit()
-
-    def restart_app(self):
-        widget = getattr(self.main, "widget", None)
-        if widget:
-            widget.close()
-        try:
-            subprocess.Popen([sys.executable, *sys.argv])
-        except Exception as exc:
-            logger.exception("重启失败：{}", exc)
-            return
-        QApplication.quit()
-
     def open_settings(self):
         handler = getattr(self.main, "open_settings", None)
         if callable(handler):
@@ -87,3 +70,18 @@ class RPTray(QObject):
             logger.info("打开设置")
             return
         logger.error("打开设置失败")
+
+    def restart_app(self):
+        handler = getattr(self.main, "restart", None)
+        if callable(handler):
+            handler()
+            return
+        logger.error("重新启动失败")
+
+    def quit_app(self):
+        handler = getattr(self.main, "quit", None)
+        if callable(handler):
+            handler()
+            return
+        logger.error("退出应用失败")
+

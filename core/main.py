@@ -1,7 +1,10 @@
 """
 主模块
 """
-from PySide6.QtCore import QObject
+import sys
+import os
+from PySide6.QtCore import QObject, Slot
+from PySide6.QtWidgets import QApplication
 from loguru import logger
 
 from core.choice import ChoiceMaker
@@ -39,3 +42,16 @@ class RPMain(QObject):
 
     def open_settings(self):
         self.settingsWindow = SettingsWindow(self)
+
+    @Slot()
+    def restart(self):
+        logger.debug("触发重新启动")
+        app = QApplication.instance()
+        app.quit()
+        app.processEvents()
+        os.execl(sys.executable, sys.executable, *sys.argv)
+
+    @Slot()
+    def quit(self):
+        logger.info("退出 RandPicker。")
+        QApplication.instance().quit()

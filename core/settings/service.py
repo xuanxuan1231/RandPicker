@@ -9,7 +9,7 @@ from ..integration.classisland import ciService
 
 
 class SettingsService(QObject):
-    connectivityUpdated = Signal(str, bool)
+    connectivityUpdated = Signal(str, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -32,16 +32,16 @@ class SettingsService(QObject):
         else:
             return False
 
-    @Slot(str, result=bool)
-    def getConnectivityStatus(self, option: str) -> bool:
+    @Slot(str, result=str)
+    def getConnectivityStatus(self, option: str) -> str:
         """获取通知方式的连接状态，供 QML 初始化状态"""
         if option == "classisland":
             return ciService.get_connectivity_status()
         elif option == "classwidgets":
-            return False
-        return False
+            return "NotRunning"
+        return "NotRunning"
 
-    def updateConnectivityStatus(self, method: str, connectivity: bool):
+    def updateConnectivityStatus(self, method: str, connectivity: str):
         if method not in ["classisland", "classwidgets"]:
             return
         self.connectivityUpdated.emit(method, connectivity)

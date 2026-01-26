@@ -32,18 +32,14 @@ class NotificationManager(QObject):
                 except Exception:
                     logger.exception("Native 通知发送失败")
             elif option == "classisland":
-                sent = ciService.send_message(pick_type, stus)
+                sent = sent or ciService.send_message(pick_type, stus)
             elif option == "classwidgets":
                 logger.error(f"不支持的通知方式: {option}")
             else:
                 logger.error(f"不支持的通知方式: {option}")
 
-        if not sent:
+        if not sent and self.settingsConfig.getNotifyFallback():
             try:
-                title = f"抽选了 {len(stus)}" + ("名学生" if pick_type == "person" else "个小组")
-                message = ", ".join(stus)
-                from core.integration.native import NativeNotifier
-                notifier = NativeNotifier()
-                notifier.send(title, message)
+                nativeNotifier.send_message(pick_type, stus)
             except Exception:
-                logger.exception("Native 兜底通知发送失败")
+                logger.exception("Native 回退通知发送失败")
