@@ -1,0 +1,29 @@
+import typing, abc
+from CommunityToolkit.Mvvm.ComponentModel import ObservableValidator
+from System.Threading.Tasks import Task
+from System.Runtime.CompilerServices import ICriticalNotifyCompletion
+from System import Action
+
+class __ObservableValidatorHelper(abc.ABC):
+    @staticmethod
+    def ValidateProperty(instance: ObservableValidator, value: typing.Any, propertyName: str) -> None: ...
+
+
+class __TaskExtensions(abc.ABC):
+    @staticmethod
+    def GetAwaitableWithoutEndValidation(task: Task) -> __TaskExtensions.TaskAwaitableWithoutEndValidation: ...
+
+    class TaskAwaitableWithoutEndValidation:
+        def __init__(self, task: Task) -> None: ...
+        def GetAwaiter(self) -> __TaskExtensions.TaskAwaitableWithoutEndValidation.Awaiter: ...
+
+        class Awaiter(ICriticalNotifyCompletion):
+            def __init__(self, task: Task) -> None: ...
+            @property
+            def IsCompleted(self) -> bool: ...
+            def GetResult(self) -> None: ...
+            def OnCompleted(self, continuation: Action) -> None: ...
+            def UnsafeOnCompleted(self, continuation: Action) -> None: ...
+
+
+
