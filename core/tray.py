@@ -4,6 +4,7 @@
 
 import subprocess
 import sys
+
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication, QMenu, QStyle, QSystemTrayIcon
 from loguru import logger

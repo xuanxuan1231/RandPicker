@@ -2,11 +2,13 @@
 TODO)) 管理“设置”中的配置
 """
 
+from pathlib import Path
+
 from PySide6.QtCore import QObject, Slot
 from RinUI import ConfigManager
-from pathlib import Path
-from .dirs import CONFIG_DIR
 from loguru import logger
+
+from .dirs import CONFIG_DIR
 
 DEFAULT_CONFIG = {
     "notification": {
@@ -19,6 +21,7 @@ DEFAULT_CONFIG = {
         },
     }
 }
+
 
 class SettingsConfig(ConfigManager, QObject):
     def __init__(self, parent=None):

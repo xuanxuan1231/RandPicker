@@ -40,9 +40,9 @@ FluentWindow {
             page: Qt.resolvedUrl("pages/stuconfig/GroupManage.qml")
         },
         {
-            title:qsTr("配置管理"),
+            title: qsTr("配置管理"),
             icon: "ic_fluent_dismiss_20_regular",
-            page: Qt.resolvedUrl("pages/stuconfig/FileManage.qml"),
+            page: Qt.resolvedUrl("pages/stuconfig/FileManage.qml")
         },
         {
             title: qsTr("应用设置"),

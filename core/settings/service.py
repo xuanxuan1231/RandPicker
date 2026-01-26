@@ -7,6 +7,7 @@ from loguru import logger
 
 from ..integration.classisland import ciService
 
+
 class SettingsService(QObject):
     connectivityUpdated = Signal(str, bool)
 

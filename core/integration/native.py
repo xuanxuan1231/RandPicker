@@ -5,6 +5,7 @@
 from loguru import logger
 from plyer import notification
 
+
 class NativeNotifier:
     def __init__(self):
         pass
@@ -32,5 +33,6 @@ class NativeNotifier:
             logger.success(f"Native 通知发送成功: {title}: {message}")
         except Exception as e:
             logger.error(f"Native 通知发送失败: {e}")
+
 
 nativeNotifier = NativeNotifier()

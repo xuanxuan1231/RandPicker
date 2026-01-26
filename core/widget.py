@@ -2,8 +2,9 @@
 浮窗后端：加载并控制 QML 窗口。
 """
 
-from loguru import logger
 from RinUI.core.launcher import RinUIWindow
+from loguru import logger
+
 from .config.dirs import *
 from .git_info import gitInfo
 

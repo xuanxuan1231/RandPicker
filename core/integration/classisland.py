@@ -2,14 +2,14 @@
 向 ClassIsland 发送通知
 
 """
-import os
-import sys
-from typing import Optional
 import asyncio
+import sys
+import threading
+from typing import Optional
 
 from PySide6.QtCore import QObject, Slot, Signal
 from loguru import logger
-import threading
+
 from ..config.dirs import DLL_DIR
 
 CSHARP_AVAILABLE = False
@@ -24,13 +24,11 @@ try:
     clr.AddReference("RP4CI.Shared")
     clr.AddReference("ClassIsland.Shared.IPC")
 
-
     from ClassIsland.Shared.IPC import IpcClient
     from dotnetCampus.Ipc.CompilerServices.GeneratedProxies import GeneratedIpcFactory
     from dotnetCampus.Ipc.Exceptions import IpcPeerConnectionBrokenException
     from RP4CI.Shared.Models import NotifyResult, PickType, OverlayType
     from RP4CI.Shared.Services import IRPService
-
 
     CSHARP_AVAILABLE = True
     logger.success("成功加载 ClassIsland 集成所需库。")
@@ -42,7 +40,7 @@ except Exception as e:
 
 class ClassIslandIntegration(QObject):
     connectivityUpdated = Signal(bool)
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.is_available = CSHARP_AVAILABLE
@@ -117,7 +115,8 @@ class ClassIslandIntegration(QObject):
 
     def _check_alive(self) -> bool:
         try:
-            rpService = GeneratedIpcFactory.CreateIpcProxy[IRPService](self.ipcClient.Provider, self.ipcClient.PeerProxy)
+            rpService = GeneratedIpcFactory.CreateIpcProxy[IRPService](self.ipcClient.Provider,
+                                                                       self.ipcClient.PeerProxy)
             return rpService.PingService() == "Pong"
         except Exception:
             # 好吵 删了
@@ -151,7 +150,8 @@ class ClassIslandIntegration(QObject):
         :param result: 由 _format_message 生成的 NotifyResult
         """
         try:
-            rpService = GeneratedIpcFactory.CreateIpcProxy[IRPService](self.ipcClient.Provider, self.ipcClient.PeerProxy)
+            rpService = GeneratedIpcFactory.CreateIpcProxy[IRPService](self.ipcClient.Provider,
+                                                                       self.ipcClient.PeerProxy)
             rpService.Notify(result)
             logger.success(f"ClassIsland 通知发送成功: {result.Title}: {result.Overlay}")
         except Exception as e:
@@ -160,7 +160,9 @@ class ClassIslandIntegration(QObject):
     def get_availability(self):
         return self.is_available
 
+
 ciService = ClassIslandIntegration()
+
 
 def initialize_ci_service():
     global ciService
@@ -168,5 +170,6 @@ def initialize_ci_service():
         ciService.start()
     except Exception as e:
         logger.error(f"初始化 ClassIsland 集成服务时出错: {e}")
+
 
 initialize_ci_service()
