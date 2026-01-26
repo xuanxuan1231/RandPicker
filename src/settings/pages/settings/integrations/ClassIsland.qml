@@ -19,9 +19,23 @@ Item {
         InfoBar {
             id: notConnectedTip
             title: qsTr("排障")
-            text: qsTr("请确保您已启动 ClassIsland v2，且安装了“RandPicker 集成”插件。\n如果故障仍然存在，请联系我们。")
+            text: qsTr("请确保您已启动 ClassIsland v2，且安装了“RandPicker”插件。\n如果故障仍然存在，请联系我们。")
             visible: notConnectedInfo.visible
             closable: false
+            customContent: [
+                Hyperlink {
+                    text: qsTr("更多排障指南")
+                    onClicked: {
+                        Qt.openUrlExternally("https://randpicker2.netlify.app/")
+                    }
+                },
+                Hyperlink {
+                    text: "ClassIsland"
+                    onClicked: {
+                        Qt.openUrlExternally("classisland://app/settings/classisland.plugins")
+                    }
+                }
+            ]
         }
         
         InfoBar {
@@ -48,11 +62,11 @@ Item {
             description: qsTr("启用后，RandPicker 的通知将通过 ClassIsland 发送。")
 
             Switch {
-                checked: SettingsConfig.getNotifyOptionStatus("native")
+                checked: SettingsConfig.getNotifyOptionStatus("classisland")
                 Component.onCompleted: {
-                        checked = SettingsConfig.getNotifyOptionStatus("native")
+                        checked = SettingsConfig.getNotifyOptionStatus("classisland")
                 }
-                onCheckedChanged: SettingsConfig.setNotifyOptionStatus("native", checked)
+                onCheckedChanged: SettingsConfig.setNotifyOptionStatus("classisland", checked)
             }
         }
     }

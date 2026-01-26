@@ -73,7 +73,7 @@ class ClassIslandIntegration(QObject):
         try:
             self.client_thread = threading.Thread(target=self._run, daemon=True)
             self.client_thread.start()
-            logger.info("ClassIsland 集成线程已启动。")
+            logger.info("ClassIsland 集成客户端已启动。")
             self.is_running = True
         except Exception as e:
             logger.error(f"启动 ClassIsland 集成客户端时出错: {e}")
@@ -124,16 +124,38 @@ class ClassIslandIntegration(QObject):
             # logger.warning(f"检查 ClassIsland 集成连接状态时出现 {type(e)} 错误: {e}")
             return False
 
-    def send_notification(self, title: str, message: str, url: str):
+    def send_message(self, pick_type: str, stus: list) -> bool:
+        try:
+            result = self._format_message(pick_type, stus)
+            self._send(result)
+            return True
+        except Exception as e:
+            logger.exception(f"发送 ClassIsland 通知时出错: {e}")
+            return False
+
+    @staticmethod
+    def _format_message(pick_type: str, stus: list) -> NotifyResult:
+        result = NotifyResult()
+        result.PickType = PickType.Person if pick_type == "person" else PickType.Group
+
+        # TODO)) 这里本应从设置中读取，但是先这样吧（
+        result.Title = f"抽选了 {len(stus)} " + ("名学生" if pick_type == "person" else "个小组")
+        result.Overlay = ", ".join(stus)
+
+        return result
+
+    def _send(self, result: NotifyResult):
         """
         发送通知到 ClassIsland
 
-        :param title: 通知标题
-        :param message: 通知内容
-        :param url: 通知链接
+        :param result: 由 _format_message 生成的 NotifyResult
         """
-        # 这里添加实际的通知发送逻辑
-        print(f"Sending notification to ClassIsland:\nTitle: {title}\nMessage: {message}\nURL: {url}")
+        try:
+            rpService = GeneratedIpcFactory.CreateIpcProxy[IRPService](self.ipcClient.Provider, self.ipcClient.PeerProxy)
+            rpService.Notify(result)
+            logger.success(f"ClassIsland 通知发送成功: {result.Title}: {result.Overlay}")
+        except Exception as e:
+            logger.error(f"向 ClassIsland 发送通知时出错: {e}")
 
     def get_availability(self):
         return self.is_available

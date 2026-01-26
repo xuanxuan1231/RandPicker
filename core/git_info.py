@@ -9,7 +9,8 @@ class GitInfo(QObject):
         self._available = os.system("git branch --show-current") == 0
         self._commit_hash = os.popen("git rev-parse --short HEAD").read().replace("\n", "") or "未知"
         self._branch_name = os.popen("git branch --show-current").read().replace("\n", "") or "未知"
-        logger.info(f"你正在启动 RandPicker 的开发预览版本。你正在 {self._branch_name} 分支的 {self._commit_hash} 提交上。")
+        logger.warning("你正在启动 RandPicker 的开发预览版本，部分功能可能不稳定。")
+        logger.info(f"你正在 {self._branch_name} 分支的 {self._commit_hash} 提交上。")
 
 
     @Slot(result=str)

@@ -6,6 +6,7 @@ from PySide6.QtCore import QObject, Slot
 from RinUI import ConfigManager
 from pathlib import Path
 from .dirs import CONFIG_DIR
+from loguru import logger
 
 DEFAULT_CONFIG = {
     "notification": {
@@ -56,5 +57,13 @@ class SettingsConfig(ConfigManager, QObject):
         options = notification.setdefault("options", {})
         options[option] = status
         self.save_config()
+
+    def getAllEnabledNotifyOptions(self) -> list:
+        """获取所有启用的通知方式"""
+        notification = self.config.get("notification", {})
+        options = notification.get("options", {})
+        result = [opt for opt, enabled in options.items() if enabled]
+        logger.info(f"当前启用的通知方式: {result}")
+        return result
 
     # endregion #
