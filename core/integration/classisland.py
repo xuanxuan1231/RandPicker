@@ -26,7 +26,6 @@ try:
 
     from ClassIsland.Shared.IPC import IpcClient
     from dotnetCampus.Ipc.CompilerServices.GeneratedProxies import GeneratedIpcFactory
-    from dotnetCampus.Ipc.Exceptions import IpcPeerConnectionBrokenException
     from RP4CI.Shared.Models import NotifyResult, PickType, OverlayType
     from RP4CI.Shared.Services import IRPService
 

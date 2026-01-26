@@ -16,7 +16,7 @@ DEFAULT_CONFIG = {
         "options": {
             "native": True,
             "classisland": False,
-            "RandPicker": False,
+            "randpicker": False,
             "classwidgets": False,
         },
     }

@@ -21,7 +21,7 @@ class SettingsService(QObject):
     @Slot(str, result=bool)
     def getNotifyAvailability(self, option: str) -> bool:
         """获取通知方式的可用性"""
-        if option == "RandPicker":
+        if option == "randpicker":
             return False
         elif option == "native":
             return True
