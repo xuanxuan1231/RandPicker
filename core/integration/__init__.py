@@ -1,6 +1,6 @@
 """通知管理模块"""
 
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Slot
 from loguru import logger
 
 from core.integration.classisland import ciService
@@ -48,3 +48,15 @@ class NotificationManager(QObject):
                 nativeNotifier.send_message(pick_type, stus)
             except Exception:
                 logger.exception("Native 回退通知发送失败")
+
+    @Slot(str)
+    def sendTest(self, option):
+        match option:
+            case "native":
+                nativeNotifier.send_test()
+            case "classisland":
+                ciService.send_test()
+            case "classwidgets":
+                logger.error(f"不支持的通知方式: {option}")
+            case _:
+                logger.error(f"不支持的通知方式: {option}")

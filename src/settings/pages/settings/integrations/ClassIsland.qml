@@ -51,6 +51,16 @@ Item {
             text: qsTr("通知和规则可以正常使用。")
             title: qsTr("已连接")
             visible: SettingsService.getConnectivityStatus("classisland") === "Connected"
+
+            customContent: [
+                Hyperlink {
+                    text: qsTr("测试通知")
+
+                    onClicked: {
+                        NotificationManager.sendTest("classisland");
+                    }
+                }
+            ]
         }
         InfoBar {
             id: notRunningInfo

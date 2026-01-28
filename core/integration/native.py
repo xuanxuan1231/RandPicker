@@ -15,6 +15,15 @@ class NativeNotifier:
         title, message = self._format_message(pick_type, stus)
         self._send(title, message)
 
+    def send_test(self) -> None:
+        """发送测试通知"""
+        try:
+            title = "测试通知"
+            message = "这是一条来自 RandPicker 的测试通知。"
+            self._send(title, message)
+        except Exception as e:
+            logger.error(f"Native 测试通知发送失败: {e}")
+
     @staticmethod
     def _format_message(pick_type: str, stus: list) -> tuple[str, str]:
         """格式化通知消息"""
@@ -22,7 +31,8 @@ class NativeNotifier:
         message = ", ".join(stus)
         return title, message
 
-    def _send(self, title: str, message: str) -> None:
+    @staticmethod
+    def _send(title: str, message: str) -> None:
         """发送系统通知"""
         try:
             notification.notify(

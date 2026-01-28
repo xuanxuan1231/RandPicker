@@ -24,5 +24,6 @@ class SettingsWindow(RinUIWindow):
         self.engine.rootContext().setContextProperty("StudentsConfig", self.studentsConfig)
         self.engine.rootContext().setContextProperty("GitInfo", gitInfo)
         self.engine.rootContext().setContextProperty("AppMain", self.parent)
+        self.engine.rootContext().setContextProperty("NotificationManager", self.parent.notificationManager)
 
         self.load(QML_DIR / "settings" / "main.qml")

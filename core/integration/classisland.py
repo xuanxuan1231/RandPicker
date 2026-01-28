@@ -162,6 +162,21 @@ if CSHARP_AVAILABLE:
                 logger.exception(f"发送 ClassIsland 通知时出错: {e}")
                 return False
 
+        def send_test(self):
+            if self.connectivity_status != "Connected":
+                logger.warning("ClassIsland 未连接或未运行，无法发送测试通知。")
+                return False
+            try:
+                result = NotifyResult()
+                result.PickType = PickType.Test
+                result.Title = "测试通知"
+                result.Overlay = "这是一条来自 RandPicker 的测试通知。"
+                self._send(result)
+            except Exception as e:
+                logger.exception(f"发送 ClassIsland 测试通知时出错: {e}")
+                return False
+
+
 
         def _format_message(self, pick_type: str, stus: list) -> NotifyResult:
             result = NotifyResult()
