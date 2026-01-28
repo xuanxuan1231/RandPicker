@@ -44,6 +44,8 @@ if CSHARP_AVAILABLE:
 
         def __init__(self, parent=None):
             super().__init__(parent)
+            self.main = None
+            self.settingsConfig = None
             self.is_available = CSHARP_AVAILABLE
             self.connectivity_status: str = "NotRunning"
 
@@ -53,6 +55,7 @@ if CSHARP_AVAILABLE:
             self._set_connectivity("NotRunning")
             self.is_running = False
             self.reconnect_attempts = deque()
+
 
         def _set_connectivity(self, status: str):
             if self.connectivity_status == status:
@@ -159,10 +162,13 @@ if CSHARP_AVAILABLE:
                 logger.exception(f"发送 ClassIsland 通知时出错: {e}")
                 return False
 
-        @staticmethod
-        def _format_message(pick_type: str, stus: list) -> NotifyResult:
+
+        def _format_message(self, pick_type: str, stus: list) -> NotifyResult:
             result = NotifyResult()
             result.PickType = PickType.Person if pick_type == "person" else PickType.Group
+            result.TitleDuration = self.settingsConfig.getCiMaskDuration()
+            result.OverlayDuration = self.settingsConfig.getCiOverlayDuration()
+            result.OverlayType = OverlayType.Simple if self.settingsConfig.getCiOverlayType() == "simple" else OverlayType.Rolling
 
             # TODO)) 这里本应从设置中读取，但是先这样吧（
             result.Title = f"抽选了 {len(stus)} " + ("名学生" if pick_type == "person" else "个小组")
@@ -186,7 +192,7 @@ if CSHARP_AVAILABLE:
 
         def get_availability(self):
             return self.is_available
-
+# 不是怎么老被炸啊（
 else:
     class ClassIslandIntegration(QObject):
         connectivityUpdated = Signal(str)

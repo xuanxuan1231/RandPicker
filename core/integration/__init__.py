@@ -13,6 +13,10 @@ class NotificationManager(QObject):
         self.parent = parent
         self.settingsConfig = parent.settingsConfig
 
+        # 因为 ciservice 在它自己那实例化了，就在这重新加一下 rpmain 相关的属性
+        ciService.main = parent
+        ciService.settingsConfig = self.settingsConfig
+
     def send(self, pick_type: str, stus: list) -> None:
         """发送通知"""
         options = self.settingsConfig.getAllEnabledNotifyOptions()
@@ -32,7 +36,8 @@ class NotificationManager(QObject):
                 except Exception:
                     logger.exception("Native 通知发送失败")
             elif option == "classisland":
-                sent = sent or ciService.send_message(pick_type, stus)
+                ciSent = ciService.send_message(pick_type, stus)
+                sent = sent or ciSent
             elif option == "classwidgets":
                 logger.error(f"不支持的通知方式: {option}")
             else:

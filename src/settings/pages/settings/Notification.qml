@@ -18,6 +18,7 @@ FluentPage {
 
             Switch {
                 checked: SettingsConfig.getNotifyFallback()
+
                 onCheckedChanged: SettingsConfig.setNotifyFallback(checked)
             }
         }
