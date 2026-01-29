@@ -29,7 +29,11 @@ DEFAULT_CONFIG = {
             "classwidgets": {
                 "enabled": False
             }
-        },
+        }
+    },
+    "widget_position": {
+        "x": None,
+        "y": None
     }
 }
 
@@ -162,3 +166,20 @@ class SettingsConfig(ConfigManager, QObject):
         self.save_config()
 
     # endregion #
+
+    # region 窗口位置 #
+    @Slot(result="QVariantList")
+    def getWidgetPosition(self) -> list[int | None]:
+        """获取主窗口位置"""
+        widget_position = self.config.get("widget_position", {})
+        x = widget_position.get("x", None)
+        y = widget_position.get("y", None)
+        return [x, y]
+
+    @Slot(int, int)
+    def setWidgetPosition(self, x: int, y: int) -> None:
+        """设置主窗口位置"""
+        self.config.setdefault("widget_position", {})
+        self.config["widget_position"]["x"] = x
+        self.config["widget_position"]["y"] = y
+        self.save_config()

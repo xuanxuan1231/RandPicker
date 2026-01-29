@@ -25,6 +25,9 @@ class RPMain(QObject):
         self.studentsConfig = None
         self.settingsConfig = None
         self.widget = None
+
+        self.app = QApplication.instance()
+
         self.init()
 
     def init(self):
@@ -46,12 +49,9 @@ class RPMain(QObject):
     @Slot()
     def restart(self):
         logger.debug("触发重新启动")
-        app = QApplication.instance()
-        app.quit()
-        app.processEvents()
         os.execl(sys.executable, sys.executable, *sys.argv)
 
     @Slot()
     def quit(self):
         logger.info("退出 RandPicker。")
-        QApplication.instance().quit()
+        self.app.quit()

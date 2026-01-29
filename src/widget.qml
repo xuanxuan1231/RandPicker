@@ -12,6 +12,8 @@ QQW.Window {
     property int snapThreshold: 50  // 吸附阈值（接近边缘50px时触发）
     property int visibleMargin: 10  // 屏幕内保留的可见像素
     property int screenPadding: 10  // 恢复到屏幕内时的边距
+    property bool pendingPositionSave: false
+    property bool positionApplied: false
 
     width: 75
     height: 157
@@ -19,6 +21,7 @@ QQW.Window {
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Widget | Qt.X11BypassWindowManagerHint
     color: "transparent"
     title: qsTr("RandPicker Widget")
+    opacity: positionApplied ? 1 : 0
 
     // 位置动画
     ParallelAnimation {
@@ -37,6 +40,12 @@ QQW.Window {
             duration: 300
             easing.type: Easing.InOutQuad
         }
+        onStopped: {
+            if (pendingPositionSave) {
+                pendingPositionSave = false
+                widget.savePosition()
+            }
+        }
     }
 
     // 带动画移动到指定位置
@@ -45,6 +54,43 @@ QQW.Window {
         xAnimation.to = newX
         yAnimation.to = newY
         positionAnimation.start()
+    }
+
+    function getDefaultPosition() {
+        return [Math.round((Screen.width - widget.width) / 2),
+            Math.round((Screen.height - widget.height) / 2)]
+    }
+
+    function applySavedPosition() {
+        if (positionApplied) {
+            return
+        }
+
+        if (!SettingsConfig) {
+            var fallback = getDefaultPosition()
+            widget.x = fallback[0]
+            widget.y = fallback[1]
+            positionApplied = true
+            return
+        }
+
+        var pos = SettingsConfig.getWidgetPosition()
+        if (pos && pos.length === 2 && pos[0] !== null && pos[1] !== null) {
+            widget.x = pos[0]
+            widget.y = pos[1]
+        } else {
+            var defaultPos = getDefaultPosition()
+            widget.x = defaultPos[0]
+            widget.y = defaultPos[1]
+        }
+        positionApplied = true
+    }
+
+    function savePosition() {
+        if (!SettingsConfig) {
+            return
+        }
+        SettingsConfig.setWidgetPosition(Math.round(widget.x), Math.round(widget.y))
     }
 
     // 自动吸附到屏幕外（靠近边缘时移出屏幕，只保留10px可见）
@@ -73,7 +119,9 @@ QQW.Window {
 
         if (shouldSnap) {
             animateTo(newX, newY)
+            return true
         }
+        return false
     }
 
     // 检查浮窗是否在屏幕外，如果在屏幕外则移回屏幕内
@@ -102,7 +150,9 @@ QQW.Window {
 
         if (isOutside) {
             animateTo(newX, newY)
+            return true
         }
+        return false
     }
 
     MouseArea {
@@ -114,6 +164,7 @@ QQW.Window {
         onPressed: (mouse) => {
             dragStartPos = Qt.point(mouse.x, mouse.y)
             isDragging = false
+            pendingPositionSave = false
             positionAnimation.stop()  // 停止可能正在进行的动画
         }
         
@@ -127,7 +178,16 @@ QQW.Window {
         }
         
         onReleased: {
-            isDragging ? widget.snapToEdge() : widget.bringToScreen()
+            if (isDragging) {
+                var animated = widget.snapToEdge()
+                if (animated) {
+                    pendingPositionSave = true
+                } else {
+                    widget.savePosition()
+                }
+            } else {
+                widget.bringToScreen()
+            }
         }
     }
 
@@ -238,5 +298,11 @@ QQW.Window {
             }
         }
     }
-}
 
+    Component.onCompleted: Qt.callLater(applySavedPosition)
+    onVisibleChanged: {
+        if (visible) {
+            Qt.callLater(applySavedPosition)
+        }
+    }
+}

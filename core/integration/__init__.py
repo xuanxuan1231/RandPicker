@@ -30,11 +30,8 @@ class NotificationManager(QObject):
 
         for option in options:
             if option == "native":
-                try:
-                    nativeNotifier.send_message(pick_type, stus)
-                    sent = True
-                except Exception:
-                    logger.exception("Native 通知发送失败")
+                nativeSent = nativeNotifier.send_message(pick_type, stus)
+                sent = sent or nativeSent
             elif option == "classisland":
                 ciSent = ciService.send_message(pick_type, stus)
                 sent = sent or ciSent
@@ -43,6 +40,7 @@ class NotificationManager(QObject):
             else:
                 logger.error(f"不支持的通知方式: {option}")
 
+        # 发送失败，则使用备选通知
         if not sent and self.settingsConfig.getNotifyFallback():
             try:
                 nativeNotifier.send_message(pick_type, stus)

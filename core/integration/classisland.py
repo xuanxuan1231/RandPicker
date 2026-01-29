@@ -180,14 +180,27 @@ if CSHARP_AVAILABLE:
 
         def _format_message(self, pick_type: str, stus: list) -> NotifyResult:
             result = NotifyResult()
-            result.PickType = PickType.Person if pick_type == "person" else PickType.Group
-            result.TitleDuration = self.settingsConfig.getCiMaskDuration()
-            result.OverlayDuration = self.settingsConfig.getCiOverlayDuration()
-            result.OverlayType = OverlayType.Simple if self.settingsConfig.getCiOverlayType() == "simple" else OverlayType.Rolling
 
             # TODO)) 这里本应从设置中读取，但是先这样吧（
             result.Title = f"抽选了 {len(stus)} " + ("名学生" if pick_type == "person" else "个小组")
             result.Overlay = ", ".join(stus)
+
+            result.PickType = PickType.Person if pick_type == "person" else PickType.Group
+            result.TitleDuration = self.settingsConfig.getCiMaskDuration()
+            result.OverlayDuration = self.settingsConfig.getCiOverlayDuration()
+
+
+            overlayType = self.settingsConfig.getCiOverlayType()
+            match overlayType:
+                case "simple":
+                    result.OverlayType = OverlayType.Simple
+                case "rolling":
+                    result.OverlayType = OverlayType.Rolling
+                case "auto":
+                    # TODO)) 自动检测
+                    result.OverlayType = OverlayType.Simple
+                case _:
+                    result.OverlayType = OverlayType.Simple
 
             return result
 
