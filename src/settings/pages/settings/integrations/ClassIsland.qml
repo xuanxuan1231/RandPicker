@@ -139,9 +139,22 @@ Item {
             }
         }
 
-        Text {
-            text: qsTr("标题遮罩 (Mask) 设置")
-            typography: Typography.Subtitle
+        RowLayout {
+            Text {
+                text: qsTr("标题遮罩 (Mask) 设置")
+                Layout.alignment: Qt.AlignLeft
+                Layout.fillWidth: true
+                typography: Typography.Subtitle
+            }
+            Button {
+                icon.name: "ic_fluent_edit_20_regular"
+                text: qsTr("编辑格式")
+                Layout.alignment: Qt.AlignRight
+                // TODO)) 打开标题格式编辑器
+                onClicked: {
+                    console.log(" [TODO] 打开标题格式编辑器")
+                }
+            }
         }
 
         SettingCard {
@@ -149,7 +162,25 @@ Item {
             description: qsTr("设置 ClassIsland 通知遮罩的显示时长。0 为默认。")
             title: qsTr("显示时长")
 
+            ToolButton {
+                flat: true
+                icon.name: "ic_fluent_arrow_hook_up_left_20_regular"
+                color: "#0078d4"
+                visible: ciMaskDurationSpinBox.value !== 0
+
+                ToolTip {
+                    delay: 500
+                    text: qsTr("重置为默认值")
+                    visible: parent.hovered
+                }
+
+                onClicked: {
+                    ciMaskDurationSpinBox.value = 0;
+                }
+            }
+
             SpinBox {
+                id: ciMaskDurationSpinBox
                 from: 0
                 to: 60
                 value: SettingsConfig.getCiMaskDuration("classisland")
@@ -164,9 +195,22 @@ Item {
             }
         }
 
-        Text {
-            text: qsTr("正文 (Overlay) 设置")
-            typography: Typography.Subtitle
+        RowLayout {
+            Text {
+                text: qsTr("正文 (Overlay) 设置")
+                Layout.alignment: Qt.AlignLeft
+                Layout.fillWidth: true
+                typography: Typography.Subtitle
+            }
+            Button {
+                icon.name: "ic_fluent_edit_20_regular"
+                text: qsTr("编辑格式")
+                Layout.alignment: Qt.AlignRight
+                // TODO)) 打开正文格式编辑器
+                onClicked: {
+                    console.log(" [TODO] 打开正文格式编辑器")
+                }
+            }
         }
 
         SettingCard {
@@ -174,7 +218,25 @@ Item {
             description: qsTr("设置 ClassIsland 通知正文的显示方式。")
             title: qsTr("显示方式")
 
+            ToolButton {
+                flat: true
+                icon.name: "ic_fluent_arrow_hook_up_left_20_regular"
+                color: "#0078d4"
+                visible: ciOverlayTypeComboBox.currentIndex !== 0
+
+                ToolTip {
+                    delay: 500
+                    text: qsTr("重置为默认值")
+                    visible: parent.hovered
+                }
+
+                onClicked: {
+                    ciOverlayTypeComboBox.currentIndex = 0;
+                }
+            }
+
             ComboBox {
+                id: ciOverlayTypeComboBox
                 model: ListModel {
                     id: overlayTypeModel
                     ListElement {
@@ -211,7 +273,25 @@ Item {
             description: qsTr("设置 ClassIsland 设置正文的显示时长。0 为默认。")
             title: qsTr("显示时长")
 
+            ToolButton {
+                flat: true
+                icon.name: "ic_fluent_arrow_hook_up_left_20_regular"
+                color: "#0078d4"
+                visible: ciOverlayDurationSpinBox.value !== 0
+
+                ToolTip {
+                    delay: 500
+                    text: qsTr("重置为默认值")
+                    visible: parent.hovered
+                }
+
+                onClicked: {
+                    ciOverlayDurationSpinBox.value = 0;
+                }
+            }
+
             SpinBox {
+                id: ciOverlayDurationSpinBox
                 from: 0
                 to: 60
                 value: SettingsConfig.getCiOverlayDuration()
