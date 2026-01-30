@@ -75,7 +75,7 @@ QQW.Window {
         }
 
         var pos = SettingsConfig.getWidgetPosition()
-        if (pos && pos.length === 2 && pos[0] !== null && pos[1] !== null) {
+        if (pos && pos.length === 2 && pos[0] != null && pos[1] != null) {
             widget.x = pos[0]
             widget.y = pos[1]
         } else {
