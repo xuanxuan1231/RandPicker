@@ -271,8 +271,8 @@ QQW.Window {
         anchors {
             left: parent.left
             bottom: parent.bottom
-            leftMargin: 7
-            bottomMargin: 7
+            leftMargin: 8
+            bottomMargin: 8
         }
         width: watermarkColumn.implicitWidth
         height: watermarkColumn.implicitHeight
