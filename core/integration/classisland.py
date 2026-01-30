@@ -228,7 +228,7 @@ else:
         def __init__(self, parent=None):
             super().__init__(parent)
             self.is_available = False
-            self.connectivity_status = "NotRunning"
+            self.connectivity_status = "NotAvailable"
 
         @Slot(result=str)
         def get_connectivity_status(self) -> str:

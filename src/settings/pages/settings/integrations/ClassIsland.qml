@@ -10,6 +10,33 @@ Item {
         anchors.fill: parent
 
         InfoBar {
+            id: notAvailableInfo
+
+            closable: false
+            severity: Severity.Error
+            text: qsTr("无法加载集成所需库。")
+            title: qsTr("不可用")
+            visible: SettingsService.getConnectivityStatus("classisland") === "NotAvailable"
+        }
+        InfoBar {
+            id: notAvailableTip
+
+            closable: false
+            text: qsTr("请确保您安装了 .NET Core 运行时 8。")
+            title: qsTr("排障")
+            visible: notAvailableInfo.visible
+
+            customContent: [
+                Hyperlink {
+                    text: qsTr("下载")
+
+                    onClicked: {
+                        Qt.openUrlExternally(SettingsService.getDotNetDownloadLink());
+                    }
+                }
+            ]
+        }
+        InfoBar {
             id: notConnectedInfo
 
             closable: false
@@ -111,10 +138,16 @@ Item {
                 onCheckedChanged: SettingsConfig.setNotifyOptionStatus("classisland", checked)
             }
         }
+
+        Text {
+            text: qsTr("标题遮罩 (Mask) 设置")
+            typography: Typography.Subtitle
+        }
+
         SettingCard {
             Layout.fillWidth: true
-            description: qsTr("设置 ClassIsland 通知遮罩的显示时长。")
-            title: qsTr("遮罩 (Mask) 显示时长")
+            description: qsTr("设置 ClassIsland 通知遮罩的显示时长。0 为默认。")
+            title: qsTr("显示时长")
 
             SpinBox {
                 from: 0
@@ -130,10 +163,16 @@ Item {
                 text: qsTr("秒")
             }
         }
+
+        Text {
+            text: qsTr("正文 (Overlay) 设置")
+            typography: Typography.Subtitle
+        }
+
         SettingCard {
             Layout.fillWidth: true
             description: qsTr("设置 ClassIsland 通知正文的显示方式。")
-            title: qsTr("正文 (Overlay) 显示方式")
+            title: qsTr("显示方式")
 
             ComboBox {
                 model: ListModel {
@@ -169,8 +208,8 @@ Item {
         }
         SettingCard {
             Layout.fillWidth: true
-            description: qsTr("设置 ClassIsland 设置正文的显示时长。")
-            title: qsTr("正文 (Overlay) 显示时长")
+            description: qsTr("设置 ClassIsland 设置正文的显示时长。0 为默认。")
+            title: qsTr("显示时长")
 
             SpinBox {
                 from: 0
@@ -190,6 +229,7 @@ Item {
     Connections {
         function onConnectivityUpdated(method, connectivity) {
             if (method === "classisland") {
+                notAvailableInfo.visible = connectivity === "NotAvailable";
                 notConnectedInfo.visible = connectivity === "NotConnected";
                 connectedInfo.visible = connectivity === "Connected";
                 notRunningInfo.visible = connectivity === "NotRunning";
