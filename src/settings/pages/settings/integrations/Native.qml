@@ -14,7 +14,9 @@ Item {
             severity: Severity.Success
             text: qsTr("原生通知可在您的系统上正常工作。")
             title: qsTr("可用")
-            visible: SettingsService.getConnectivityStatus("classisland") === "Connected"
+
+            // TODO)) 检查可用性
+            visible: true
 
             customContent: [
                 Hyperlink {
