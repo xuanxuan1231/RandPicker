@@ -34,6 +34,9 @@ DEFAULT_CONFIG = {
     "widget_position": {
         "x": None,
         "y": None
+    },
+    "advanced": {
+        "uiaccess": False
     }
 }
 
@@ -183,3 +186,18 @@ class SettingsConfig(ConfigManager, QObject):
         self.config["widget_position"]["x"] = x
         self.config["widget_position"]["y"] = y
         self.save_config()
+    # endregion #
+
+    # region UIACCESS #
+    def getUIAccessEnabled(self) -> bool:
+        """获取 UIAccess 启用状态"""
+        advanced = self.config.get("advanced", {})
+        return bool(advanced.get("uiaccess", False))
+
+    @Slot(bool)
+    def setUIAccessEnabled(self, enabled: bool) -> None:
+        """设置 UIAccess 启用状态"""
+        advanced = self.config.setdefault("advanced", {})
+        advanced["uiaccess"] = enabled
+        self.save_config()
+    # endregion #

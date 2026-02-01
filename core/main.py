@@ -3,7 +3,8 @@
 """
 import sys
 import os
-from PySide6.QtCore import QObject, Slot
+import threading
+from PySide6.QtCore import QObject, Slot, QTimer
 from PySide6.QtWidgets import QApplication
 from loguru import logger
 
@@ -34,6 +35,9 @@ class RPMain(QObject):
         logger.info("正在启动 RandPicker。")
 
         self.settingsConfig = SettingsConfig(self)
+
+        self.open_uiaccess()
+
         self.studentsConfig = StudentsConfig(self)
         self.notificationManager = NotificationManager(self)
         self.choiceMaker = ChoiceMaker(self)
@@ -54,4 +58,71 @@ class RPMain(QObject):
     @Slot()
     def quit(self):
         logger.info("退出 RandPicker。")
-        self.app.quit()
+        self._begin_shutdown()
+
+    def _begin_shutdown(self):
+        # Hide tray/window first to avoid stuck UI when quitting from the tray menu.
+        if self.tray and getattr(self.tray, "tray", None):
+            self.tray.tray.hide()
+
+        if self.settingsWindow:
+            self.settingsWindow.close()
+            self.settingsWindow = None
+
+        if self.widget:
+            try:
+                self.widget.close()
+            except Exception as e:
+                logger.error(f"关闭浮窗时发生异常: {e}")
+
+        if self.app:
+            self.app.closeAllWindows()
+
+        QTimer.singleShot(0, self._final_quit)
+
+    def _final_quit(self):
+        if self.app:
+            # Use a stdlib timer so the fallback triggers even if Qt's loop is blocked.
+            threading.Timer(2.0, self._force_exit).start()
+            self.app.exit(0)
+        else:
+            logger.error("QApplication 实例不存在，无法退出。")
+
+    def _force_exit(self):
+        logger.warning("应用退出超时，强制结束进程。")
+        os._exit(0)
+
+    def open_uiaccess(self):
+        if not self.settingsConfig.getUIAccessEnabled():
+            logger.debug("未启用 UIAccess，跳过加载。")
+            return
+
+        from core.uiaccess import IsUIAccess, run_with_uiaccess, check_privileges
+
+        if IsUIAccess():
+            logger.info("当前进程已具有 UIAccess 权限。")
+            return
+
+        if not check_privileges():
+            logger.warning("启用 UIAccess 需要管理员权限，请以管理员身份重新启动程序。")
+            return
+
+        try:
+            logger.info("尝试以 UIAccess 权限重新启动程序。")
+            if getattr(sys, "frozen", False):
+                exe = sys.executable
+                args = sys.argv[1:]
+                cmdline = " ".join([f'"{exe}"'] + [f'"{arg}"' for arg in args])
+            else:
+                exe = sys.executable
+                script = sys.argv[0]
+                args = sys.argv[1:]
+                cmdline = " ".join([f'"{exe}"', f'"{script}"'] + [f'"{arg}"' for arg in args])
+            pid = run_with_uiaccess(cmdline, exe)
+            if pid is not None:
+                logger.info("UIAccess 进程启动成功，退出当前进程。")
+                sys.exit(0)
+            else:
+                logger.error("UIAccess 进程启动失败，继续使用当前进程。")
+        except Exception as e:
+            logger.error(f"启动 UIAccess 进程时发生异常: {e}，继续使用当前进程。")
