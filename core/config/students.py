@@ -2,13 +2,15 @@
 管理学生数据
 """
 
+import json
+from copy import deepcopy
+from pathlib import Path
+from uuid import uuid4
+
 from PySide6.QtCore import QObject, Slot
 from loguru import logger
+
 from .dirs import CONFIG_DIR
-import json
-from pathlib import Path
-from copy import deepcopy
-from uuid import uuid4
 
 DEFAULT_CONFIG = {
     "students": [

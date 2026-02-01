@@ -2,8 +2,9 @@
 浮窗后端：加载并控制 QML 窗口。
 """
 
-from loguru import logger
 from RinUI.core.launcher import RinUIWindow
+from loguru import logger
+
 from .config.dirs import *
 from .git_info import gitInfo
 
@@ -23,6 +24,7 @@ class RPWidget(RinUIWindow):
         self.engine.rootContext().setContextProperty("widget", self)
         self.engine.rootContext().setContextProperty("ChoiceMaker", getattr(self.parent, "choiceMaker", None))
         self.engine.rootContext().setContextProperty("GitInfo", gitInfo)
+        self.engine.rootContext().setContextProperty("SettingsConfig", getattr(self.parent, "settingsConfig", None))
 
         self.window = getattr(self, "root_window", None)
 
