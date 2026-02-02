@@ -97,14 +97,18 @@ class RPMain(QObject):
             logger.debug("未启用 UIAccess，跳过加载。")
             return
 
-        from core.uiaccess import IsUIAccess, run_with_uiaccess, check_privileges
+        try:
+            from core.uiaccess import IsUIAccess, run_with_uiaccess, check_privileges
+        except ImportError as e:
+            logger.error(f"导入 UIAccess 模块时发生错误: {e}，跳过启用 UIAccess。")
+            return
 
         if IsUIAccess():
             logger.info("当前进程已具有 UIAccess 权限。")
             return
 
         if not check_privileges():
-            logger.warning("启用 UIAccess 需要管理员权限，请以管理员身份重新启动程序。")
+            logger.warning("您期望使用 UIAccess，但启用 UIAccess 需要管理员权限。")
             return
 
         try:
@@ -120,8 +124,8 @@ class RPMain(QObject):
                 cmdline = " ".join([f'"{exe}"', f'"{script}"'] + [f'"{arg}"' for arg in args])
             pid = run_with_uiaccess(cmdline, exe)
             if pid is not None:
-                logger.info("UIAccess 进程启动成功，退出当前进程。")
-                sys.exit(0)
+                logger.info(f"UIAccess 进程 {pid} 启动成功，退出当前进程。")
+                self.quit()
             else:
                 logger.error("UIAccess 进程启动失败，继续使用当前进程。")
         except Exception as e:

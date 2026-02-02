@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import RinUI
+import "../../../../components"
 
 Item {
     anchors.fill: parent
@@ -139,22 +140,31 @@ Item {
             }
         }
 
-        RowLayout {
-            Text {
-                text: qsTr("标题遮罩 (Mask) 设置")
-                Layout.alignment: Qt.AlignLeft
-                Layout.fillWidth: true
-                typography: Typography.Subtitle
+        SettingCard {
+            id: notifyFormatSettingCard
+
+            Layout.fillWidth: true
+            title: qsTr("编辑通知格式")
+
+            Icon {
+                Layout.fillHeight: true
+                icon: "ic_fluent_open_20_regular"
+                size: 20
             }
-            Button {
-                icon.name: "ic_fluent_edit_20_regular"
-                text: qsTr("编辑格式")
-                Layout.alignment: Qt.AlignRight
-                // TODO)) 打开标题格式编辑器
-                onClicked: {
-                    console.log(" [TODO] 打开标题格式编辑器")
-                }
+
+            TapHandler {
+                parent: notifyFormatSettingCard
+
+                onTapped: notifyFormatEditDialog.open()
             }
+        }
+
+        Text {
+            text: qsTr("标题遮罩 (Mask) 设置")
+            Layout.alignment: Qt.AlignLeft
+            Layout.fillWidth: true
+            font.pixelSize: 18
+            font.bold: true
         }
 
         SettingCard {
@@ -183,34 +193,24 @@ Item {
                 id: ciMaskDurationSpinBox
                 from: 0
                 to: 60
-                value: SettingsConfig.getCiMaskDuration("classisland")
+                value: SettingsConfig.getCiMaskDuration()
 
                 Component.onCompleted: {
-                    value = SettingsConfig.getCiMaskDuration("classisland");
+                    value = SettingsConfig.getCiMaskDuration();
                 }
-                onValueChanged: SettingsConfig.setCiMaskDuration("classisland", value)
+                onValueChanged: SettingsConfig.setCiMaskDuration(value)
             }
             Text {
                 text: qsTr("秒")
             }
         }
 
-        RowLayout {
-            Text {
-                text: qsTr("正文 (Overlay) 设置")
-                Layout.alignment: Qt.AlignLeft
-                Layout.fillWidth: true
-                typography: Typography.Subtitle
-            }
-            Button {
-                icon.name: "ic_fluent_edit_20_regular"
-                text: qsTr("编辑格式")
-                Layout.alignment: Qt.AlignRight
-                // TODO)) 打开正文格式编辑器
-                onClicked: {
-                    console.log(" [TODO] 打开正文格式编辑器")
-                }
-            }
+        Text {
+            text: qsTr("正文 (Overlay) 设置")
+            Layout.alignment: Qt.AlignLeft
+            Layout.fillWidth: true
+            font.pixelSize: 18
+            font.bold: true
         }
 
         SettingCard {
@@ -307,7 +307,9 @@ Item {
         }
     }
     Connections {
-        function onConnectivityUpdated(method, connectivity) {
+        target: SettingsService
+
+        onConnectivityUpdated: (method, connectivity) => {
             if (method === "classisland") {
                 notAvailableInfo.visible = connectivity === "NotAvailable";
                 notConnectedInfo.visible = connectivity === "NotConnected";
@@ -315,7 +317,10 @@ Item {
                 notRunningInfo.visible = connectivity === "NotRunning";
             }
         }
+    }
 
-        target: SettingsService
+    NotifyFormatEditDialog {
+        id: notifyFormatEditDialog
+        notifyOption: "classisland"
     }
 }

@@ -13,9 +13,11 @@ class NotificationManager(QObject):
         self.parent = parent
         self.settingsConfig = parent.settingsConfig
 
-        # 因为 ciservice 在它自己那实例化了，就在这重新加一下 rpmain 相关的属性
+        # 因为相关 service 在它自己那实例化了，就在这重新加一下 rpmain 相关的属性
         ciService.main = parent
         ciService.settingsConfig = self.settingsConfig
+        nativeNotifier.main = parent
+        nativeNotifier.settingsConfig = self.settingsConfig
 
     def send(self, pick_type: str, stus: list) -> None:
         """发送通知"""

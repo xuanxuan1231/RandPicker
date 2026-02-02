@@ -8,7 +8,8 @@ from plyer import notification
 
 class NativeNotifier:
     def __init__(self):
-        pass
+        self.settingsConfig = None
+        self.main = None
 
     def send_message(self, pick_type: str, stus: list) -> bool:
         """发送通知消息"""
@@ -29,13 +30,24 @@ class NativeNotifier:
         except Exception as e:
             logger.error(f"Native 测试通知发送失败: {e}")
 
-    @staticmethod
-    def _format_message(pick_type: str, stus: list) -> tuple[str, str]:
+    def _format_message(self, pick_type: str, stus: list) -> tuple[str, str]:
         """格式化通知消息"""
-        # TODO)) 预埋：从设置中读取标题和内容格式
-        title = f"抽选了 {len(stus)} " + ("名学生" if pick_type == "person" else "个小组")
-        message = ", ".join(stus)
-        return title, message
+        if not self.settingsConfig:
+            raise ValueError("SettingsConfig 未初始化，无法格式化消息")
+        format = self.settingsConfig.getNotifyFormat("native")
+
+        names = format['names']['separator'].join(stus)
+        count = len(stus)
+        suffix = format['suffix']['person'] if pick_type == "person" else format['suffix']['group']
+
+        title_template = format['title']
+        body_template = format['body']
+
+        title = title_template.replace("{count}", str(count)).replace("{suffix}", suffix).replace("{names}",
+                                                                                                         names)
+        body = body_template.replace("{count}", str(count)).replace("{suffix}", suffix).replace("{names}",
+                                                                                                          names)
+        return title, body
 
     @staticmethod
     def _send(title: str, message: str) -> None:

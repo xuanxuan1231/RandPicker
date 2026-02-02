@@ -1,5 +1,5 @@
 """
-TODO)) 管理“设置”中的配置
+管理“设置”中的配置
 """
 
 from pathlib import Path
@@ -15,13 +15,35 @@ DEFAULT_CONFIG = {
         "fallback": True,
         "options": {
             "native": {
-                "enabled": True
+                "enabled": True,
+                "format": {
+                    "title": "抽选了 {count} {suffix}",
+                    "body": "{names}",
+                    "names": {
+                        "separator": ",",
+                    },
+                    "suffix": {
+                        "person": "位同学",
+                        "group": "个小组"
+                    }
+                }
             },
             "classisland": {
                 "enabled": False,
                 "mask_duration": 0,
                 "overlay_duration": 0,
-                "overlay_type": 0 # 0: simple, 1: rolling, 2: auto
+                "overlay_type": 2, # 0: simple, 1: rolling, 2: auto
+                "format": {
+                    "title": "抽选了 {count} {suffix}",
+                    "body": "{names}",
+                    "names": {
+                        "separator": ",",
+                    },
+                    "suffix": {
+                        "person": "位同学",
+                        "group": "个小组"
+                    }
+                }
             },
             "randpicker": {
                 "enabled": False
@@ -168,6 +190,51 @@ class SettingsConfig(ConfigManager, QObject):
                 ci_options["overlay_type"] = 0
         self.save_config()
 
+    @Slot(str, result=dict)
+    def getNotifyFormat(self, option: str) -> dict:
+        """获取通知方式的格式化内容。
+        """
+        notification = self.config.get("notification", {})
+        options = notification.get("options", {})
+        data = options.get(option, {})
+        format_data = data.get("format", {})
+        if not isinstance(format_data, dict):
+            format_data = {}
+
+        title = format_data.get("title", "抽选了 {count} {suffix}")
+        body = format_data.get("body", "{names}")
+
+        names = format_data.get("names", {})
+        if not isinstance(names, dict):
+            names = {}
+        separator = names.get("separator", ",")
+
+        suffix = format_data.get("suffix", {})
+        if not isinstance(suffix, dict):
+            suffix = {}
+        person_suffix = suffix.get("person", "位同学")
+        group_suffix = suffix.get("group", "个小组")
+
+        return {
+            "title": title,
+            "body": body,
+            "names": {
+                "separator": separator,
+            },
+            "suffix": {
+                "person": person_suffix,
+                "group": group_suffix,
+            },
+        }
+
+    @Slot(str, dict)
+    def setNotifyFormat(self, option: str, format_data: dict) -> None:
+        """设置通知方式的格式化内容"""
+        notification = self.config.setdefault("notification", {})
+        options = notification.setdefault("options", {})
+        data = options.setdefault(option, {})
+        data["format"] = format_data
+        self.save_config()
     # endregion #
 
     # region 窗口位置 #

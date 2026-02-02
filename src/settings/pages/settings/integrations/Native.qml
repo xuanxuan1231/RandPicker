@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import RinUI
+import "../../../../components"
 
 Item {
     anchors.fill: parent
@@ -51,5 +53,28 @@ Item {
                 onCheckedChanged: SettingsConfig.setNotifyOptionStatus("native", checked)
             }
         }
+
+        SettingCard {
+            id: notifyFormatSettingCard
+
+            Layout.fillWidth: true
+            title: qsTr("编辑通知格式")
+
+            Icon {
+                icon: "ic_fluent_open_20_regular"
+                size: 20
+            }
+
+            TapHandler {
+                parent: notifyFormatSettingCard
+
+                onTapped: notifyFormatEditDialog.open()
+            }
+        }
+    }
+
+    NotifyFormatEditDialog {
+        id: notifyFormatEditDialog
+        notifyOption: "native"
     }
 }

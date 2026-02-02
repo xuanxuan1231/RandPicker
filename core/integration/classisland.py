@@ -185,9 +185,17 @@ if CSHARP_AVAILABLE:
         def _format_message(self, pick_type: str, stus: list) -> NotifyResult:
             result = NotifyResult()
 
-            # TODO)) 这里本应从设置中读取，但是先这样吧（
-            result.Title = f"抽选了 {len(stus)} " + ("名学生" if pick_type == "person" else "个小组")
-            result.Overlay = ", ".join(stus)
+            format = self.settingsConfig.getNotifyFormat("classisland")
+
+            names = format['names']['separator'].join(stus)
+            count = len(stus)
+            suffix = format['suffix']['person'] if pick_type == "person" else format['suffix']['group']
+
+            title_template = format['title']
+            body_template = format['body']
+
+            result.Title = title_template.replace("{count}", str(count)).replace("{suffix}", suffix).replace("{names}", names)
+            result.Overlay = body_template.replace("{count}", str(count)).replace("{suffix}", suffix).replace("{names}", names)
 
             result.PickType = PickType.Person if pick_type == "person" else PickType.Group
             result.TitleDuration = self.settingsConfig.getCiMaskDuration()

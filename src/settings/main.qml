@@ -13,8 +13,8 @@ FluentWindow {
     minimumHeight: 400
     visible: true
 
-    property string branch: GitInfo.getBranchName()
-    property string commitHash: GitInfo.getCommitHash()
+    property string branch: VersionInfo.getBranchName()
+    property string commitHash: VersionInfo.getCommitHash()
 
     navigationItems: [
         {
@@ -31,7 +31,7 @@ FluentWindow {
         },
         {
             title: qsTr("学生管理"),
-            icon: "ic_fluent_home_20_regular",
+            icon: "ic_fluent_people_20_regular",
             page: Qt.resolvedUrl("pages/stuconfig/StudentManage.qml")
         },
         {
@@ -56,14 +56,14 @@ FluentWindow {
                     page: Qt.resolvedUrl("pages/settings/Appearance.qml")
                 },
                 {
-                    title: qsTr("通知"),
+                    title: qsTr("通知和集成"),
                     icon: "ic_fluent_notification_20_regular",
                     page: Qt.resolvedUrl("pages/settings/Notification.qml")
                 }
             ]
         },
         {
-            title: qsTr("关于 RandPicker"),
+            title: qsTr("关于本产品"),
             icon: "ic_fluent_info_20_regular",
             page: Qt.resolvedUrl("pages/AboutPage.qml"),
             position: Position.Bottom
@@ -85,7 +85,7 @@ FluentWindow {
         width: watermarkColumn.implicitWidth
         height: watermarkColumn.implicitHeight
         enabled: false // ensure it never intercepts input
-        visible: GitInfo.getAvailability()
+        visible: VersionInfo.getAvailability()
 
         Column {
             id: watermarkColumn
