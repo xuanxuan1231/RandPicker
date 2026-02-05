@@ -1,5 +1,5 @@
 """
-浮窗后端：加载并控制 QML 窗口。
+浮窗后端
 """
 
 from RinUI.core.launcher import RinUIWindow

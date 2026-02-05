@@ -1,7 +1,15 @@
+"""UI Access"""
+
+# --*--
+# DLL 来源于 https://github.com/shc0743/RunUIAccess
+# 实现中参考了 shc0743 的部分代码。
+# --*--
+
 import ctypes
 from ctypes import wintypes
 from .config.dirs import DLL_DIR
 import sys
+from loguru import logger
 
 # 加载 uiaccess.dll
 # 确保 dll 文件在当前目录或系统路径中
@@ -9,6 +17,7 @@ try:
     uiaccess = ctypes.WinDLL(str(DLL_DIR / "uiaccess.dll"))
 except OSError as e:
     print(f"Error: Could not load uiaccess.dll. {e}")
+    logger.error(f"加载 uiaccess.dll 时出错: {e}")
     sys.exit(1)
 
 # 定义 StartUIAccessProcess 函数原型
@@ -47,7 +56,7 @@ def run_with_uiaccess(command_line, app_name=None):
     # 标志位，通常设为 0 即可，底层会自动添加 CREATE_NEW_CONSOLE
     flags = 0
 
-    print(f"Attempting to start: {command_line}")
+    logger.debug(f"即将启动: {command_line}")
     success = StartUIAccessProcess(
         app_name,
         command_line,
@@ -57,11 +66,11 @@ def run_with_uiaccess(command_line, app_name=None):
     )
 
     if success:
-        print(f"Successfully started process with PID: {pid.value}")
+        logger.success(f"成功启动进程。PID: {pid.value}")
         return pid.value
     else:
         error_code = ctypes.get_last_error()
-        print(f"Failed to start process. Error code: {error_code}")
+        logger.exception(f"启动进程失败。错误代码: {error_code}")
         return None
 
 
@@ -77,13 +86,13 @@ def check_privileges():
 
 if __name__ == "__main__":
     if not check_privileges():
-        print("This script must be run as Administrator.")
+        logger.warning("必须用管理员权限运行。")
         sys.exit(1)
 
     if IsUIAccess():
-        print("Current process is already running with UIAccess.")
+        logger.info("当前进程已具有 UIAccess")
     else:
-        print("Current process is NOT running with UIAccess.")
+        logger.info("当前进程不具有 UIAccess")
 
     # 示例：启动记事本
     target_command = "notepad.exe"
