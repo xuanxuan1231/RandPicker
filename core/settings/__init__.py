@@ -8,7 +8,6 @@ from .service import SettingsService
 from ..config.dirs import *
 from ..version_info import versionInfo
 
-
 class SettingsWindow(RinUIWindow):
     def __init__(self, parent):
         super().__init__()
