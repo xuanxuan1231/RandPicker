@@ -218,7 +218,7 @@ QQW.Window {
         height: watermarkColumn.implicitHeight
         enabled: false
         z: 114514
-        visible: GitInfo.getAvailability()
+        visible: VersionInfo.getAvailability()
 
         Column {
             id: watermarkColumn

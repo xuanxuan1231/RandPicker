@@ -5,7 +5,7 @@
 from loguru import logger
 from RinUI.core.launcher import RinUIWindow
 from .config.dirs import *
-from .git_info import gitInfo
+from .version_info import versionInfo
 
 
 class RPWidget(RinUIWindow):
@@ -22,7 +22,7 @@ class RPWidget(RinUIWindow):
         super().__init__(qml_path)
         self.engine.rootContext().setContextProperty("widget", self)
         self.engine.rootContext().setContextProperty("ChoiceMaker", getattr(self.parent, "choiceMaker", None))
-        self.engine.rootContext().setContextProperty("GitInfo", gitInfo)
+        self.engine.rootContext().setContextProperty("VersionInfo", versionInfo)
 
         self.window = getattr(self, "root_window", None)
 

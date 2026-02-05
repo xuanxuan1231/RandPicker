@@ -13,8 +13,8 @@ FluentWindow {
     minimumHeight: 400
     visible: true
 
-    property string branch: GitInfo.getBranchName()
-    property string commitHash: GitInfo.getCommitHash()
+    property string branch: VersionInfo.getBranchName()
+    property string commitHash: VersionInfo.getCommitHash()
 
     navigationItems: [
         {
@@ -39,7 +39,7 @@ FluentWindow {
         width: watermarkColumn.implicitWidth
         height: watermarkColumn.implicitHeight
         enabled: false // ensure it never intercepts input
-        visible: GitInfo.getAvailability()
+        visible: VersionInfo.getAvailability()
 
         Column {
             id: watermarkColumn
