@@ -309,7 +309,7 @@ Item {
     Connections {
         target: SettingsService
 
-        onConnectivityUpdated: (method, connectivity) => {
+        onConnectivityUpdated(method, connectivity) {
             if (method === "classisland") {
                 notAvailableInfo.visible = connectivity === "NotAvailable";
                 notConnectedInfo.visible = connectivity === "NotConnected";
