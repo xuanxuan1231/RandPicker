@@ -2,6 +2,7 @@
 主模块
 """
 from PySide6.QtCore import QObject
+from RinUI import ThemeManager
 from loguru import logger
 
 from core.choice import ChoiceMaker
@@ -22,6 +23,7 @@ class RPMain(QObject):
         self.studentsConfig = None
         self.settingsConfig = None
         self.widget = None
+        self.themeManager = None
         self.init()
 
     def init(self):
@@ -31,6 +33,9 @@ class RPMain(QObject):
         self.studentsConfig = StudentsConfig(self)
         self.notificationManager = NotificationManager(self)
         self.choiceMaker = ChoiceMaker(self)
+        self.themeManager = ThemeManager()
+
+        self.themeManager.themeChanged.connect(lambda theme: self.onThemeChanged(theme))
 
         self.widget = RPWidget(self)
         self.widget.show()
@@ -39,5 +44,8 @@ class RPMain(QObject):
 
     def open_settings(self):
         self.settingsWindow = SettingsWindow(self)
+
+    def onThemeChanged(self, theme):
+        logger.info(f"主题切换为 {theme}。")
 
 

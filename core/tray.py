@@ -5,14 +5,20 @@
 import subprocess
 import sys
 from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QApplication, QMenu, QStyle, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
+from PySide6.QtGui import QIcon
 from loguru import logger
+
+from .config.dirs import ASSETS_DIR
 
 
 class RPTray(QObject):
     def __init__(self, parent):
         super().__init__()
         self.main = parent
+
+        self.main.themeManager.themeChanged.connect(lambda theme: self.onThemeChanged(theme))
+
         self.tray = None
         self.menu = None
         self.toggle_action = None
@@ -23,8 +29,8 @@ class RPTray(QObject):
             logger.warning("系统托盘不可用，跳过托盘菜单。")
             return
 
-        icon = QApplication.style().standardIcon(QStyle.SP_ComputerIcon)
-        self.tray = QSystemTrayIcon(icon, self)
+        icon_path = str(ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
+        self.tray = QSystemTrayIcon(QIcon(icon_path), self)
         self.tray.setToolTip("RandPicker")
 
         self.menu = QMenu()
@@ -86,3 +92,9 @@ class RPTray(QObject):
             logger.info("打开设置")
             return
         logger.error("打开设置失败")
+
+    def onThemeChanged(self, theme):
+        if not self.tray:
+            return
+        icon_path = str(ASSETS_DIR / ("icon-light.jpg" if theme == "Light" else "icon-dark.jpg"))
+        self.tray.setIcon(QIcon(icon_path))
