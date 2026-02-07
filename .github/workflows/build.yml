@@ -73,7 +73,7 @@ jobs:
       - name: Install system dependencies
         run: |
           apt-get update
-          apt-get install -y git python3 python3-pip binutils libglib2.0-0 libdbus-1-3 libx11-6 libxcb1 libxrender1 libxext6 libfontconfig1 libfreetype6 libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcb-xinerama0 libxcb-xkb1 libgl1 libegl1 zip
+          apt-get install -y git python3 python3-pip binutils libglib2.0-0 libdbus-1-3 libx11-6 libxcb1 libxrender1 libxext6 libfontconfig1 libfreetype6 libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcb-xinerama0 libxcb-xkb1 libgl1 libegl1 zip dpkg-dev fakeroot
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -103,7 +103,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RandPicker-Linux
-          path: dist/*.zip
+          path: |
+            dist/*.zip
+            dist/*.deb
 
   release:
     needs: [build, build-linux]
