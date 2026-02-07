@@ -36,12 +36,13 @@ def _add_data_args():
 
 def _get_icon(platform_key: str) -> Path | None:
     candidates = {
-        "windows": ROOT / "assets" / "icon-dark.ico",
-        "mac": ROOT / "assets" / "icon-dark.icns",
+        "windows": [ROOT / "assets" / "icon-dark.ico", ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.jpg"],
+        "mac": [ROOT / "assets" / "icon-dark.icns", ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.jpg"],
+        "linux": [ROOT / "assets" / "icon-dark.jpg", ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.ico"],
     }
-    icon_path = candidates.get(platform_key)
-    if icon_path and icon_path.exists():
-        return icon_path
+    for path in candidates.get(platform_key, []):
+        if path.exists():
+            return path
     return None
 
 
@@ -72,6 +73,12 @@ def _platform_args(platform_key: str) -> list[str]:
             "--contents-directory=.",
         ])
     elif platform_key == "mac":
+        args.extend([
+            "--onedir",
+            "--windowed",
+            f"--osx-bundle-identifier=com.randpicker.{APP_NAME.lower()}",
+        ])
+    elif platform_key.startswith("linux"):
         args.extend([
             "--onedir",
             "--windowed",
@@ -124,6 +131,13 @@ def _write_win_version_file(path: Path) -> Path:
     return path
 
 
+def _write_unix_version_file(path: Path) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = f"name={APP_NAME}\nversion={APP_VERSION}\n"
+    path.write_text(content, encoding="utf-8")
+    return path
+
+
 def build(platform_key: str, name: str = APP_NAME):
     if not MAIN_FILE.exists():
         raise FileNotFoundError("Missing app.py entry point")
@@ -141,6 +155,12 @@ def build(platform_key: str, name: str = APP_NAME):
     if platform_key == "windows":
         version_file = _write_win_version_file(BUILD_DIR / "version.txt")
         args.append(f"--version-file={version_file}")
+    elif platform_key == "mac":
+        meta_file = _write_unix_version_file(BUILD_DIR / "mac_version.txt")
+        args.append(f"--add-data={meta_file}{os.pathsep}.")
+    elif platform_key.startswith("linux"):
+        meta_file = _write_unix_version_file(BUILD_DIR / "linux_version.txt")
+        args.append(f"--add-data={meta_file}{os.pathsep}.")
 
     args.extend(_platform_args(platform_key))
     args.extend(_add_data_args())
