@@ -31,7 +31,8 @@ def _add_data_args():
     for rel_path, target in DATA_MAPPINGS:
         src = ROOT / rel_path
         if src.exists():
-            yield f"--add-data={src}{os.pathsep}{target}"
+            # PyInstaller data mapping: src:dest
+            yield f"{src}{os.pathsep}{target}"
 
 
 def _get_icon(platform_key: str) -> Path | None:
@@ -57,7 +58,7 @@ def _resolve_platform(key: str | None = None) -> str:
         return "windows"
     if sys.platform == "darwin":
         return "mac"
-    return sys.platform
+    return "linux"
 
 
 def _platform_args(platform_key: str) -> list[str]:
@@ -78,7 +79,7 @@ def _platform_args(platform_key: str) -> list[str]:
             "--windowed",
             f"--osx-bundle-identifier=com.randpicker.{APP_NAME.lower()}",
         ])
-    elif platform_key.startswith("linux"):
+    elif platform_key == "linux":
         args.extend([
             "--onedir",
             "--windowed",
@@ -87,7 +88,16 @@ def _platform_args(platform_key: str) -> list[str]:
 
 
 def _version_numbers() -> tuple[int, int, int, int]:
-    parts = list(VERSION.release)
+    try:
+        # Check if VERSION is a packaging.version.Version object
+        if hasattr(VERSION, 'release'):
+            parts = list(VERSION.release)
+        else:
+            # Fallback if VERSION is a string
+            parts = [int(p) for p in str(VERSION).split('.') if p.isdigit()]
+    except Exception:
+        parts = [0, 0, 0, 0]
+        
     while len(parts) < 4:
         parts.append(0)
     return tuple(parts[:4])
@@ -140,7 +150,7 @@ def _write_unix_version_file(path: Path) -> Path:
 
 def build(platform_key: str, name: str = APP_NAME):
     if not MAIN_FILE.exists():
-        raise FileNotFoundError("Missing app.py entry point")
+        raise FileNotFoundError(f"Missing app.py entry point at {MAIN_FILE}")
 
     args = [
         str(MAIN_FILE),
@@ -150,20 +160,22 @@ def build(platform_key: str, name: str = APP_NAME):
         f"--workpath={BUILD_DIR}",
         f"--name={name}",
     ]
-    args = [a for a in args if a]
-
+    
     if platform_key == "windows":
         version_file = _write_win_version_file(BUILD_DIR / "version.txt")
         args.append(f"--version-file={version_file}")
     elif platform_key == "mac":
         meta_file = _write_unix_version_file(BUILD_DIR / "mac_version.txt")
         args.append(f"--add-data={meta_file}{os.pathsep}.")
-    elif platform_key.startswith("linux"):
+    elif platform_key == "linux":
         meta_file = _write_unix_version_file(BUILD_DIR / "linux_version.txt")
         args.append(f"--add-data={meta_file}{os.pathsep}.")
 
     args.extend(_platform_args(platform_key))
-    args.extend(_add_data_args())
+    for data_arg in _add_data_args():
+        args.append(f"--add-data={data_arg}")
+        
+    print(f"Running PyInstaller with args: {args}")
     PyInstaller.__main__.run(args)
 
 
@@ -171,4 +183,5 @@ if __name__ == "__main__":
     # Always clean before building
     _clean_outputs()
     platform_key = _resolve_platform()
+    print(f"Detected platform: {platform_key}")
     build(platform_key=platform_key, name=APP_NAME)
