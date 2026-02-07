@@ -2,6 +2,7 @@ import os
 import shutil
 from pathlib import Path
 import sys
+import subprocess
 
 import PyInstaller.__main__
 
@@ -39,7 +40,7 @@ def _get_icon(platform_key: str) -> Path | None:
     candidates = {
         "windows": [ROOT / "assets" / "icon-dark.ico", ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.jpg"],
         "mac": [ROOT / "assets" / "icon-dark.icns", ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.jpg"],
-        "linux": [ROOT / "assets" / "icon-dark.jpg", ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.ico"],
+        "linux": [ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.jpg", ROOT / "assets" / "icon-dark.ico"],
     }
     for path in candidates.get(platform_key, []):
         if path.exists():
@@ -89,11 +90,9 @@ def _platform_args(platform_key: str) -> list[str]:
 
 def _version_numbers() -> tuple[int, int, int, int]:
     try:
-        # Check if VERSION is a packaging.version.Version object
         if hasattr(VERSION, 'release'):
             parts = list(VERSION.release)
         else:
-            # Fallback if VERSION is a string
             parts = [int(p) for p in str(VERSION).split('.') if p.isdigit()]
     except Exception:
         parts = [0, 0, 0, 0]
@@ -148,6 +147,67 @@ def _write_unix_version_file(path: Path) -> Path:
     return path
 
 
+def build_deb(dist_app_dir: Path):
+    """构建 .deb 软件包"""
+    print("Starting .deb package build...")
+    pkg_root = BUILD_DIR / "deb_root"
+    if pkg_root.exists():
+        shutil.rmtree(pkg_root)
+    
+    # 创建目录结构
+    bin_dir = pkg_root / "usr" / "bin"
+    opt_dir = pkg_root / "opt" / APP_NAME.lower()
+    share_dir = pkg_root / "usr" / "share"
+    apps_dir = share_dir / "applications"
+    icons_dir = share_dir / "icons" / "hicolor" / "256x256" / "apps"
+    debian_dir = pkg_root / "DEBIAN"
+    
+    for d in [bin_dir, opt_dir, apps_dir, icons_dir, debian_dir]:
+        d.mkdir(parents=True, exist_ok=True)
+        
+    # 拷贝构建产物到 /opt
+    shutil.copytree(dist_app_dir, opt_dir, dirs_exist_ok=True)
+    
+    # 创建软链接到 /usr/bin
+    executable = bin_dir / APP_NAME.lower()
+    executable.symlink_to(f"/opt/{APP_NAME.lower()}/{APP_NAME}")
+    
+    # 创建 .desktop 文件
+    desktop_file = apps_dir / f"{APP_NAME.lower()}.desktop"
+    desktop_content = f"""[Desktop Entry]
+Name={APP_NAME}
+Exec=/usr/bin/{APP_NAME.lower()}
+Icon={APP_NAME.lower()}
+Type=Application
+Categories=Utility;
+Comment=A random picker application.
+"""
+    desktop_file.write_text(desktop_content, encoding="utf-8")
+    
+    # 拷贝图标
+    icon_src = _get_icon("linux")
+    if icon_src:
+        shutil.copy(icon_src, icons_dir / f"{APP_NAME.lower()}{icon_src.suffix}")
+        
+    # 创建 control 文件
+    control_file = debian_dir / "control"
+    control_content = f"""Package: {APP_NAME.lower()}
+Version: {APP_VERSION}
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Manus App <manus-app@manus.im>
+Description: {APP_NAME} random picker application.
+ RandPicker is a simple and beautiful random picker application.
+"""
+    control_file.write_text(control_content, encoding="utf-8")
+    
+    # 构建 .deb
+    output_deb = DIST_DIR / f"{APP_NAME.lower()}_{APP_VERSION}_amd64.deb"
+    subprocess.run(["dpkg-deb", "--build", str(pkg_root), str(output_deb)], check=True)
+    print(f".deb package built at {output_deb}")
+
+
 def build(platform_key: str, name: str = APP_NAME):
     if not MAIN_FILE.exists():
         raise FileNotFoundError(f"Missing app.py entry point at {MAIN_FILE}")
@@ -177,10 +237,13 @@ def build(platform_key: str, name: str = APP_NAME):
         
     print(f"Running PyInstaller with args: {args}")
     PyInstaller.__main__.run(args)
+    
+    # 如果是 Linux，额外构建 .deb
+    if platform_key == "linux":
+        build_deb(DIST_DIR / name)
 
 
 if __name__ == "__main__":
-    # Always clean before building
     _clean_outputs()
     platform_key = _resolve_platform()
     print(f"Detected platform: {platform_key}")
