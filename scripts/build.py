@@ -176,7 +176,7 @@ def build_deb(dist_app_dir: Path):
     installed_size = 0
     for p in deb_dir.rglob('*'):
         if p.is_file():
-            installed_size += p.stat().size
+            installed_size += p.stat().st_size
     installed_size_kb = installed_size // 1024
 
     # 4. 创建 DEBIAN/control
