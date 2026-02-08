@@ -12,7 +12,9 @@ DIST_DIR = ROOT / "dist"
 BUILD_DIR = ROOT / "build"
 sys.path.insert(0, str(ROOT))
 from core.version_info import VERSION
+
 APP_NAME = "RandPicker"
+PKG_NAME = APP_NAME.lower()
 APP_VERSION = str(VERSION)
 
 DATA_MAPPINGS = [
@@ -32,15 +34,17 @@ def _add_data_args():
     for rel_path, target in DATA_MAPPINGS:
         src = ROOT / rel_path
         if src.exists():
-            # PyInstaller data mapping: src:dest
             yield f"{src}{os.pathsep}{target}"
 
 
 def _get_icon(platform_key: str) -> Path | None:
     candidates = {
-        "windows": [ROOT / "assets" / "icon-dark.ico", ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.jpg"],
-        "mac": [ROOT / "assets" / "icon-dark.icns", ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.jpg"],
-        "linux": [ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.jpg", ROOT / "assets" / "icon-dark.ico"],
+        "windows": [ROOT / "assets" / "icon-dark.ico", ROOT / "assets" / "icon-dark.png",
+                    ROOT / "assets" / "icon-dark.jpg"],
+        "mac": [ROOT / "assets" / "icon-dark.icns", ROOT / "assets" / "icon-dark.png",
+                ROOT / "assets" / "icon-dark.jpg"],
+        "linux": [ROOT / "assets" / "icon-dark.png", ROOT / "assets" / "icon-dark.jpg",
+                  ROOT / "assets" / "icon-dark.ico"],
     }
     for path in candidates.get(platform_key, []):
         if path.exists():
@@ -96,11 +100,10 @@ def _version_numbers() -> tuple[int, int, int, int]:
             parts = [int(p) for p in str(VERSION).split('.') if p.isdigit()]
     except Exception:
         parts = [0, 0, 0, 0]
-        
+
     while len(parts) < 4:
         parts.append(0)
     return tuple(parts[:4])
-
 
 def _write_win_version_file(path: Path) -> Path:
     nums = _version_numbers()
@@ -142,69 +145,79 @@ def _write_win_version_file(path: Path) -> Path:
 
 def _write_unix_version_file(path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    content = f"name={APP_NAME}\nversion={APP_VERSION}\n"
+    content = f"name={APP_NAME}\\nversion={APP_VERSION}\\n"
     path.write_text(content, encoding="utf-8")
     return path
 
 
 def build_deb(dist_app_dir: Path):
-    """构建 .deb 软件包"""
-    print("Starting .deb package build...")
-    pkg_root = BUILD_DIR / "deb_root"
-    if pkg_root.exists():
-        shutil.rmtree(pkg_root)
-    
-    # 创建目录结构
-    bin_dir = pkg_root / "usr" / "bin"
-    opt_dir = pkg_root / "opt" / APP_NAME.lower()
-    share_dir = pkg_root / "usr" / "share"
+    """构建 .deb 软件包，参考 Class-Widgets 标准"""
+    print("Starting .deb package build (Class-Widgets style)...")
+    pkg_name = PKG_NAME
+    deb_dir = BUILD_DIR / "deb"
+    if deb_dir.exists():
+        shutil.rmtree(deb_dir)
+
+    # 1. 创建目录结构
+    opt_dir = deb_dir / "opt" / pkg_name
+    bin_dir = deb_dir / "usr" / "bin"
+    share_dir = deb_dir / "usr" / "share"
     apps_dir = share_dir / "applications"
     icons_dir = share_dir / "icons" / "hicolor" / "256x256" / "apps"
-    debian_dir = pkg_root / "DEBIAN"
-    
-    for d in [bin_dir, opt_dir, apps_dir, icons_dir, debian_dir]:
+    debian_meta_dir = deb_dir / "DEBIAN"
+
+    for d in [opt_dir, bin_dir, apps_dir, icons_dir, debian_meta_dir]:
         d.mkdir(parents=True, exist_ok=True)
-        
-    # 拷贝构建产物到 /opt
+
+    # 2. 拷贝构建产物
     shutil.copytree(dist_app_dir, opt_dir, dirs_exist_ok=True)
-    
-    # 创建软链接到 /usr/bin
-    executable = bin_dir / APP_NAME.lower()
-    executable.symlink_to(f"/opt/{APP_NAME.lower()}/{APP_NAME}")
-    
-    # 创建 .desktop 文件
-    desktop_file = apps_dir / f"{APP_NAME.lower()}.desktop"
-    desktop_content = f"""[Desktop Entry]
-Name={APP_NAME}
-Exec=/usr/bin/{APP_NAME.lower()}
-Icon={APP_NAME.lower()}
-Type=Application
-Categories=Utility;
-Comment=A random picker application.
-"""
-    desktop_file.write_text(desktop_content, encoding="utf-8")
-    
-    # 拷贝图标
-    icon_src = _get_icon("linux")
-    if icon_src:
-        shutil.copy(icon_src, icons_dir / f"{APP_NAME.lower()}{icon_src.suffix}")
-        
-    # 创建 control 文件
-    control_file = debian_dir / "control"
-    control_content = f"""Package: {APP_NAME.lower()}
+
+    # 3. 计算 Installed-Size (单位 KB)
+    installed_size = 0
+    for p in deb_dir.rglob('*'):
+        if p.is_file():
+            installed_size += p.stat().size
+    installed_size_kb = installed_size // 1024
+
+    # 4. 创建 DEBIAN/control
+    control_content = f"""Package: {pkg_name}
 Version: {APP_VERSION}
 Section: utils
 Priority: optional
 Architecture: amd64
 Maintainer: Manus App <manus-app@manus.im>
+Installed-Size: {installed_size_kb}
+Depends: libglib2.0-0, libdbus-1-3, libxcb1, libx11-6
 Description: {APP_NAME} random picker application.
  RandPicker is a simple and beautiful random picker application.
 """
-    control_file.write_text(control_content, encoding="utf-8")
-    
-    # 构建 .deb
-    output_deb = DIST_DIR / f"{APP_NAME.lower()}_{APP_VERSION}_amd64.deb"
-    subprocess.run(["dpkg-deb", "--build", str(pkg_root), str(output_deb)], check=True)
+    (debian_meta_dir / "control").write_text(control_content, encoding="utf-8")
+
+    # 5. 创建桌面快捷方式
+    desktop_content = f"""[Desktop Entry]
+Name={APP_NAME}
+Exec=/usr/bin/{pkg_name}
+Icon={pkg_name}
+Type=Application
+Categories=Utility;
+Comment=A random picker application.
+Terminal=false
+"""
+    (apps_dir / f"{pkg_name}.desktop").write_text(desktop_content, encoding="utf-8")
+
+    # 6. 拷贝图标
+    icon_src = _get_icon("linux")
+    if icon_src:
+        shutil.copy(icon_src, icons_dir / f"{pkg_name}{icon_src.suffix}")
+
+    # 7. 创建 /usr/bin 软链接
+    executable_link = bin_dir / pkg_name
+    target_rel = Path(f"../../opt/{pkg_name}/{APP_NAME}")
+    os.symlink(target_rel, executable_link)
+
+    # 8. 执行打包
+    output_deb = DIST_DIR / f"{pkg_name}_{APP_VERSION}_amd64.deb"
+    subprocess.run(["dpkg-deb", "--build", str(deb_dir), str(output_deb)], check=True)
     print(f".deb package built at {output_deb}")
 
 
@@ -220,7 +233,7 @@ def build(platform_key: str, name: str = APP_NAME):
         f"--workpath={BUILD_DIR}",
         f"--name={name}",
     ]
-    
+
     if platform_key == "windows":
         version_file = _write_win_version_file(BUILD_DIR / "version.txt")
         args.append(f"--version-file={version_file}")
@@ -234,11 +247,10 @@ def build(platform_key: str, name: str = APP_NAME):
     args.extend(_platform_args(platform_key))
     for data_arg in _add_data_args():
         args.append(f"--add-data={data_arg}")
-        
+
     print(f"Running PyInstaller with args: {args}")
     PyInstaller.__main__.run(args)
-    
-    # 如果是 Linux，额外构建 .deb
+
     if platform_key == "linux":
         build_deb(DIST_DIR / name)
 
