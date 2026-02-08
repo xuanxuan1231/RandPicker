@@ -9,7 +9,6 @@ Dialog {
 
     // Fixed dimensions to prevent dynamic height calculations
     width: 700
-    height: 520
 
     // Insert snippet into a TextField at current cursor position (or replace selection)
     function insertAtCursor(field, snippet) {
@@ -62,7 +61,8 @@ Dialog {
     }
 
     RowLayout {
-        anchors.fill: parent
+        Layout.fillWidth: true
+        Layout.fillHeight: true
         spacing: 16
 
         // Left panel: Format settings
@@ -124,171 +124,183 @@ Dialog {
                         Layout.alignment: Qt.AlignLeft
                     }
 
-                    // Suffix settings card
-                    Clip {
+                    ScrollView {
                         Layout.fillWidth: true
-                        implicitHeight: suffixLayout.implicitHeight + 24
-                        backgroundColor: Theme.currentTheme.colors.controlColor
-                        radius: 6
-                        borderColor: Theme.currentTheme.colors.controlBorderColor
-                        borderWidth: 1
-
-                        ColumnLayout {
-                            id: suffixLayout
-                            anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 10
-
-                            // Header
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 8
-
-                                Text {
-                                    text: "{suffix}"
-                                    font.bold: true
-                                    font.pixelSize: 14
-                                    color: Theme.currentTheme.colors.textColor
-                                }
-
-                                Text {
-                                    text: qsTr("称呼后缀")
-                                    font.pixelSize: 12
-                                    color: Theme.currentTheme.colors.textSecondaryColor
-                                }
-
-                                Item {
-                                    Layout.fillWidth: true
-                                }
-
-                                Text {
-                                    text: "1" + personSuffixField.text + " / " + "1" + groupSuffixField.text
-                                    font.pixelSize: 12
-                                    color: Theme.currentTheme.colors.textSecondaryColor
-                                }
-                            }
-
-                            // Divider
-                            Rectangle {
-                                Layout.fillWidth: true
-                                height: 1
-                                color: Theme.currentTheme.colors.dividerColor
-                            }
-
-                            // Person suffix
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 12
-
-                                Text {
-                                    text: qsTr("学生")
-                                    font.pixelSize: 13
-                                    color: Theme.currentTheme.colors.textColor
-                                    Layout.preferredWidth: 50
-                                }
-
-                                TextField {
-                                    id: personSuffixField
-                                    Layout.fillWidth: true
-                                    placeholderText: qsTr("位同学")
-                                }
-                            }
-
-                            // Group suffix
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 12
-
-                                Text {
-                                    text: qsTr("小组")
-                                    font.pixelSize: 13
-                                    color: Theme.currentTheme.colors.textColor
-                                    Layout.preferredWidth: 50
-                                }
-
-                                TextField {
-                                    id: groupSuffixField
-                                    Layout.fillWidth: true
-                                    placeholderText: qsTr("个小组")
-                                }
-                            }
-                        }
-                    }
-
-                    // Names settings card
-                    Clip {
-                        Layout.fillWidth: true
-                        implicitHeight: namesLayout.implicitHeight + 24
-                        backgroundColor: Theme.currentTheme.colors.controlColor
-                        radius: 6
-                        borderColor: Theme.currentTheme.colors.controlBorderColor
-                        borderWidth: 1
-
-                        ColumnLayout {
-                            id: namesLayout
-                            anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 10
-
-                            // Header
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 8
-
-                                Text {
-                                    text: "{names}"
-                                    font.bold: true
-                                    font.pixelSize: 14
-                                    color: Theme.currentTheme.colors.textColor
-                                }
-
-                                Text {
-                                    text: qsTr("学生列表格式")
-                                    font.pixelSize: 12
-                                    color: Theme.currentTheme.colors.textSecondaryColor
-                                }
-
-                                Item {
-                                    Layout.fillWidth: true
-                                }
-
-                                Text {
-                                    text: qsTr("分隔符：%1").arg(separatorField.text)
-                                    font.pixelSize: 12
-                                    color: Theme.currentTheme.colors.textSecondaryColor
-                                }
-                            }
-
-                            // Divider
-                            Rectangle {
-                                Layout.fillWidth: true
-                                height: 1
-                                color: Theme.currentTheme.colors.dividerColor
-                            }
-
-                            // Separator setting
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 12
-
-                                Text {
-                                    text: qsTr("分隔符")
-                                    font.pixelSize: 13
-                                    color: Theme.currentTheme.colors.textColor
-                                    Layout.preferredWidth: 50
-                                }
-
-                                TextField {
-                                    id: separatorField
-                                    Layout.fillWidth: true
-                                    placeholderText: qsTr(",")
-                                }
-                            }
-                        }
-                    }
-
-                    Item {
                         Layout.fillHeight: true
+                        contentWidth: availableWidth
+                        clip: true
+
+                        ColumnLayout {
+                            width: parent.width
+                            spacing: 12
+
+                            // Suffix settings card
+                            Clip {
+                                Layout.fillWidth: true
+                                implicitHeight: suffixLayout.implicitHeight + 24
+                                backgroundColor: Theme.currentTheme.colors.controlColor
+                                radius: 6
+                                borderColor: Theme.currentTheme.colors.controlBorderColor
+                                borderWidth: 1
+
+                                ColumnLayout {
+                                    id: suffixLayout
+                                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    spacing: 10
+
+                                    // Header
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 8
+
+                                        Text {
+                                            text: "{suffix}"
+                                            font.bold: true
+                                            font.pixelSize: 14
+                                            color: Theme.currentTheme.colors.textColor
+                                        }
+
+                                        Text {
+                                            text: qsTr("称呼后缀")
+                                            font.pixelSize: 12
+                                            color: Theme.currentTheme.colors.textSecondaryColor
+                                        }
+
+                                        Item {
+                                            Layout.fillWidth: true
+                                        }
+
+                                        Text {
+                                            text: "1" + personSuffixField.text + " / " + "1" + groupSuffixField.text
+                                            font.pixelSize: 12
+                                            color: Theme.currentTheme.colors.textSecondaryColor
+                                        }
+                                    }
+
+                                    // Divider
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        height: 1
+                                        color: Theme.currentTheme.colors.dividerColor
+                                    }
+
+                                    // Person suffix
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 12
+
+                                        Text {
+                                            text: qsTr("学生")
+                                            font.pixelSize: 13
+                                            color: Theme.currentTheme.colors.textColor
+                                            Layout.preferredWidth: 50
+                                        }
+
+                                        TextField {
+                                            id: personSuffixField
+                                            Layout.fillWidth: true
+                                            placeholderText: qsTr("位同学")
+                                        }
+                                    }
+
+                                    // Group suffix
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 12
+
+                                        Text {
+                                            text: qsTr("小组")
+                                            font.pixelSize: 13
+                                            color: Theme.currentTheme.colors.textColor
+                                            Layout.preferredWidth: 50
+                                        }
+
+                                        TextField {
+                                            id: groupSuffixField
+                                            Layout.fillWidth: true
+                                            placeholderText: qsTr("个小组")
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Names settings card
+                            Clip {
+                                Layout.fillWidth: true
+                                implicitHeight: namesLayout.implicitHeight + 24
+                                backgroundColor: Theme.currentTheme.colors.controlColor
+                                radius: 6
+                                borderColor: Theme.currentTheme.colors.controlBorderColor
+                                borderWidth: 1
+
+                                ColumnLayout {
+                                    id: namesLayout
+                                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    spacing: 10
+
+                                    // Header
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 8
+
+                                        Text {
+                                            text: "{names}"
+                                            font.bold: true
+                                            font.pixelSize: 14
+                                            color: Theme.currentTheme.colors.textColor
+                                        }
+
+                                        Text {
+                                            text: qsTr("学生列表格式")
+                                            font.pixelSize: 12
+                                            color: Theme.currentTheme.colors.textSecondaryColor
+                                        }
+
+                                        Item {
+                                            Layout.fillWidth: true
+                                        }
+
+                                        Text {
+                                            text: qsTr("分隔符：%1").arg(separatorField.text)
+                                            font.pixelSize: 12
+                                            color: Theme.currentTheme.colors.textSecondaryColor
+                                        }
+                                    }
+
+                                    // Divider
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        height: 1
+                                        color: Theme.currentTheme.colors.dividerColor
+                                    }
+
+                                    // Separator setting
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 12
+
+                                        Text {
+                                            text: qsTr("分隔符")
+                                            font.pixelSize: 13
+                                            color: Theme.currentTheme.colors.textColor
+                                            Layout.preferredWidth: 50
+                                        }
+
+                                        TextField {
+                                            id: separatorField
+                                            Layout.fillWidth: true
+                                            placeholderText: qsTr(",")
+                                        }
+                                    }
+                                }
+                            }
+
+                            Item {
+                                Layout.fillHeight: true
+                            }
+                        }
                     }
                 }
             }
