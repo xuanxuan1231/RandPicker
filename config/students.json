@@ -1,0 +1,12 @@
+{
+    "students": [
+        {
+            "id": "bc808947-859b-4051-84bd-fb6091a689e4",
+            "name": "张三",
+            "weight": 1,
+            "enabled": true,
+            "avatar": "",
+            "properties": []
+        }
+    ]
+}
