@@ -104,31 +104,28 @@ if CSHARP_AVAILABLE:
 
                 # 预留 注册事件处理器
 
-                task = self.ipcClient.Connect()
-                await self.event_loop.run_in_executor(None, task.Wait)
-                self._set_connectivity("Connected")
-                logger.info("ClassIsland 集成客户端已连接。")
-
                 while self.is_running:
                     await asyncio.sleep(1)
                     # 实时检查连接状态
-                    if self._check_alive():
-                        continue
-                    else:
-                        self._set_connectivity("NotConnected")
-                        logger.warning("ClassIsland 集成客户端连接丢失，正在尝试重新连接...")
-                        if not self._allow_reconnect():
-                            logger.warning("重连频率太大，本次启动停止重连。")
-                            logger.info("检查是否已经安装 RandPicker 插件。")
-                            self.is_running = False
-                            self._stop_event_loop()
-                            self._set_connectivity("NotRunning")
-                            break
+                    if not self._check_alive():
+                        # 连接重试
+                        if len(self.reconnect_attempts) != 0: # 当非首次失连时 (REAL 失联)
+                            self._set_connectivity("NotConnected")
+                            logger.warning("ClassIsland 集成客户端连接丢失，正在尝试重新连接...")
+                            if not self._allow_reconnect():
+                                logger.warning("重连频率太大，本次启动停止重连。")
+                                logger.info("检查是否已经安装 RandPicker 插件。")
+                                self.is_running = False
+                                self._stop_event_loop()
+                                self._set_connectivity("NotRunning")
+                                break
+                        else: # 首次连接 不是“连接丢失”
+                            self._allow_reconnect() # 让队列里保留一个首次连接的尝试
 
                         task = self.ipcClient.Connect()
                         await self.event_loop.run_in_executor(None, task.Wait)
                         self._set_connectivity("Connected")
-                        logger.info("ClassIsland 集成客户端已重新连接。")
+                        logger.info("ClassIsland 集成客户端已连接。")
 
             self.event_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.event_loop)
