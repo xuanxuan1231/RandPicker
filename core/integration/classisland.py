@@ -56,6 +56,7 @@ if CSHARP_AVAILABLE:
             self.ipcClient: Optional[IpcClient] = None
             self.client_thread: Optional[threading.Thread] = None
             self.event_loop: Optional[asyncio.AbstractEventLoop] = None
+            self._client_task: Optional[asyncio.Task] = None
             self._set_connectivity("NotRunning")
             self.is_running = False
             self.reconnect_attempts = deque()
@@ -90,8 +91,11 @@ if CSHARP_AVAILABLE:
         def stop(self):
             self.is_running = False
             try:
-                for task in asyncio.all_tasks(self.event_loop):
-                    task.cancel()
+                if self.event_loop and self.event_loop.is_running():
+                    def _cancel_client_task():
+                        if self._client_task and not self._client_task.done():
+                            self._client_task.cancel()
+                    self.event_loop.call_soon_threadsafe(_cancel_client_task)
                 if self.client_thread and self.client_thread.is_alive():
                     self.client_thread.join(timeout=5)
                 logger.info("ClassIsland 集成客户端已停止。")
@@ -104,36 +108,34 @@ if CSHARP_AVAILABLE:
 
                 # 预留 注册事件处理器
 
-                task = self.ipcClient.Connect()
-                await self.event_loop.run_in_executor(None, task.Wait)
-                self._set_connectivity("Connected")
-                logger.info("ClassIsland 集成客户端已连接。")
-
                 while self.is_running:
                     await asyncio.sleep(1)
                     # 实时检查连接状态
-                    if self._check_alive():
-                        continue
-                    else:
-                        self._set_connectivity("NotConnected")
-                        logger.warning("ClassIsland 集成客户端连接丢失，正在尝试重新连接...")
-                        if not self._allow_reconnect():
-                            logger.warning("重连频率太大，本次启动停止重连。")
-                            logger.info("检查是否已经安装 RandPicker 插件。")
-                            self.is_running = False
-                            self._stop_event_loop()
-                            self._set_connectivity("NotRunning")
-                            break
+                    if not self._check_alive():
+                        # 连接重试
+                        if len(self.reconnect_attempts) != 0: # 当非首次失连时 (REAL 失联)
+                            self._set_connectivity("NotConnected")
+                            logger.warning("ClassIsland 集成客户端连接丢失，正在尝试重新连接...")
+                            if not self._allow_reconnect():
+                                logger.warning("重连频率太大，本次启动停止重连。")
+                                logger.info("检查是否已经安装 RandPicker 插件。")
+                                self.is_running = False
+                                self._stop_event_loop()
+                                self._set_connectivity("NotRunning")
+                                break
+                        else: # 首次连接 不是“连接丢失”
+                            self._allow_reconnect() # 让队列里保留一个首次连接的尝试
 
                         task = self.ipcClient.Connect()
-                        await self.event_loop.run_in_executor(None, task.Wait)
+                        await self._await_dotnet_task(task)
                         self._set_connectivity("Connected")
-                        logger.info("ClassIsland 集成客户端已重新连接。")
+                        logger.info("ClassIsland 集成客户端已连接。")
 
             self.event_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.event_loop)
             try:
-                self.event_loop.run_until_complete(client())
+                self._client_task = self.event_loop.create_task(client())
+                self.event_loop.run_until_complete(self._client_task)
             except Exception as e:
                 logger.exception(f"ClassIsland 集成客户端运行时出错: {e}")
             except asyncio.CancelledError:
@@ -141,7 +143,23 @@ if CSHARP_AVAILABLE:
             finally:
                 self._cleanup()
 
+        async def _await_dotnet_task(self, task):
+            loop = asyncio.get_running_loop()
+            done = loop.create_future()
+
+            def _worker():
+                try:
+                    task.Wait()
+                except Exception as exc:
+                    loop.call_soon_threadsafe(done.set_exception, exc)
+                else:
+                    loop.call_soon_threadsafe(done.set_result, None)
+
+            threading.Thread(target=_worker, daemon=True).start()
+            await done
+
         def _cleanup(self):
+            self._client_task = None
             self.event_loop.close()
             self.event_loop = None
             self._set_connectivity("NotRunning")
@@ -195,8 +213,6 @@ if CSHARP_AVAILABLE:
             except Exception as e:
                 logger.exception(f"发送 ClassIsland 测试通知时出错: {e}")
                 return False
-
-
 
         def _format_message(self, pick_type: str, stus: list) -> NotifyResult:
             result = NotifyResult()
