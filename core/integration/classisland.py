@@ -79,13 +79,24 @@ if CSHARP_AVAILABLE:
                 return
             try:
                 self._set_connectivity("NotConnected")
-                self.client_thread = threading.Thread(target=self._run, daemon=True)
+                self.client_thread = threading.Thread(target=self._run, daemon=False)
                 self.client_thread.start()
                 logger.info("ClassIsland 集成客户端已启动。")
                 self.is_running = True
             except Exception as e:
                 logger.error(f"启动 ClassIsland 集成客户端时出错: {e}")
                 self.is_running = False
+
+        def stop(self):
+            self.is_running = False
+            try:
+                for task in asyncio.all_tasks(self.event_loop):
+                    task.cancel()
+                if self.client_thread and self.client_thread.is_alive():
+                    self.client_thread.join(timeout=5)
+                logger.info("ClassIsland 集成客户端已停止。")
+            except Exception as e:
+                logger.exception(e)
 
         def _run(self):
             async def client():
@@ -125,10 +136,15 @@ if CSHARP_AVAILABLE:
                 self.event_loop.run_until_complete(client())
             except Exception as e:
                 logger.exception(f"ClassIsland 集成客户端运行时出错: {e}")
+            except asyncio.CancelledError:
+                pass
             finally:
-                self.event_loop.close()
-                self.event_loop = None
-                self._set_connectivity("NotRunning")
+                self._cleanup()
+
+        def _cleanup(self):
+            self.event_loop.close()
+            self.event_loop = None
+            self._set_connectivity("NotRunning")
 
         def _stop_event_loop(self):
             if self.event_loop and self.event_loop.is_running():

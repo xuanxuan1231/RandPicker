@@ -11,7 +11,7 @@ from loguru import logger
 
 from core.choice import ChoiceMaker
 from core.config import SettingsConfig, StudentsConfig
-from core.integration import NotificationManager
+from core.integration import NotificationManager, ciService
 from core.settings import SettingsWindow
 from core.tray import RPTray
 from core.widget import RPWidget
@@ -66,7 +66,11 @@ class RPMain(QObject):
     @Slot()
     def quit(self):
         logger.info("退出 RandPicker。")
-        self._begin_shutdown()
+        self.cleanup()
+        self.app.quit()
+
+    def cleanup(self):
+        ciService.stop()
 
     def _begin_shutdown(self):
         # Hide tray/window first to avoid stuck UI when quitting from the tray menu.
