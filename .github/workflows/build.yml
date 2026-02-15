@@ -45,6 +45,7 @@ jobs:
           python scripts/pre_build.py
 
       - name: Build with PyInstaller
+        shell: bash
         run: |
           pyinstaller $(python scripts/pyinstaller_args.py)
 

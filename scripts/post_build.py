@@ -15,12 +15,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DIST_DIR = ROOT / "dist"
 BUILD_DIR = ROOT / "build"
-sys.path.insert(0, str(ROOT))
-from core.version_info import VERSION
+
+# Import VERSION directly to avoid full module dependencies
+version_file = ROOT / "core" / "version_info.py"
+VERSION = None
+with open(version_file) as f:
+    for line in f:
+        if line.startswith("VERSION = Version("):
+            # Extract version string
+            version_str = line.split('"')[1]
+            VERSION = version_str
+            break
+
+if VERSION is None:
+    VERSION = "0.0.0"
 
 APP_NAME = "RandPicker"
 PKG_NAME = APP_NAME.lower()
-APP_VERSION = str(VERSION)
+APP_VERSION = VERSION
 
 
 def get_icon(platform_key: str) -> Path | None:

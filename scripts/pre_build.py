@@ -14,20 +14,30 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = ROOT / "build"
 DIST_DIR = ROOT / "dist"
-sys.path.insert(0, str(ROOT))
-from core.version_info import VERSION
+
+# Import VERSION directly to avoid full module dependencies
+version_file = ROOT / "core" / "version_info.py"
+VERSION = None
+with open(version_file) as f:
+    for line in f:
+        if line.startswith("VERSION = Version("):
+            # Extract version string
+            version_str = line.split('"')[1]
+            VERSION = version_str
+            break
+
+if VERSION is None:
+    VERSION = "0.0.0"
 
 APP_NAME = "RandPicker"
-APP_VERSION = str(VERSION)
+APP_VERSION = VERSION
 
 
 def _version_numbers() -> tuple[int, int, int, int]:
-    """Extract version numbers from VERSION object."""
+    """Extract version numbers from VERSION string."""
     try:
-        if hasattr(VERSION, 'release'):
-            parts = list(VERSION.release)
-        else:
-            parts = [int(p) for p in str(VERSION).split('.') if p.isdigit()]
+        # VERSION is already a string like "2.0.0"
+        parts = [int(p) for p in VERSION.split('.') if p.isdigit()]
     except Exception:
         parts = [0, 0, 0, 0]
 
@@ -79,7 +89,7 @@ def write_win_version_file(path: Path) -> Path:
 def write_unix_version_file(path: Path) -> Path:
     """Write Unix/Linux/Mac version metadata file."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    content = f"name={APP_NAME}\\nversion={APP_VERSION}\\n"
+    content = f"name={APP_NAME}\nversion={APP_VERSION}\n"
     path.write_text(content, encoding="utf-8")
     print(f"Unix version file created at: {path}")
     return path
