@@ -19,11 +19,12 @@ DIST_DIR = ROOT / "dist"
 version_file = ROOT / "core" / "version_info.py"
 VERSION = None
 with open(version_file) as f:
+    import re
     for line in f:
-        if line.startswith("VERSION = Version("):
-            # Extract version string
-            version_str = line.split('"')[1]
-            VERSION = version_str
+        # Match: VERSION = Version("x.y.z")
+        match = re.search(r'VERSION\s*=\s*Version\s*\(\s*["\']([^"\']+)["\']\s*\)', line)
+        if match:
+            VERSION = match.group(1)
             break
 
 if VERSION is None:
@@ -87,7 +88,15 @@ def write_win_version_file(path: Path) -> Path:
 
 
 def write_unix_version_file(path: Path) -> Path:
-    """Write Unix/Linux/Mac version metadata file."""
+    """
+    Write Unix/Linux/Mac version metadata file.
+    
+    Creates a simple key-value format file:
+        name=<APP_NAME>
+        version=<APP_VERSION>
+    
+    This file is bundled with the application and can be read at runtime.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     content = f"name={APP_NAME}\nversion={APP_VERSION}\n"
     path.write_text(content, encoding="utf-8")

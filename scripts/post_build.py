@@ -20,11 +20,12 @@ BUILD_DIR = ROOT / "build"
 version_file = ROOT / "core" / "version_info.py"
 VERSION = None
 with open(version_file) as f:
+    import re
     for line in f:
-        if line.startswith("VERSION = Version("):
-            # Extract version string
-            version_str = line.split('"')[1]
-            VERSION = version_str
+        # Match: VERSION = Version("x.y.z")
+        match = re.search(r'VERSION\s*=\s*Version\s*\(\s*["\']([^"\']+)["\']\s*\)', line)
+        if match:
+            VERSION = match.group(1)
             break
 
 if VERSION is None:
