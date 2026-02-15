@@ -40,9 +40,40 @@ jobs:
           uv pip install .
           uv pip install pyinstaller
 
-      - name: Build with build.py
+      - name: Pre Build
         run: |
-          python scripts/build.py
+          python scripts/pre_build.py
+
+      - name: Build (Windows)
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: |
+          pyinstaller app.py \
+            --name RandPicker \
+            --icon assets/icon-dark.ico \
+            --add-data assets:assets \
+            --add-data src:src \
+            --add-data LICENSE:LICENSE \
+            --version-file version.txt \
+            --contents-directory . \
+            --windowed
+
+      - name: Build (macOS)
+        if: matrix.platform == 'mac'
+        shell: bash
+        run: |
+          pyinstaller app.py \
+            --name RandPicker \
+            --icon assets/icon-dark.icns \
+            --add-data assets:assets \
+            --add-data src:src \
+            --add-data LICENSE:LICENSE \
+            --contents-directory . \
+            --windowed
+
+      - name: Post Build
+        run: |
+          python scripts/post_build.py
 
       - name: Package (Windows)
         if: matrix.platform == 'windows'
@@ -94,9 +125,26 @@ jobs:
           uv pip install .
           uv pip install pyinstaller
 
-      - name: Build with build.py
+      - name: Pre Build
         run: |
-          python3 scripts/build.py
+          python3 scripts/pre_build.py
+
+      - name: Build (Linux)
+        shell: bash
+        run: |
+          pyinstaller app.py \
+            --name RandPicker \
+            --icon assets/icon-dark.png \
+            --add-data assets:assets \
+            --add-data src:src \
+            --add-data LICENSE:LICENSE \
+            --contents-directory . \
+            --windowed
+
+      - name: Post Build
+        shell: bash
+        run: |
+          python3 scripts/post_build.py
 
       - name: Package (Linux)
         run: |
