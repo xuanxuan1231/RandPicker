@@ -27,13 +27,13 @@ try:
     import clr
 
     sys.path.append(DLL_DIR.as_posix())
-    clr.AddReference("RP4CI.Shared")
+    clr.AddReference("RP4CI.Interface")
     clr.AddReference("ClassIsland.Shared.IPC")
 
     from ClassIsland.Shared.IPC import IpcClient
     from dotnetCampus.Ipc.CompilerServices.GeneratedProxies import GeneratedIpcFactory
-    from RP4CI.Shared.Models import NotifyResult, PickType, OverlayType
-    from RP4CI.Shared.Services import IRPService
+    from RP4CI.Interface.Models import NotifyResult, PickType, OverlayType
+    from RP4CI.Interface.Services import IRPService
 
     CSHARP_AVAILABLE = True
     logger.success("成功加载 ClassIsland 集成所需库。")
