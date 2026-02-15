@@ -40,9 +40,17 @@ jobs:
           uv pip install .
           uv pip install pyinstaller
 
-      - name: Build with build.py
+      - name: Pre-build processing
         run: |
-          python scripts/build.py
+          python scripts/pre_build.py
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller $(python scripts/pyinstaller_args.py)
+
+      - name: Post-build processing
+        run: |
+          python scripts/post_build.py
 
       - name: Package (Windows)
         if: matrix.platform == 'windows'
@@ -94,9 +102,17 @@ jobs:
           uv pip install .
           uv pip install pyinstaller
 
-      - name: Build with build.py
+      - name: Pre-build processing
         run: |
-          python3 scripts/build.py
+          python3 scripts/pre_build.py
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller $(python3 scripts/pyinstaller_args.py)
+
+      - name: Post-build processing
+        run: |
+          python3 scripts/post_build.py
 
       - name: Package (Linux)
         run: |
