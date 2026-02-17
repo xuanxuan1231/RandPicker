@@ -44,9 +44,9 @@ class NativeNotifier:
         body_template = format['body']
 
         title = title_template.replace("{count}", str(count)).replace("{suffix}", suffix).replace("{names}",
-                                                                                                         names)
+                                                                                                  names)
         body = body_template.replace("{count}", str(count)).replace("{suffix}", suffix).replace("{names}",
-                                                                                                          names)
+                                                                                                names)
         return title, body
 
     @staticmethod

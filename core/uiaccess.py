@@ -6,10 +6,12 @@
 # --*--
 
 import ctypes
-from ctypes import wintypes
-from .config.dirs import DLL_DIR
 import sys
+from ctypes import wintypes
+
 from loguru import logger
+
+from .config.dirs import DLL_DIR
 
 # 加载 uiaccess.dll
 # 确保 dll 文件在当前目录或系统路径中

@@ -16,7 +16,9 @@ from ..config.dirs import DLL_DIR
 
 CSHARP_AVAILABLE = False
 try:
+    # raise Exception("Test")
     from pythonnet import load
+
     try:
         runtime_config = DLL_DIR / "randpicker.runtimeconfig.json"
         load("coreclr", runtime_config=str(runtime_config))
@@ -63,7 +65,6 @@ if CSHARP_AVAILABLE:
             self.is_running = False
             self.reconnect_attempts = deque()
 
-
         def _set_connectivity(self, status: str):
             if self.connectivity_status == status:
                 return
@@ -97,6 +98,7 @@ if CSHARP_AVAILABLE:
                     def _cancel_client_task():
                         if self._client_task and not self._client_task.done():
                             self._client_task.cancel()
+
                     self.event_loop.call_soon_threadsafe(_cancel_client_task)
                 if self.client_thread and self.client_thread.is_alive():
                     self.client_thread.join(timeout=5)
@@ -115,7 +117,7 @@ if CSHARP_AVAILABLE:
                     # 实时检查连接状态
                     if not self._check_alive():
                         # 连接重试
-                        if len(self.reconnect_attempts) != 0: # 当非首次失连时 (REAL 失联)
+                        if len(self.reconnect_attempts) != 0:  # 当非首次失连时 (REAL 失联)
                             self._set_connectivity("NotConnected")
                             logger.warning("ClassIsland 集成客户端连接丢失，正在尝试重新连接...")
                             if not self._allow_reconnect():
@@ -125,8 +127,8 @@ if CSHARP_AVAILABLE:
                                 self._stop_event_loop()
                                 self._set_connectivity("NotRunning")
                                 break
-                        else: # 首次连接 不是“连接丢失”
-                            self._allow_reconnect() # 让队列里保留一个首次连接的尝试
+                        else:  # 首次连接 不是“连接丢失”
+                            self._allow_reconnect()  # 让队列里保留一个首次连接的尝试
 
                         task = self.ipcClient.Connect()
                         await self._await_dotnet_task(task)
@@ -229,8 +231,10 @@ if CSHARP_AVAILABLE:
             title_template = format['title']
             body_template = format['body']
 
-            result.Title = title_template.replace("{count}", str(count)).replace("{suffix}", suffix).replace("{names}", names)
-            result.Overlay = body_template.replace("{count}", str(count)).replace("{suffix}", suffix).replace("{names}", names)
+            result.Title = title_template.replace("{count}", str(count)).replace("{suffix}", suffix).replace("{names}",
+                                                                                                             names)
+            result.Overlay = body_template.replace("{count}", str(count)).replace("{suffix}", suffix).replace("{names}",
+                                                                                                              names)
 
             result.PickType = PickType.Person if pick_type == "person" else PickType.Group
             result.TitleDuration = self.settingsConfig.getCiMaskDuration()
@@ -308,7 +312,6 @@ else:
 
         def get_availability(self):
             return self.is_available
-
 
 ciService = ClassIslandIntegration()
 

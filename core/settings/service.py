@@ -36,9 +36,12 @@ class SettingsService(QObject):
     def getConnectivityStatus(self, option: str) -> str:
         """获取通知方式的连接状态，供 QML 初始化状态"""
         match option:
-            case "classisland": return ciService.get_connectivity_status()
-            case "classwidgets": return "NotAvailable"
-            case _: return "NotAvailable"
+            case "classisland":
+                return ciService.get_connectivity_status()
+            case "classwidgets":
+                return "NotAvailable"
+            case _:
+                return "NotAvailable"
 
     def updateConnectivityStatus(self, method: str, connectivity: str) -> None:
         if method not in ["classisland", "classwidgets"]:
@@ -49,16 +52,20 @@ class SettingsService(QObject):
     @Slot(result=str)
     def getDotNetDownloadLink(self):
         match platform.system():
-            case "win32" : running_os = "windows"
-            case "linux" :
+            case "win32":
+                running_os = "windows"
+            case "linux":
                 return "https://learn.microsoft.com/dotnet/core/install/linux?WT.mc_id=dotnet-35129-website"
-            case "darwin": running_os = "macos"
+            case "darwin":
+                running_os = "macos"
             case _:
                 return "https://dotnet.microsoft.com/en-us/download/dotnet/scripts"
 
         match platform.machine().lower():
-            case "amd64" | "x86_64"  : arch = "x64"
-            case "arm64" | "aarch64" : arch = "arm64"
+            case "amd64" | "x86_64":
+                arch = "x64"
+            case "arm64" | "aarch64":
+                arch = "arm64"
             case _:
                 return "https://dotnet.microsoft.com/en-us/download/dotnet/scripts"
 

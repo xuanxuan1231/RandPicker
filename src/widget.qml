@@ -160,14 +160,14 @@ QQW.Window {
         anchors.fill: parent
         property point dragStartPos: Qt.point(0, 0)
         property bool isDragging: false
-        
+
         onPressed: (mouse) => {
             dragStartPos = Qt.point(mouse.x, mouse.y)
             isDragging = false
             pendingPositionSave = false
             positionAnimation.stop()  // 停止可能正在进行的动画
         }
-        
+
         onPositionChanged: (mouse) => {
             if (pressed) {
                 var delta = Qt.point(mouse.x - dragStartPos.x, mouse.y - dragStartPos.y)
@@ -176,7 +176,7 @@ QQW.Window {
                 isDragging = true
             }
         }
-        
+
         onReleased: {
             if (isDragging) {
                 var animated = widget.snapToEdge()
@@ -208,7 +208,7 @@ QQW.Window {
         // 计数器和加减按钮
         RowLayout {
             Layout.fillWidth: true
-            
+
             Text {
                 text: itemCount
                 color: Colors.get("textColor")
@@ -218,11 +218,11 @@ QQW.Window {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-            
+
             RowLayout {
                 Layout.alignment: Qt.AlignRight
                 spacing: 1
-                
+
                 Button {
                     flat: true
                     text: "+"
@@ -232,7 +232,7 @@ QQW.Window {
                     enabled: itemCount < 99
                     onClicked: itemCount++
                 }
-                
+
                 Button {
                     flat: true
                     text: "-"

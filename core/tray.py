@@ -2,12 +2,9 @@
 系统托盘菜单。
 """
 
-import subprocess
-import sys
-
 from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QMenu, QSystemTrayIcon
 from loguru import logger
 
 from .config.dirs import ASSETS_DIR
@@ -30,7 +27,8 @@ class RPTray(QObject):
             logger.warning("系统托盘不可用，跳过托盘菜单。")
             return
 
-        icon_path = str(ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
+        icon_path = str(
+            ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
         self.tray = QSystemTrayIcon(QIcon(icon_path), self)
         self.tray.setToolTip("RandPicker")
 

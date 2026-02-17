@@ -1,10 +1,10 @@
 """
 主模块
 """
-import sys
 import os
-import threading
-from PySide6.QtCore import QObject, Slot, QTimer
+import sys
+
+from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
 from RinUI import ThemeManager
 from loguru import logger
@@ -71,38 +71,6 @@ class RPMain(QObject):
 
     def cleanup(self):
         ciService.stop()
-
-    def _begin_shutdown(self):
-        # Hide tray/window first to avoid stuck UI when quitting from the tray menu.
-        if self.tray and getattr(self.tray, "tray", None):
-            self.tray.tray.hide()
-
-        if self.settingsWindow:
-            self.settingsWindow.close()
-            self.settingsWindow = None
-
-        if self.widget:
-            try:
-                self.widget.close()
-            except Exception as e:
-                logger.error(f"关闭浮窗时发生异常: {e}")
-
-        if self.app:
-            self.app.closeAllWindows()
-
-        QTimer.singleShot(0, self._final_quit)
-
-    def _final_quit(self):
-        if self.app:
-            # Use a stdlib timer so the fallback triggers even if Qt's loop is blocked.
-            threading.Timer(2.0, self._force_exit).start()
-            self.app.exit(0)
-        else:
-            logger.error("QApplication 实例不存在，无法退出。")
-
-    def _force_exit(self):
-        logger.warning("应用退出超时，强制结束进程。")
-        os._exit(0)
 
     def open_uiaccess(self):
         if not self.settingsConfig.getUIAccessEnabled():

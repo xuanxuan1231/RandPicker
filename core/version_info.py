@@ -1,11 +1,12 @@
 import os
-from packaging.version import Version
 
 from PySide6.QtCore import QObject, Slot
 from loguru import logger
+from packaging.version import Version
 
 VERSION = Version("2.0.0")
 CODENAME = "JellyCat"
+
 
 class VersionInfo(QObject):
     def __init__(self):
@@ -19,7 +20,6 @@ class VersionInfo(QObject):
             logger.info(f"你正在 {self._branch_name} 分支的 {self._commit_hash} 提交上。下一版本: {str(VERSION)}")
         else:
             logger.info(f"RandPicker {str(VERSION)} (Codename: {CODENAME})")
-
 
     @Slot(result=str)
     def getCommitHash(self) -> str:
@@ -43,5 +43,6 @@ class VersionInfo(QObject):
     def getCodename(self) -> str:
         """获取当前版本代号"""
         return CODENAME
+
 
 versionInfo = VersionInfo()

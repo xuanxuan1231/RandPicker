@@ -48,7 +48,7 @@ Item {
             Switch {
                 checked: SettingsConfig.getNotifyOptionStatus("native")
                 Component.onCompleted: {
-                        checked = SettingsConfig.getNotifyOptionStatus("native")
+                    checked = SettingsConfig.getNotifyOptionStatus("native")
                 }
                 onCheckedChanged: SettingsConfig.setNotifyOptionStatus("native", checked)
             }

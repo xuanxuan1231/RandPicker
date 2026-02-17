@@ -32,7 +32,7 @@ DEFAULT_CONFIG = {
                 "enabled": False,
                 "mask_duration": 0,
                 "overlay_duration": 0,
-                "overlay_type": 2, # 0: simple, 1: rolling, 2: auto
+                "overlay_type": 2,  # 0: simple, 1: rolling, 2: auto
                 "format": {
                     "title": "抽选了 {count} {suffix}",
                     "body": "{names}",
@@ -235,6 +235,7 @@ class SettingsConfig(ConfigManager, QObject):
         data = options.setdefault(option, {})
         data["format"] = format_data
         self.save_config()
+
     # endregion #
 
     # region 窗口位置 #
@@ -253,6 +254,7 @@ class SettingsConfig(ConfigManager, QObject):
         self.config["widget_position"]["x"] = x
         self.config["widget_position"]["y"] = y
         self.save_config()
+
     # endregion #
 
     # region UIACCESS #

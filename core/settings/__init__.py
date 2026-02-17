@@ -8,6 +8,7 @@ from .service import SettingsService
 from ..config.dirs import *
 from ..version_info import versionInfo
 
+
 class SettingsWindow(RinUIWindow):
     def __init__(self, parent):
         super().__init__()
@@ -27,12 +28,12 @@ class SettingsWindow(RinUIWindow):
 
         self.load(QML_DIR / "settings" / "main.qml")
 
-        self.main.themeManager.themeChanged.connect(lambda theme: self.onThemeChanged(theme))
+        self.main.themeManager.themeChanged.connect(lambda: self.onThemeChanged())
         icon_path = str(
             ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
         self.setIcon(icon_path)
 
-    def onThemeChanged(self, theme):
+    def onThemeChanged(self):
         icon_path = str(
             ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
         self.setIcon(icon_path)
