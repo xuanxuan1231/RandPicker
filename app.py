@@ -1,8 +1,12 @@
 import sys
 
 from PySide6.QtWidgets import QApplication
+from loguru import logger
+
+logger.add(str(ROOT / "logs/{time:YYYY-MM-DD}.log"), rotation="00:00")
 
 from core.main import RPMain
+from core.config.dirs import ROOT
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
