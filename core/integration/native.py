@@ -36,7 +36,7 @@ class NativeNotifier:
             raise ValueError("SettingsConfig 未初始化，无法格式化消息")
         format = self.settingsConfig.getNotifyFormat("native")
 
-        names = format['names']['separator'].join(stus)
+        names = format['names']['separator'].join([s.get("name", "未知") for s in stus])
         count = len(stus)
         suffix = format['suffix']['person'] if pick_type == "person" else format['suffix']['group']
 

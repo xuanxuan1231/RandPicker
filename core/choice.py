@@ -36,7 +36,7 @@ class ChoiceMaker(QObject):
                 # title=f"抽选了 {number} 名学生",
                 pick_type="person",
                 # message=", ".join([self.studentsConfig.get_single_student(s).get("name", "未知") for s in result])
-                stus=[self.studentsConfig.get_single_student(s).get("name", "未知") for s in result]
+                stus=[self.studentsConfig.get_single_student(s) for s in result]
             )
             return None
         else:

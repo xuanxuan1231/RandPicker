@@ -30,9 +30,11 @@ try:
     clr.AddReference("RP4CI.Interface")
     clr.AddReference("ClassIsland.Shared.IPC")
 
+    from System.Collections.Generic import List
+
     from ClassIsland.Shared.IPC import IpcClient
     from dotnetCampus.Ipc.CompilerServices.GeneratedProxies import GeneratedIpcFactory
-    from RP4CI.Interface.Models import NotifyResult, PickType, OverlayType
+    from RP4CI.Interface.Models import NotifyResult, PickType, OverlayType, PickStudent, CustomProperty
     from RP4CI.Interface.Services import IRPService
 
     CSHARP_AVAILABLE = True
@@ -215,11 +217,12 @@ if CSHARP_AVAILABLE:
                 return False
 
         def _format_message(self, pick_type: str, stus: list) -> NotifyResult:
+            """对通知进行前处理"""
             result = NotifyResult()
 
             format = self.settingsConfig.getNotifyFormat("classisland")
 
-            names = format['names']['separator'].join(stus)
+            names = format['names']['separator'].join([s.get("name", "未知") for s in stus])
             count = len(stus)
             suffix = format['suffix']['person'] if pick_type == "person" else format['suffix']['group']
 
@@ -233,6 +236,24 @@ if CSHARP_AVAILABLE:
             result.TitleDuration = self.settingsConfig.getCiMaskDuration()
             result.OverlayDuration = self.settingsConfig.getCiOverlayDuration()
 
+            if pick_type == "person":
+                result.StudentList = List[PickStudent]()
+                for stu in stus:
+                    pick_stu = PickStudent()
+                    pick_stu.Name = stu.get("name", "未知")
+                    pick_stu.Weight = stu.get("weight", 1)
+                    pick_stu.CustomProperties = List[CustomProperty]()
+                    for p in stu.get("properties", []):
+                        custom_property = CustomProperty()
+                        custom_property.Name = p.get("name", "")
+                        custom_property.Value = p.get("value", "")
+                        pick_stu.CustomProperties.Add(custom_property)
+                    result.StudentList.Add(pick_stu)
+            elif pick_type == "group":
+                # TODO)) GROUP
+                pass
+            else:
+                pass
 
             overlayType = self.settingsConfig.getCiOverlayType()
             match overlayType:
