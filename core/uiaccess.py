@@ -3,6 +3,7 @@
 # --*--
 # DLL 来源于 https://github.com/shc0743/RunUIAccess
 # 实现中参考了 shc0743 的部分代码。
+# 部分代码由 AI 编写。
 # --*--
 
 import ctypes
@@ -18,7 +19,6 @@ from .config.dirs import DLL_DIR
 try:
     uiaccess = ctypes.WinDLL(str(DLL_DIR / "uiaccess.dll"))
 except OSError as e:
-    print(f"Error: Could not load uiaccess.dll. {e}")
     logger.error(f"加载 uiaccess.dll 时出错: {e}")
     sys.exit(1)
 

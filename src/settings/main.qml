@@ -51,14 +51,19 @@ FluentWindow {
             position: Position.Bottom,
             subItems: [
                 {
-                    title: qsTr("外观"),
+                    title: qsTr("外观 & 行为"),
                     icon: "ic_fluent_color_line_20_regular",
                     page: Qt.resolvedUrl("pages/settings/Appearance.qml")
                 },
                 {
-                    title: qsTr("通知和集成"),
+                    title: qsTr("通知 & 集成"),
                     icon: "ic_fluent_notification_20_regular",
                     page: Qt.resolvedUrl("pages/settings/Notification.qml")
+                },
+                {
+                    title: qsTr("高级"),
+                    icon: "ic_fluent_settings_20_regular",
+                    page: Qt.resolvedUrl("pages/settings/Advanced.qml")
                 }
             ]
         },

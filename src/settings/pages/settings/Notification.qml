@@ -5,7 +5,7 @@ import RinUI
 FluentPage {
     id: notificationSettingsPage
 
-    title: qsTr("通知和集成")
+    title: qsTr("通知 & 集成")
 
     ColumnLayout {
         Layout.fillHeight: true
