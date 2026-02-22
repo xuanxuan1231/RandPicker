@@ -1,9 +1,10 @@
 """
-浮窗后端：加载并控制 QML 窗口。
+浮窗后端
 """
 
-from loguru import logger
 from RinUI.core.launcher import RinUIWindow
+from loguru import logger
+
 from .config.dirs import *
 from .version_info import versionInfo
 
@@ -19,11 +20,13 @@ class RPWidget(RinUIWindow):
             logger.exception(f"Widget QML 文件不存在: {qml_path}")
             self.window = None
             return
-        super().__init__(qml_path)
+        super().__init__()
         self.engine.rootContext().setContextProperty("widget", self)
         self.engine.rootContext().setContextProperty("ChoiceMaker", getattr(self.parent, "choiceMaker", None))
         self.engine.rootContext().setContextProperty("VersionInfo", versionInfo)
+        self.engine.rootContext().setContextProperty("SettingsConfig", getattr(self.parent, "settingsConfig", None))
 
+        self.load(qml_path)
         self.window = getattr(self, "root_window", None)
 
     def show(self) -> None:

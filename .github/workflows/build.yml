@@ -11,7 +11,7 @@ jobs:
   build:
     name: Build on ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
           - os: windows-latest
@@ -54,6 +54,7 @@ jobs:
             --add-data assets:assets \
             --add-data src:src \
             --add-data LICENSE:LICENSE \
+            --add-data lib:lib \
             --version-file version.txt \
             --contents-directory . \
             --windowed
@@ -68,6 +69,7 @@ jobs:
             --add-data assets:assets \
             --add-data src:src \
             --add-data LICENSE:LICENSE \
+            --add-data lib:lib \
             --contents-directory . \
             --windowed
 
@@ -138,6 +140,7 @@ jobs:
             --add-data assets:assets \
             --add-data src:src \
             --add-data LICENSE:LICENSE \
+            --add-data lib:lib \
             --contents-directory . \
             --windowed
 

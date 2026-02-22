@@ -15,23 +15,25 @@ Frame {
         Layout.fillHeight: true
         Layout.alignment: Qt.AlignTop | Qt.AlignLeft
 
-        ColumnLayout{spacing: 6
+        ColumnLayout {
+            spacing: 6
 
-        Avatar {
-            size: 64
-            source: stuAvatar
-            text: stuName !== "" ? stuName : qsTr("无")
-            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+            Avatar {
+                size: 64
+                source: stuAvatar
+                text: stuName !== "" ? stuName : qsTr("无")
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+            }
+
+            Text {
+                text: stuName !== "" ? stuName : qsTr("未抽选")
+                font.bold: true
+                font.pixelSize: 32
+                horizontalAlignment: Text.AlignLeft
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+            }
         }
-
-        Text {
-            text: stuName !== "" ? stuName : qsTr("未抽选")
-            font.bold: true
-            font.pixelSize: 32
-            horizontalAlignment: Text.AlignLeft
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-        }}
 
         ColumnLayout {
             spacing: 4

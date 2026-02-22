@@ -10,6 +10,7 @@ dependencies = [
     "packaging>=26.0",
     "plyer>=2.1.0",
     "pyside6>=6.10.1",
+    "pythonnet>=3.0.5",
     "rinui>=0.1.9.1",
 ]
 
