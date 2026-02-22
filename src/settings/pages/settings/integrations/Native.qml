@@ -5,9 +5,9 @@ import RinUI
 import "../../../../components"
 
 Item {
-    anchors.fill: parent
+    implicitHeight: childrenRect.height
     ColumnLayout {
-        anchors.fill: parent
+        width: parent.width
 
         InfoBar {
             id: connectedInfo

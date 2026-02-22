@@ -20,7 +20,7 @@ QQW.Window {
     visible: true
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Widget | Qt.X11BypassWindowManagerHint
     color: "transparent"
-    title: qsTr("RandPicker Widget")
+    title: qsTr("RandPicker")
     opacity: positionApplied ? 1 : 0
 
     // 位置动画

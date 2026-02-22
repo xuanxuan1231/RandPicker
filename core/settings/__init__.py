@@ -28,7 +28,7 @@ class SettingsWindow(RinUIWindow):
 
         self.load(QML_DIR / "settings" / "main.qml")
 
-        self.main.themeManager.themeChanged.connect(lambda: self.onThemeChanged())
+        self.main.themeManager.themeChanged.connect(self.onThemeChanged)
         icon_path = str(
             ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
         self.setIcon(icon_path)

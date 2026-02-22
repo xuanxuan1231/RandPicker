@@ -5,7 +5,7 @@ import RinUI
 
 FluentWindow {
     id: root
-    title: qsTr("RandPicker 设置")
+    title: qsTr("RandPicker")
     width: 900
     height: 600
 
