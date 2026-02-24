@@ -51,8 +51,8 @@ class SettingsService(QObject):
 
     @Slot(result=str)
     def getDotNetDownloadLink(self):
-        match platform.system():
-            case "win32":
+        match platform.system().lower():
+            case "windows":
                 running_os = "windows"
             case "linux":
                 return "https://learn.microsoft.com/dotnet/core/install/linux?WT.mc_id=dotnet-35129-website"
