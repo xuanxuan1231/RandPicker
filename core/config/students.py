@@ -53,7 +53,7 @@ class StudentsConfig(QObject):
                 with open(self.file, "w", encoding="utf-8") as f:
                     json.dump(loaded, f, ensure_ascii=False, indent=4)
             except Exception as e:
-                logger.error(f"保存 默认 学生配置时出现错误: {e}")
+                logger.exception(f"保存 默认 学生配置时出现错误: {e}")
         # 初始化读写两份配置
         self.config_write = deepcopy(loaded)
         self.config_read = deepcopy(loaded)

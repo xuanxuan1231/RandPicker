@@ -17,7 +17,7 @@ class RPWidget(RinUIWindow):
 
         qml_path = QML_DIR / "widget.qml"
         if not qml_path.exists():
-            logger.exception(f"Widget QML 文件不存在: {qml_path}")
+            logger.error(f"Widget QML 文件不存在: {qml_path}")
             self.window = None
             return
         super().__init__()

@@ -18,7 +18,7 @@ class NativeNotifier:
             self._send(title, message)
             return True
         except Exception as e:
-            logger.error(f"Native 通知发送失败: {e}")
+            logger.exception(f"Native 通知发送失败: {e}")
             return False
 
     def send_test(self) -> None:
@@ -28,7 +28,7 @@ class NativeNotifier:
             message = "这是一条来自 RandPicker 的测试通知。"
             self._send(title, message)
         except Exception as e:
-            logger.error(f"Native 测试通知发送失败: {e}")
+            logger.exception(f"Native 测试通知发送失败: {e}")
 
     def _format_message(self, pick_type: str, stus: list) -> tuple[str, str]:
         """格式化通知消息"""
@@ -60,7 +60,7 @@ class NativeNotifier:
             )
             logger.success(f"Native 通知发送成功: {title}: {message}")
         except Exception as e:
-            logger.error(f"Native 通知发送失败: {e}")
+            logger.exception(f"Native 通知发送失败: {e}")
 
 
 nativeNotifier = NativeNotifier()

@@ -47,7 +47,7 @@ try:
     logger.success("成功加载 ClassIsland 集成所需库。")
 
 except Exception as e:
-    logger.error(f"加载 ClassIsland 集成库时发生错误: {e}")
+    logger.exception(f"加载 ClassIsland 集成库时发生错误: {e}")
     logger.warning("ClassIsland 集成在您的系统上不可用，即使您能在设置中启用它。")
 
 if CSHARP_AVAILABLE:
@@ -92,7 +92,7 @@ if CSHARP_AVAILABLE:
                 logger.info("ClassIsland 集成客户端已启动。")
                 self.is_running = True
             except Exception as e:
-                logger.error(f"启动 ClassIsland 集成客户端时出错: {e}")
+                logger.exception(f"启动 ClassIsland 集成客户端时出错: {e}")
                 self.is_running = False
 
         def stop(self):
@@ -289,7 +289,7 @@ if CSHARP_AVAILABLE:
                 rpService.Notify(result)
                 logger.success(f"ClassIsland 通知发送成功: {result.Title}: {result.Overlay}")
             except Exception as e:
-                logger.error(f"向 ClassIsland 发送通知时出错: {e}")
+                logger.exception(f"向 ClassIsland 发送通知时出错: {e}")
 
         def get_availability(self):
             return self.is_available
@@ -333,7 +333,7 @@ def initialize_ci_service():
     try:
         ciService.start()
     except Exception as e:
-        logger.error(f"初始化 ClassIsland 集成服务时出错: {e}")
+        logger.exception(f"初始化 ClassIsland 集成服务时出错: {e}")
 
 
 initialize_ci_service()

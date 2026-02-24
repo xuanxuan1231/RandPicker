@@ -80,7 +80,7 @@ class RPMain(QObject):
         try:
             from core.uiaccess import IsUIAccess, run_with_uiaccess, check_privileges
         except ImportError as e:
-            logger.error(f"导入 UIAccess 模块时发生错误: {e}，跳过启用 UIAccess。")
+            logger.exception(f"导入 UIAccess 模块时发生错误: {e}，跳过启用 UIAccess。")
             return
 
         if IsUIAccess():
@@ -109,4 +109,4 @@ class RPMain(QObject):
             else:
                 logger.error("UIAccess 进程启动失败，继续使用当前进程。")
         except Exception as e:
-            logger.error(f"启动 UIAccess 进程时发生异常: {e}，继续使用当前进程。")
+            logger.exception(f"启动 UIAccess 进程时发生异常: {e}，继续使用当前进程。")
