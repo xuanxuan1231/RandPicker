@@ -84,7 +84,7 @@ def run_with_uiaccess(command_line, app_name=None):
         return pid.value
     else:
         error_code = ctypes.get_last_error()
-        logger.exception(f"启动进程失败。错误代码: {error_code}")
+        logger.error(f"启动进程失败。错误代码: {error_code}")
         return None
 
 

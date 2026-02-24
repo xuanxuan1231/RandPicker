@@ -22,9 +22,9 @@ try:
     try:
         runtime_config = DLL_DIR / "randpicker.runtimeconfig.json"
         load("coreclr", runtime_config=str(runtime_config))
-    except Exception:
-        logger.exception("加载 .NET Core 失败，检查是否安装 .NET Core 运行时 8.0。")
-        raise Exception
+    except Exception as e:
+        logger.exception("加载 .NET Core 失败，检查是否安装 .NET Core 运行时 8。")
+        raise e
 
     import clr
 
