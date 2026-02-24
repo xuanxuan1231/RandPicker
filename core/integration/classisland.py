@@ -34,9 +34,13 @@ try:
 
     from System.Collections.Generic import List
 
+    # noinspection PyUnresolvedReferences
     from ClassIsland.Shared.IPC import IpcClient
+    # noinspection PyUnresolvedReferences
     from dotnetCampus.Ipc.CompilerServices.GeneratedProxies import GeneratedIpcFactory
+    # noinspection PyUnresolvedReferences
     from RP4CI.Interface.Models import NotifyResult, PickType, OverlayType, PickStudent, CustomProperty
+    # noinspection PyUnresolvedReferences
     from RP4CI.Interface.Services import IRPService
 
     CSHARP_AVAILABLE = True
