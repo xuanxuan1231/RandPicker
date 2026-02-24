@@ -306,12 +306,20 @@ else:
         def start(self):
             logger.warning("ClassIsland 集成不可用，无法启动客户端。")
 
-        def send_message(self, pick_type: str, stus: list) -> bool:
+        def send_message(self, *arg) -> bool:
             logger.warning("ClassIsland 集成不可用，无法发送通知。")
+            return False
+
+        def send_test(self):
+            logger.warning("ClassIsland 集成不可用，无法发送测试通知。")
             return False
 
         def get_availability(self):
             return self.is_available
+
+        def stop(self):
+            pass
+
 
 ciService = ClassIslandIntegration()
 
