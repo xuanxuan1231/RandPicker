@@ -13,3 +13,5 @@
  新一代智能选人工具
 </p>
 
+![Alt](https://repobeats.axiom.co/api/embed/2a0f2e2bb500c86cf313f3b0d54f527e1bdc7580.svg "Repobeats analytics image")
+
