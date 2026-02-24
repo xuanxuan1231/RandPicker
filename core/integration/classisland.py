@@ -211,7 +211,7 @@ if CSHARP_AVAILABLE:
         def send_test(self):
             if self.connectivity_status != "Connected":
                 logger.warning("ClassIsland 未连接或未运行，无法发送测试通知。")
-                return False
+                return
             try:
                 result = NotifyResult()
                 result.PickType = PickType.Test
@@ -220,7 +220,7 @@ if CSHARP_AVAILABLE:
                 self._send(result)
             except Exception as e:
                 logger.exception(f"发送 ClassIsland 测试通知时出错: {e}")
-                return False
+                return
 
         def _format_message(self, pick_type: str, stus: list) -> NotifyResult:
             """对通知进行前处理"""
