@@ -7,7 +7,9 @@
 # --*--
 
 import ctypes
+import os
 import sys
+import hashlib
 from ctypes import wintypes
 
 from loguru import logger
@@ -15,12 +17,22 @@ from loguru import logger
 from .config.dirs import DLL_DIR
 
 # 加载 uiaccess.dll
+
+CHECKSUM_EXPECTED = "9d9f3a1979f78b3c1884cf0b08895fc1"
+UIACCESS_DLL_PATH = DLL_DIR / "uiaccess.dll"
+
 # 确保 dll 文件在当前目录或系统路径中
-try:
-    uiaccess = ctypes.WinDLL(str(DLL_DIR / "uiaccess.dll"))
-except OSError as e:
-    logger.error(f"加载 uiaccess.dll 时出错: {e}")
-    sys.exit(1)
+if not os.path.exists(UIACCESS_DLL_PATH):
+    logger.error(f"未找到 uiaccess.dll 文件: {UIACCESS_DLL_PATH}")
+    raise FileNotFoundError(f"未找到 uiaccess.dll 文件: {UIACCESS_DLL_PATH}")
+
+with open(UIACCESS_DLL_PATH, "rb") as f:
+    checksum = hashlib.file_digest("md5", f).hexdigest()
+    if checksum != CHECKSUM_EXPECTED:
+        logger.error(f"uiaccess.dll 文件校验失败。期望: {CHECKSUM_EXPECTED}, 实际: {checksum}")
+        raise ValueError(f"uiaccess.dll 文件校验失败。期望: {CHECKSUM_EXPECTED}, 实际: {checksum}")
+
+uiaccess = ctypes.WinDLL(str(UIACCESS_DLL_PATH))
 
 # 定义 StartUIAccessProcess 函数原型
 # BOOL WINAPI StartUIAccessProcess(LPCWSTR appName, PCWSTR cmdLine, DWORD flag, PDWORD pPid, DWORD dwSession);
