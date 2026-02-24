@@ -6,6 +6,7 @@ import "../../../../components"
 
 Item {
     implicitHeight: childrenRect.height
+
     ColumnLayout {
         width: parent.width
 
@@ -30,7 +31,6 @@ Item {
                 }
             ]
         }
-
         InfoBar {
             id: connectedTip
 
@@ -39,21 +39,20 @@ Item {
             title: qsTr("看不到通知？")
             visible: connectedInfo.visible
         }
-
         SettingCard {
             Layout.fillWidth: true
-            title: qsTr("启用通知")
             description: qsTr("启用后，RandPicker 的通知将通过系统发送。")
+            title: qsTr("启用通知")
 
             Switch {
                 checked: SettingsConfig.getNotifyOptionStatus("native")
+
                 Component.onCompleted: {
-                    checked = SettingsConfig.getNotifyOptionStatus("native")
+                    checked = SettingsConfig.getNotifyOptionStatus("native");
                 }
                 onCheckedChanged: SettingsConfig.setNotifyOptionStatus("native", checked)
             }
         }
-
         SettingCard {
             id: notifyFormatSettingCard
 
@@ -64,7 +63,6 @@ Item {
                 icon: "ic_fluent_open_20_regular"
                 size: 20
             }
-
             TapHandler {
                 parent: notifyFormatSettingCard
 
@@ -72,9 +70,9 @@ Item {
             }
         }
     }
-
     NotifyFormatEditDialog {
         id: notifyFormatEditDialog
+
         notifyOption: "native"
     }
 }

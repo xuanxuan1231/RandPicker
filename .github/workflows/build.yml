@@ -163,7 +163,7 @@ jobs:
             dist/*.deb
 
   release:
-    needs: [build, build-linux]
+    needs: [ build, build-linux ]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:

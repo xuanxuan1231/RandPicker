@@ -5,10 +5,8 @@ import RinUI
 
 Dialog {
     id: root
-    property string notifyOption: ""
 
-    // Fixed dimensions to prevent dynamic height calculations
-    width: 700
+    property string notifyOption: ""
 
     // Insert snippet into a TextField at current cursor position (or replace selection)
     function insertAtCursor(field, snippet) {
@@ -33,9 +31,26 @@ Dialog {
         field.cursorPosition = start + snippet.length;
     }
 
-    title: qsTr("为 %1 编辑通知格式").arg(notifyOption)
     standardButtons: Dialog.Ok | Dialog.Cancel
+    title: qsTr("为 %1 编辑通知格式").arg(notifyOption)
 
+    // Fixed dimensions to prevent dynamic height calculations
+    width: 700
+
+    onAccepted: {
+        var newFormat = {
+            title: titleField.text,
+            body: contentField.text,
+            names: {
+                separator: separatorField.text
+            },
+            suffix: {
+                person: personSuffixField.text,
+                group: groupSuffixField.text
+            }
+        };
+        SettingsConfig.setNotifyFormat(notifyOption, newFormat);
+    }
     onOpened: {
         if (notifyOption) {
             var formatData = SettingsConfig.getNotifyFormat(notifyOption);
@@ -61,8 +76,8 @@ Dialog {
     }
 
     RowLayout {
-        Layout.fillWidth: true
         Layout.fillHeight: true
+        Layout.fillWidth: true
         spacing: 16
 
         // Left panel: Format settings
@@ -77,13 +92,13 @@ Dialog {
                 spacing: 6
 
                 Text {
-                    text: qsTr("标题格式")
                     font.bold: true
                     font.pixelSize: 14
+                    text: qsTr("标题格式")
                 }
-
                 TextField {
                     id: titleField
+
                     Layout.fillWidth: true
                     placeholderText: qsTr("标题格式")
                 }
@@ -95,13 +110,13 @@ Dialog {
                 spacing: 6
 
                 Text {
-                    text: qsTr("正文格式")
                     font.bold: true
                     font.pixelSize: 14
+                    text: qsTr("正文格式")
                 }
-
                 TextField {
                     id: contentField
+
                     Layout.fillWidth: true
                     placeholderText: qsTr("正文格式")
                 }
@@ -109,8 +124,8 @@ Dialog {
 
             // Property settings section - Fixed height, no expander
             Frame {
-                Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.fillWidth: true
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -118,33 +133,33 @@ Dialog {
                     spacing: 12
 
                     Text {
-                        text: qsTr("属性设置")
+                        Layout.alignment: Qt.AlignLeft
                         font.bold: true
                         font.pixelSize: 16
-                        Layout.alignment: Qt.AlignLeft
+                        text: qsTr("属性设置")
                     }
-
                     ScrollView {
-                        Layout.fillWidth: true
                         Layout.fillHeight: true
-                        contentWidth: availableWidth
+                        Layout.fillWidth: true
                         clip: true
+                        contentWidth: availableWidth
 
                         ColumnLayout {
-                            width: parent.width
                             spacing: 12
+                            width: parent.width
 
                             // Suffix settings card
                             Clip {
                                 Layout.fillWidth: true
-                                implicitHeight: suffixLayout.implicitHeight + 24
                                 backgroundColor: Theme.currentTheme.colors.controlColor
-                                radius: 6
                                 borderColor: Theme.currentTheme.colors.controlBorderColor
                                 borderWidth: 1
+                                implicitHeight: suffixLayout.implicitHeight + 24
+                                radius: 6
 
                                 ColumnLayout {
                                     id: suffixLayout
+
                                     anchors.fill: parent
                                     anchors.margins: 12
                                     spacing: 10
@@ -155,34 +170,31 @@ Dialog {
                                         spacing: 8
 
                                         Text {
-                                            text: "{suffix}"
+                                            color: Theme.currentTheme.colors.textColor
                                             font.bold: true
                                             font.pixelSize: 14
-                                            color: Theme.currentTheme.colors.textColor
+                                            text: "{suffix}"
                                         }
-
                                         Text {
-                                            text: qsTr("称呼后缀")
-                                            font.pixelSize: 12
                                             color: Theme.currentTheme.colors.textSecondaryColor
+                                            font.pixelSize: 12
+                                            text: qsTr("称呼后缀")
                                         }
-
                                         Item {
                                             Layout.fillWidth: true
                                         }
-
                                         Text {
-                                            text: "1" + personSuffixField.text + " / " + "1" + groupSuffixField.text
-                                            font.pixelSize: 12
                                             color: Theme.currentTheme.colors.textSecondaryColor
+                                            font.pixelSize: 12
+                                            text: "1" + personSuffixField.text + " / " + "1" + groupSuffixField.text
                                         }
                                     }
 
                                     // Divider
                                     Rectangle {
                                         Layout.fillWidth: true
-                                        height: 1
                                         color: Theme.currentTheme.colors.dividerColor
+                                        height: 1
                                     }
 
                                     // Person suffix
@@ -191,14 +203,14 @@ Dialog {
                                         spacing: 12
 
                                         Text {
-                                            text: qsTr("学生")
-                                            font.pixelSize: 13
-                                            color: Theme.currentTheme.colors.textColor
                                             Layout.preferredWidth: 50
+                                            color: Theme.currentTheme.colors.textColor
+                                            font.pixelSize: 13
+                                            text: qsTr("学生")
                                         }
-
                                         TextField {
                                             id: personSuffixField
+
                                             Layout.fillWidth: true
                                             placeholderText: qsTr("位同学")
                                         }
@@ -210,14 +222,14 @@ Dialog {
                                         spacing: 12
 
                                         Text {
-                                            text: qsTr("小组")
-                                            font.pixelSize: 13
-                                            color: Theme.currentTheme.colors.textColor
                                             Layout.preferredWidth: 50
+                                            color: Theme.currentTheme.colors.textColor
+                                            font.pixelSize: 13
+                                            text: qsTr("小组")
                                         }
-
                                         TextField {
                                             id: groupSuffixField
+
                                             Layout.fillWidth: true
                                             placeholderText: qsTr("个小组")
                                         }
@@ -228,14 +240,15 @@ Dialog {
                             // Names settings card
                             Clip {
                                 Layout.fillWidth: true
-                                implicitHeight: namesLayout.implicitHeight + 24
                                 backgroundColor: Theme.currentTheme.colors.controlColor
-                                radius: 6
                                 borderColor: Theme.currentTheme.colors.controlBorderColor
                                 borderWidth: 1
+                                implicitHeight: namesLayout.implicitHeight + 24
+                                radius: 6
 
                                 ColumnLayout {
                                     id: namesLayout
+
                                     anchors.fill: parent
                                     anchors.margins: 12
                                     spacing: 10
@@ -246,34 +259,31 @@ Dialog {
                                         spacing: 8
 
                                         Text {
-                                            text: "{names}"
+                                            color: Theme.currentTheme.colors.textColor
                                             font.bold: true
                                             font.pixelSize: 14
-                                            color: Theme.currentTheme.colors.textColor
+                                            text: "{names}"
                                         }
-
                                         Text {
-                                            text: qsTr("学生列表格式")
-                                            font.pixelSize: 12
                                             color: Theme.currentTheme.colors.textSecondaryColor
+                                            font.pixelSize: 12
+                                            text: qsTr("学生列表格式")
                                         }
-
                                         Item {
                                             Layout.fillWidth: true
                                         }
-
                                         Text {
-                                            text: qsTr("分隔符：%1").arg(separatorField.text)
-                                            font.pixelSize: 12
                                             color: Theme.currentTheme.colors.textSecondaryColor
+                                            font.pixelSize: 12
+                                            text: qsTr("分隔符：%1").arg(separatorField.text)
                                         }
                                     }
 
                                     // Divider
                                     Rectangle {
                                         Layout.fillWidth: true
-                                        height: 1
                                         color: Theme.currentTheme.colors.dividerColor
+                                        height: 1
                                     }
 
                                     // Separator setting
@@ -282,21 +292,20 @@ Dialog {
                                         spacing: 12
 
                                         Text {
-                                            text: qsTr("分隔符")
-                                            font.pixelSize: 13
-                                            color: Theme.currentTheme.colors.textColor
                                             Layout.preferredWidth: 50
+                                            color: Theme.currentTheme.colors.textColor
+                                            font.pixelSize: 13
+                                            text: qsTr("分隔符")
                                         }
-
                                         TextField {
                                             id: separatorField
+
                                             Layout.fillWidth: true
                                             placeholderText: qsTr(",")
                                         }
                                     }
                                 }
                             }
-
                             Item {
                                 Layout.fillHeight: true
                             }
@@ -321,28 +330,28 @@ Dialog {
                     spacing: 8
 
                     Text {
-                        text: qsTr("内容填充")
+                        Layout.alignment: Qt.AlignLeft
                         font.bold: true
                         font.pixelSize: 16
-                        Layout.alignment: Qt.AlignLeft
+                        text: qsTr("内容填充")
                     }
-
                     Item {
                         Layout.fillWidth: true
                     }
-
                     ComboBox {
                         id: typeComboBox
+
                         Layout.alignment: Qt.AlignRight
                         Layout.preferredWidth: 75
-                        model: [qsTr("标题"), qsTr("正文")]
                         currentIndex: 0
+                        model: [qsTr("标题"), qsTr("正文")]
                     }
                 }
-
                 ResultPropertyClip {
+                    Layout.fillWidth: true
                     propertyName: qsTr("数量")
                     propertyValue: "{count}"
+
                     onClicked: {
                         if (typeComboBox.currentIndex === 0) {
                             insertAtCursor(titleField, "{count}");
@@ -350,13 +359,12 @@ Dialog {
                             insertAtCursor(contentField, "{count}");
                         }
                     }
-                    Layout.fillWidth: true
                 }
-
                 ResultPropertyClip {
+                    Layout.fillWidth: true
                     propertyName: qsTr("后缀")
                     propertyValue: "{suffix}"
-                    Layout.fillWidth: true
+
                     onClicked: {
                         if (typeComboBox.currentIndex === 0) {
                             insertAtCursor(titleField, "{suffix}");
@@ -365,10 +373,11 @@ Dialog {
                         }
                     }
                 }
-
                 ResultPropertyClip {
+                    Layout.fillWidth: true
                     propertyName: qsTr("学生列表")
                     propertyValue: "{names}"
+
                     onClicked: {
                         if (typeComboBox.currentIndex === 0) {
                             insertAtCursor(titleField, "{names}");
@@ -376,28 +385,11 @@ Dialog {
                             insertAtCursor(contentField, "{names}");
                         }
                     }
-                    Layout.fillWidth: true
                 }
-
                 Item {
                     Layout.fillHeight: true
                 }
             }
         }
-    }
-
-    onAccepted: {
-        var newFormat = {
-            title: titleField.text,
-            body: contentField.text,
-            names: {
-                separator: separatorField.text
-            },
-            suffix: {
-                person: personSuffixField.text,
-                group: groupSuffixField.text
-            }
-        };
-        SettingsConfig.setNotifyFormat(notifyOption, newFormat)
     }
 }

@@ -324,7 +324,6 @@ else:
         def stop(self):
             pass
 
-
 ciService = ClassIslandIntegration()
 
 

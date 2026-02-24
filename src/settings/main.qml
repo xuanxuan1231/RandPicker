@@ -5,17 +5,13 @@ import RinUI
 
 FluentWindow {
     id: root
-    title: qsTr("RandPicker")
-    width: 900
-    height: 600
-
-    minimumWidth: 500
-    minimumHeight: 400
-    visible: true
 
     property string branch: VersionInfo.getBranchName()
     property string commitHash: VersionInfo.getCommitHash()
 
+    height: 600
+    minimumHeight: 400
+    minimumWidth: 500
     navigationItems: [
         {
             title: qsTr("主页"),
@@ -74,56 +70,61 @@ FluentWindow {
             position: Position.Bottom
         }
     ]
-
-    navigationView.navigationBar.minimumExpandWidth: width + 1
     navigationView.navigationBar.collapsed: true
+    navigationView.navigationBar.minimumExpandWidth: width + 1
+    title: qsTr("RandPicker")
+    visible: true
+    width: 900
 
     Item {
         id: watermark
-        z: 999
-        anchors {
-            left: parent.left
-            bottom: parent.bottom
-            leftMargin: 12
-            bottomMargin: 12
-        }
-        width: watermarkColumn.implicitWidth
-        height: watermarkColumn.implicitHeight
-        enabled: false // ensure it never intercepts input
-        visible: VersionInfo.getAvailability()
 
+        enabled: false // ensure it never intercepts input
+        height: watermarkColumn.implicitHeight
+        visible: VersionInfo.getAvailability()
+        width: watermarkColumn.implicitWidth
+        z: 999
+
+        anchors {
+            bottom: parent.bottom
+            bottomMargin: 12
+            left: parent.left
+            leftMargin: 12
+        }
         Column {
             id: watermarkColumn
+
             spacing: 2
+
             Text {
-                text: qsTr("开发预览")
                 color: Colors.get("textColor")
-                font.pixelSize: 14
                 font.bold: true
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignLeft
                 lineHeight: 1.1
                 lineHeightMode: Text.ProportionalHeight
+                text: qsTr("开发预览")
                 wrapMode: Text.Wrap
-                horizontalAlignment: Text.AlignLeft
             }
             Text {
-                text: "RandPicker 2.0 (Codename: JellyCat)"
                 color: Colors.get("textColor")
+                font.pixelSize: 11
+                horizontalAlignment: Text.AlignLeft
+                lineHeight: 1.1
+                lineHeightMode: Text.ProportionalHeight
                 opacity: 0.75
-                font.pixelSize: 11
-                lineHeight: 1.1
-                lineHeightMode: Text.ProportionalHeight
+                text: "RandPicker 2.0 (Codename: JellyCat)"
                 wrapMode: Text.Wrap
-                horizontalAlignment: Text.AlignLeft
             }
             Text {
-                text: qsTr("您正位于 %1 分支的 %2 提交。").arg(branch).arg(commitHash)
                 color: Colors.get("textColor")
-                opacity: 0.65
                 font.pixelSize: 11
+                horizontalAlignment: Text.AlignLeft
                 lineHeight: 1.1
                 lineHeightMode: Text.ProportionalHeight
+                opacity: 0.65
+                text: qsTr("您正位于 %1 分支的 %2 提交。").arg(branch).arg(commitHash)
                 wrapMode: Text.Wrap
-                horizontalAlignment: Text.AlignLeft
             }
         }
     }

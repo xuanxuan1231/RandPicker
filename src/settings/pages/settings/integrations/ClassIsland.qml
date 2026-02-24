@@ -139,7 +139,6 @@ Item {
                 onCheckedChanged: SettingsConfig.setNotifyOptionStatus("classisland", checked)
             }
         }
-
         SettingCard {
             id: notifyFormatSettingCard
 
@@ -151,46 +150,43 @@ Item {
                 icon: "ic_fluent_open_20_regular"
                 size: 20
             }
-
             TapHandler {
                 parent: notifyFormatSettingCard
 
                 onTapped: notifyFormatEditDialog.open()
             }
         }
-
         Text {
-            text: qsTr("标题遮罩 (Mask) 设置")
             Layout.alignment: Qt.AlignLeft
             Layout.fillWidth: true
-            font.pixelSize: 18
             font.bold: true
+            font.pixelSize: 18
+            text: qsTr("标题遮罩 (Mask) 设置")
         }
-
         SettingCard {
             Layout.fillWidth: true
             description: qsTr("设置 ClassIsland 通知遮罩的显示时长。0 为默认。")
             title: qsTr("显示时长")
 
             ToolButton {
+                color: "#0078d4"
                 flat: true
                 icon.name: "ic_fluent_arrow_hook_up_left_20_regular"
-                color: "#0078d4"
                 visible: ciMaskDurationSpinBox.value !== 0
+
+                onClicked: {
+                    ciMaskDurationSpinBox.value = 0;
+                }
 
                 ToolTip {
                     delay: 500
                     text: qsTr("重置为默认值")
                     visible: parent.hovered
                 }
-
-                onClicked: {
-                    ciMaskDurationSpinBox.value = 0;
-                }
             }
-
             SpinBox {
                 id: ciMaskDurationSpinBox
+
                 from: 0
                 to: 60
                 value: SettingsConfig.getCiMaskDuration()
@@ -204,41 +200,44 @@ Item {
                 text: qsTr("秒")
             }
         }
-
         Text {
-            text: qsTr("正文 (Overlay) 设置")
             Layout.alignment: Qt.AlignLeft
             Layout.fillWidth: true
-            font.pixelSize: 18
             font.bold: true
+            font.pixelSize: 18
+            text: qsTr("正文 (Overlay) 设置")
         }
-
         SettingCard {
             Layout.fillWidth: true
             description: qsTr("设置 ClassIsland 通知正文的显示方式。")
             title: qsTr("显示方式")
 
             ToolButton {
+                color: "#0078d4"
                 flat: true
                 icon.name: "ic_fluent_arrow_hook_up_left_20_regular"
-                color: "#0078d4"
                 visible: ciOverlayTypeComboBox.currentIndex !== 0
+
+                onClicked: {
+                    ciOverlayTypeComboBox.currentIndex = 0;
+                }
 
                 ToolTip {
                     delay: 500
                     text: qsTr("重置为默认值")
                     visible: parent.hovered
                 }
-
-                onClicked: {
-                    ciOverlayTypeComboBox.currentIndex = 0;
-                }
             }
-
             ComboBox {
                 id: ciOverlayTypeComboBox
+
+                currentIndex: SettingsConfig.getCiOverlayTypeIndex()
+                // 强制设置 text 为文字属性
+                textRole: "text"
+
                 model: ListModel {
                     id: overlayTypeModel
+
                     ListElement {
                         text: qsTr("简单")
                         value: "simple"
@@ -252,20 +251,13 @@ Item {
                         value: "auto"
                     }
                 }
-                // 强制设置 text 为文字属性
-                textRole: "text"
-
-
-                currentIndex: SettingsConfig.getCiOverlayTypeIndex()
 
                 Component.onCompleted: {
                     currentIndex = SettingsConfig.getCiOverlayTypeIndex();
                 }
-
                 onCurrentIndexChanged: {
                     SettingsConfig.setCiOverlayType(overlayTypeModel.get(currentIndex).value);
                 }
-
             }
         }
         SettingCard {
@@ -274,24 +266,24 @@ Item {
             title: qsTr("显示时长")
 
             ToolButton {
+                color: "#0078d4"
                 flat: true
                 icon.name: "ic_fluent_arrow_hook_up_left_20_regular"
-                color: "#0078d4"
                 visible: ciOverlayDurationSpinBox.value !== 0
+
+                onClicked: {
+                    ciOverlayDurationSpinBox.value = 0;
+                }
 
                 ToolTip {
                     delay: 500
                     text: qsTr("重置为默认值")
                     visible: parent.hovered
                 }
-
-                onClicked: {
-                    ciOverlayDurationSpinBox.value = 0;
-                }
             }
-
             SpinBox {
                 id: ciOverlayDurationSpinBox
+
                 from: 0
                 to: 60
                 value: SettingsConfig.getCiOverlayDuration()
@@ -307,8 +299,6 @@ Item {
         }
     }
     Connections {
-        target: SettingsService
-
         function onConnectivityUpdated(method, connectivity) {
             if (method === "classisland") {
                 notAvailableInfo.visible = connectivity === "NotAvailable";
@@ -317,10 +307,12 @@ Item {
                 notRunningInfo.visible = connectivity === "NotRunning";
             }
         }
-    }
 
+        target: SettingsService
+    }
     NotifyFormatEditDialog {
         id: notifyFormatEditDialog
+
         notifyOption: "classisland"
     }
 }

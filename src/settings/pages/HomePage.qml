@@ -63,25 +63,26 @@ FluentPage {
 
             RowLayout {
                 ToolButton {
+                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                     icon.name: "ic_fluent_arrow_up_20_regular"
+
                     onClicked: {
                         if (parseInt(stuCount.text) < 99) {
                             stuCount.text = (parseInt(stuCount.text) + 1).toString();
                         }
                     }
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                 }
                 Text {
                     id: stuCount
+
                     Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-
-                    font.pixelSize: 36
                     font.bold: true
+                    font.pixelSize: 36
+                    horizontalAlignment: Text.AlignHCenter
                     text: "1"
-
                 }
                 ToolButton {
+                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                     icon.name: "ic_fluent_arrow_down_20_regular"
 
                     onClicked: {
@@ -89,8 +90,6 @@ FluentPage {
                             stuCount.text = (parseInt(stuCount.text) - 1).toString();
                         }
                     }
-
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                 }
             }
             Button {

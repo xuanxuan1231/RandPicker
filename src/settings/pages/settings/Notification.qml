@@ -13,6 +13,7 @@ FluentPage {
 
         SettingCard {
             id: settingCard
+
             Layout.fillWidth: true
             description: qsTr("如果自定义的通知方案都不可用，将回退到系统原生通知方案。")
             title: qsTr("启用备选通知方案")
@@ -75,29 +76,32 @@ FluentPage {
         }
         Flickable {
             Layout.fillWidth: true
+            Layout.maximumHeight: Layout.preferredHeight
             // 精确计算剩余高度，避免触发 FluentPage 外层滚动
             // FluentPage 内部: container.topMargin=18, spacing=14, bottomPadding=24
-            Layout.preferredHeight: notificationSettingsPage.height
-                - (notificationSettingsPage.header ? notificationSettingsPage.header.height : 0)
-                - notificationSettingsPage.bottomPadding
-                - 18   // container topMargin
-                - settingCard.height - 14  // settingCard + spacing
-                - segmented.height - 14    // segmented + spacing
-            Layout.maximumHeight: Layout.preferredHeight
+            Layout.preferredHeight: notificationSettingsPage.height - (notificationSettingsPage.header ? notificationSettingsPage.header.height : 0) - notificationSettingsPage.bottomPadding - 18   // container topMargin
+            - settingCard.height - 14  // settingCard + spacing
+            - segmented.height - 14    // segmented + spacing
+            boundsBehavior: Flickable.StopAtBounds
             clip: true
             contentHeight: loader.item ? loader.item.implicitHeight : 0
-            boundsBehavior: Flickable.StopAtBounds
+
+            ScrollBar.vertical: ScrollBar {
+            }
 
             Loader {
                 id: loader
-                width: parent.width
+
                 source: rep.model[segmented.currentIndex].page
+                width: parent.width
+
                 onLoaded: {
-                    if (item) item.width = Qt.binding(function() { return loader.width; });
+                    if (item)
+                        item.width = Qt.binding(function () {
+                            return loader.width;
+                        });
                 }
             }
-
-            ScrollBar.vertical: ScrollBar {}
         }
     }
 }

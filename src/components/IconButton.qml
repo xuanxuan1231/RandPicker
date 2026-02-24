@@ -11,21 +11,20 @@ Button {
     Layout.preferredHeight: 50
 
     contentItem: Column {
-        spacing: 2
         anchors.centerIn: parent
+        spacing: 2
 
         Icon {
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: Colors.get("textColor")
             name: root.iconName
             size: 20
-            anchors.horizontalCenter: parent.horizontalCenter
-            color: Colors.get("textColor")
         }
-
         Text {
-            text: root.text
+            anchors.horizontalCenter: parent.horizontalCenter
             color: Colors.get("textColor")
             font.pixelSize: 12
-            anchors.horizontalCenter: parent.horizontalCenter
+            text: root.text
         }
     }
 }

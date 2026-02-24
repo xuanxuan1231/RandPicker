@@ -3,8 +3,8 @@ import sys
 from PySide6.QtWidgets import QApplication
 from loguru import logger
 
-from core.main import RPMain
 from core.config.dirs import ROOT
+from core.main import RPMain
 
 logger.add(str(ROOT / "logs/RandPicker-{time:YYYY-MM-DD}.log"), rotation="00:00")
 

@@ -9,14 +9,13 @@ Clip {
     property string propertyName: ""
     property string propertyValue: ""
 
-    width: parent.width
-    implicitHeight: 62
-    height: implicitHeight
-
     backgroundColor: Theme.currentTheme.colors.controlColor
-    radius: 8
     borderColor: Theme.currentTheme.colors.controlBorderColor
     borderWidth: 1
+    height: implicitHeight
+    implicitHeight: 62
+    radius: 8
+    width: parent.width
 
     RowLayout {
         anchors.fill: parent
@@ -24,24 +23,25 @@ Clip {
         spacing: 8
 
         ColumnLayout {
-            Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+            Layout.fillWidth: true
             spacing: 3
+
             Text {
-                text: propertyName
-                font.bold: true
                 color: Theme.currentTheme.colors.textColor
+                font.bold: true
                 font.pixelSize: 15
+                text: propertyName
             }
             Text {
-                text: propertyValue
                 color: Theme.currentTheme.colors.textSecondaryColor
                 font.pixelSize: 12
+                text: propertyValue
             }
         }
         Icon {
-            icon: "ic_fluent_add_20_regular"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
+            icon: "ic_fluent_add_20_regular"
         }
     }
 }

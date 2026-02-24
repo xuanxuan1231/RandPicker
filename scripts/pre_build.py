@@ -10,6 +10,7 @@ from core.version_info import VERSION
 APP_NAME = "RandPicker"
 APP_VERSION = str(VERSION)
 
+
 def _version_numbers() -> tuple[int, int, int, int]:
     try:
         if hasattr(VERSION, 'release'):
@@ -22,6 +23,7 @@ def _version_numbers() -> tuple[int, int, int, int]:
     while len(parts) < 4:
         parts.append(0)
     return tuple(parts[:4])
+
 
 def _write_win_version_file(path: Path) -> Path:
     nums = _version_numbers()
@@ -59,6 +61,7 @@ def _write_win_version_file(path: Path) -> Path:
 """
     path.write_text(content, encoding="utf-8")
     return path
+
 
 if __name__ == "__main__":
     if sys.platform == "win32":

@@ -7,9 +7,9 @@
 # --*--
 
 import ctypes
+import hashlib
 import os
 import sys
-import hashlib
 from ctypes import wintypes
 
 from loguru import logger

@@ -1,8 +1,8 @@
 import os
 import shutil
-from pathlib import Path
-import sys
 import subprocess
+import sys
+from pathlib import Path
 
 import PyInstaller.__main__
 
@@ -104,6 +104,7 @@ def _version_numbers() -> tuple[int, int, int, int]:
     while len(parts) < 4:
         parts.append(0)
     return tuple(parts[:4])
+
 
 def _write_win_version_file(path: Path) -> Path:
     nums = _version_numbers()
