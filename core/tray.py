@@ -2,11 +2,9 @@
 系统托盘菜单。
 """
 
-import subprocess
-import sys
 from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QMenu, QSystemTrayIcon
 from loguru import logger
 
 from .config.dirs import ASSETS_DIR
@@ -29,7 +27,8 @@ class RPTray(QObject):
             logger.warning("系统托盘不可用，跳过托盘菜单。")
             return
 
-        icon_path = str(ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
+        icon_path = str(
+            ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
         self.tray = QSystemTrayIcon(QIcon(icon_path), self)
         self.tray.setToolTip("RandPicker")
 
@@ -68,23 +67,6 @@ class RPTray(QObject):
         text = "隐藏窗口" if widget.window.isVisible() else "显示窗口"
         self.toggle_action.setText(text)
 
-    def quit_app(self):
-        widget = getattr(self.main, "widget", None)
-        if widget:
-            widget.close()
-        QApplication.quit()
-
-    def restart_app(self):
-        widget = getattr(self.main, "widget", None)
-        if widget:
-            widget.close()
-        try:
-            subprocess.Popen([sys.executable, *sys.argv])
-        except Exception as exc:
-            logger.exception("重启失败：{}", exc)
-            return
-        QApplication.quit()
-
     def open_settings(self):
         handler = getattr(self.main, "open_settings", None)
         if callable(handler):
@@ -92,6 +74,20 @@ class RPTray(QObject):
             logger.info("打开设置")
             return
         logger.error("打开设置失败")
+
+    def restart_app(self):
+        handler = getattr(self.main, "restart", None)
+        if callable(handler):
+            handler()
+            return
+        logger.error("重新启动失败")
+
+    def quit_app(self):
+        handler = getattr(self.main, "quit", None)
+        if callable(handler):
+            handler()
+            return
+        logger.error("退出应用失败")
 
     def onThemeChanged(self, theme):
         if not self.tray:

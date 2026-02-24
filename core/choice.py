@@ -1,11 +1,12 @@
 """
 随机选择
 """
+from random import choices
 from typing import Any
 
-from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtCore import QObject, Slot
 from loguru import logger
-from random import choices
+
 
 class ChoiceMaker(QObject):
     def __init__(self, parent):
@@ -32,9 +33,10 @@ class ChoiceMaker(QObject):
         logger.info(f"选择结果: {result}")
         if notify:
             self.notificationManager.send(
-                option="native",
-                title=f"抽选了 {number} 名学生",
-                message=", ".join([self.studentsConfig.get_single_student(s).get("name", "未知") for s in result])
+                # title=f"抽选了 {number} 名学生",
+                pick_type="person",
+                # message=", ".join([self.studentsConfig.get_single_student(s).get("name", "未知") for s in result])
+                stus=[self.studentsConfig.get_single_student(s) for s in result]
             )
             return None
         else:

@@ -2,13 +2,15 @@
 管理学生数据
 """
 
+import json
+from copy import deepcopy
+from pathlib import Path
+from uuid import uuid4
+
 from PySide6.QtCore import QObject, Slot
 from loguru import logger
+
 from .dirs import CONFIG_DIR
-import json
-from pathlib import Path
-from copy import deepcopy
-from uuid import uuid4
 
 DEFAULT_CONFIG = {
     "students": [
@@ -51,7 +53,7 @@ class StudentsConfig(QObject):
                 with open(self.file, "w", encoding="utf-8") as f:
                     json.dump(loaded, f, ensure_ascii=False, indent=4)
             except Exception as e:
-                logger.error(f"保存 默认 学生配置时出现错误: {e}")
+                logger.exception(f"保存 默认 学生配置时出现错误: {e}")
         # 初始化读写两份配置
         self.config_write = deepcopy(loaded)
         self.config_read = deepcopy(loaded)
@@ -65,7 +67,7 @@ class StudentsConfig(QObject):
             with open(self.file, "w", encoding="utf-8") as f:
                 json.dump(self.config_write, f, ensure_ascii=False, indent=4)
         except Exception as e:
-            logger.error(f"保存 学生 GUID 时出现错误: {e}")
+            logger.exception(f"保存 学生 GUID 时出现错误: {e}")
 
     def _ensure_student_ids(self, cfg: dict) -> None:
         """确保学生都有唯一 GUID。就地修改。"""
@@ -99,7 +101,7 @@ class StudentsConfig(QObject):
             self.config_read = deepcopy(self.config_write)
             logger.success("学生配置已保存，并刷新读取快照。")
         except Exception as e:
-            logger.error(f"保存 设置 配置时出现错误: {e}")
+            logger.exception(f"保存 设置 配置时出现错误: {e}")
 
     @Slot(result=list)
     def get_students(self) -> list:
