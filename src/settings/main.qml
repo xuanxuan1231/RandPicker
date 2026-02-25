@@ -6,8 +6,8 @@ import RinUI
 FluentWindow {
     id: root
 
-    property string branch: VersionInfo.getBranchName()
-    property string commitHash: VersionInfo.getCommitHash()
+    property string branch: VersionInfo ? VersionInfo.getBranchName() : ""
+    property string commitHash: VersionInfo ? VersionInfo.getCommitHash() : ""
 
     height: 600
     minimumHeight: 400
@@ -81,7 +81,7 @@ FluentWindow {
 
         enabled: false // ensure it never intercepts input
         height: watermarkColumn.implicitHeight
-        visible: VersionInfo.getAvailability()
+        visible: VersionInfo ? VersionInfo.getAvailability() : false
         width: watermarkColumn.implicitWidth
         z: 999
 

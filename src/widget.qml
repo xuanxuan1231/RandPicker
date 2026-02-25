@@ -277,7 +277,7 @@ QQW.Window {
 
         enabled: false
         height: watermarkColumn.implicitHeight
-        visible: VersionInfo.getAvailability()
+        visible: VersionInfo ? VersionInfo.getAvailability() : false
         width: watermarkColumn.implicitWidth
         z: 114514
 
