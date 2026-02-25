@@ -204,11 +204,15 @@ class StudentsConfig(QObject):
         avatar_path = student.get("avatar", "")
         if avatar_path == "":
             return ""
-        avatar_file = Path(avatar_path)
-        if not avatar_file.exists():
-            logger.warning(f"学生 GUID {guid} 的头像文件不存在: {avatar_path}")
+        try:
+            avatar_file = Path(avatar_path)
+            if not avatar_file.exists():
+                logger.warning(f"学生 GUID {guid} 的头像文件不存在: {avatar_path}")
+                return ""
+            return str(avatar_file.resolve())
+        except (OSError, ValueError) as e:
+            logger.warning(f"学生 GUID {guid} 的头像路径无效或无权访问: {avatar_path}, 错误: {e}")
             return ""
-        return str(avatar_file.resolve())
 
     @Slot(str, result=list)
     def getProperty(self, guid: str) -> list:
@@ -225,11 +229,23 @@ class StudentsConfig(QObject):
         if idx == -1:
             logger.error(f"更新失败：未找到 GUID {guid}")
             return
+        # 验证头像路径安全性
+        safe_avatar = ""
+        if avatar:
+            try:
+                # 允许绝对路径（跨平台：Unix / 开头，Windows 盘符如 C:/ 开头）
+                is_abs = avatar.startswith("/") or (len(avatar) >= 3 and avatar[1] == ":" and avatar[2] in ("/", "\\"))
+                if is_abs:
+                    safe_avatar = avatar
+                else:
+                    logger.warning(f"头像路径不是绝对路径，已忽略: {avatar}")
+            except (OSError, ValueError) as e:
+                logger.warning(f"头像路径无效，已忽略: {avatar}, 错误: {e}")
         stu = self.config_write["students"][idx]
         stu["name"] = name
         stu["weight"] = weight
         stu["enabled"] = enabled
-        stu["avatar"] = avatar
+        stu["avatar"] = safe_avatar
         logger.success(f"缓冲区已更新学生 {name}（GUID: {guid}）")
 
     @Slot(str, list)

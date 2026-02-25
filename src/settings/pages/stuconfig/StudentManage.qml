@@ -12,6 +12,10 @@ FluentPage {
     // 学生列表模型（从写缓冲读取）
     property var studentsModel: []
 
+    // FluentPage 内部布局常量（用于精确计算剩余高度）
+    readonly property int pageContainerTopMargin: 18
+    readonly property int pageContainerSpacing: 14
+
     function refreshStudents() {
         studentsModel = StudentsConfig.get_write_students();
     }
@@ -23,6 +27,17 @@ FluentPage {
         return text.length > maxLen ? text.substring(0, maxLen) + "…" : text;
     }
 
+    // 跨平台本地文件路径转 URL
+    function localFileUrl(path) {
+        if (!path)
+            return "";
+        // Linux/macOS: /home/... → file:///home/...
+        // Windows:     C:/...    → file:///C:/...
+        if (path.charAt(0) === "/")
+            return "file://" + path;
+        return "file:///" + path;
+    }
+
     title: qsTr("学生信息管理")
 
     // 禁用 FluentPage 内部 Flickable 滚动，让表格自行处理
@@ -31,7 +46,7 @@ FluentPage {
         // 遍历子项找到 Flickable 并禁用其交互式滚动
         for (var i = 0; i < studentManagePage.children.length; i++) {
             var child = studentManagePage.children[i];
-            if (child instanceof Flickable) {
+            if (child.hasOwnProperty("flickableDirection") && child.hasOwnProperty("interactive")) {
                 child.interactive = false;
                 child.ScrollBar.vertical.policy = ScrollBar.AlwaysOff;
                 break;
@@ -86,13 +101,12 @@ FluentPage {
     // ── 表格区域 ──
     Frame {
         // 精确计算剩余高度，使表格填满页面而非触发外层滚动
-        // FluentPage 内部: header.height, container topMargin=18, spacing=14, bottomPadding=24
         Layout.fillWidth: true
         Layout.preferredHeight: studentManagePage.height
             - (studentManagePage.header ? studentManagePage.header.height : 0)
             - studentManagePage.bottomPadding
-            - 18   // container topMargin
-            - toolbarRow.height - 14  // toolbar + spacing
+            - pageContainerTopMargin
+            - toolbarRow.height - pageContainerSpacing
         Layout.minimumHeight: 200
         hoverable: false
 
@@ -251,7 +265,7 @@ FluentPage {
                                 anchors.verticalCenter: parent.verticalCenter
                                 fillMode: Image.PreserveAspectFit
                                 height: 28
-                                source: modelData.avatar ? "file:///" + modelData.avatar : ""
+                                source: modelData.avatar ? localFileUrl(modelData.avatar) : ""
                                 visible: modelData.avatar && status === Image.Ready
                                 width: 28
                             }
@@ -303,8 +317,8 @@ FluentPage {
 
                                 onClicked: {
                                     studentManagePage.editingGuid = modelData.id;
-                                    editDialog.loadStudent(modelData.id);
-                                    editDialog.open();
+                                    if (editDialog.loadStudent(modelData.id))
+                                        editDialog.open();
                                 }
                             }
                             ToolButton {
@@ -399,7 +413,14 @@ FluentPage {
             var stu = StudentsConfig.get_write_student(guid);
             if (!stu || !stu.id) {
                 console.warn("loadStudent: 找不到 GUID", guid);
-                return;
+                studentManagePage.Window.window.floatLayer.createInfoBar({
+                    title: qsTr("加载失败"),
+                    text: qsTr("无法加载该学生的数据，请重试。"),
+                    severity: Severity.Error,
+                    timeout: 3000,
+                    position: Position.Top
+                });
+                return false;
             }
             editNameField.text = stu.name || "";
             editWeightSlider.value = stu.weight !== undefined ? stu.weight : 1;
@@ -414,6 +435,7 @@ FluentPage {
                     value: props[i].value || ""
                 });
             editDialog.editProperties = copy;
+            return true;
         }
 
         modal: true
@@ -528,7 +550,7 @@ FluentPage {
                         Layout.preferredHeight: 28
                         Layout.preferredWidth: 28
                         fillMode: Image.PreserveAspectFit
-                        source: editAvatarField.text ? "file:///" + editAvatarField.text : ""
+                        source: editAvatarField.text ? localFileUrl(editAvatarField.text) : ""
                         visible: editAvatarField.text && status === Image.Ready
                     }
                     Text {
@@ -572,7 +594,7 @@ FluentPage {
                         Layout.maximumHeight: 96
                         Layout.maximumWidth: 96
                         fillMode: Image.PreserveAspectFit
-                        source: editAvatarField.text ? "file:///" + editAvatarField.text : ""
+                        source: editAvatarField.text ? localFileUrl(editAvatarField.text) : ""
                         visible: status === Image.Ready
                     }
                 }
@@ -620,7 +642,7 @@ FluentPage {
                                 placeholderText: qsTr("属性名")
                                 text: modelData.name
 
-                                onTextChanged: {
+                                onEditingFinished: {
                                     if (index >= 0 && index < editDialog.editProperties.length && editDialog.editProperties[index].name !== text) {
                                         var arr = editDialog.editProperties.slice();
                                         arr[index] = {
@@ -636,7 +658,7 @@ FluentPage {
                                 placeholderText: qsTr("属性值")
                                 text: modelData.value
 
-                                onTextChanged: {
+                                onEditingFinished: {
                                     if (index >= 0 && index < editDialog.editProperties.length && editDialog.editProperties[index].value !== text) {
                                         var arr = editDialog.editProperties.slice();
                                         arr[index] = {
