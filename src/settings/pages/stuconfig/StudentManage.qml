@@ -60,6 +60,19 @@ FluentPage {
             Layout.fillWidth: true
         }
         Button {
+            icon.name: "ic_fluent_arrow_sync_20_regular"
+            text: qsTr("刷新")
+
+            onClicked: {
+                if (StudentsConfig.has_unsaved_changes()) {
+                    discardConfirmDialog.open();
+                } else {
+                    StudentsConfig.reload_config();
+                    refreshStudents();
+                }
+            }
+        }
+        Button {
             icon.name: "ic_fluent_save_20_regular"
             text: qsTr("保存")
 
@@ -228,12 +241,33 @@ FluentPage {
                         }
 
                         // 头像
-                        Text {
+                        Item {
                             Layout.preferredWidth: 120
-                            color: modelData.avatar ? Theme.currentTheme.colors.textColor : Theme.currentTheme.colors.textSecondaryColor
-                            elide: Text.ElideMiddle
-                            font.pixelSize: 12
-                            text: modelData.avatar ? ellipsis(modelData.avatar, 18) : qsTr("未设置")
+                            implicitHeight: Math.max(avatarImg.visible ? avatarImg.height : 0, avatarText.implicitHeight)
+
+                            Image {
+                                id: avatarImg
+
+                                anchors.verticalCenter: parent.verticalCenter
+                                fillMode: Image.PreserveAspectFit
+                                height: 28
+                                source: modelData.avatar ? "file:///" + modelData.avatar : ""
+                                visible: modelData.avatar && status === Image.Ready
+                                width: 28
+                            }
+                            Text {
+                                id: avatarText
+
+                                anchors.left: avatarImg.visible ? avatarImg.right : parent.left
+                                anchors.leftMargin: avatarImg.visible ? 6 : 0
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: modelData.avatar ? Theme.currentTheme.colors.textColor : Theme.currentTheme.colors.textSecondaryColor
+                                elide: Text.ElideMiddle
+                                font.pixelSize: 12
+                                text: modelData.avatar ? ellipsis(modelData.avatar, 12) : qsTr("未设置")
+                                visible: !avatarImg.visible || modelData.avatar
+                            }
                         }
 
                         // 附加属性
@@ -305,6 +339,29 @@ FluentPage {
         }
     }
 
+    // ── 丢弃更改确认 Dialog ──
+    Dialog {
+        id: discardConfirmDialog
+
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        title: qsTr("丢弃更改")
+        width: 400
+
+        onAccepted: {
+            StudentsConfig.reload_config();
+            studentManagePage.refreshStudents();
+        }
+
+        Text {
+            Layout.fillWidth: true
+            color: Theme.currentTheme.colors.textColor
+            font.pixelSize: 14
+            text: qsTr("您有未保存的更改。刷新将丢弃所有更改并从磁盘重新加载，确定继续吗？")
+            wrapMode: Text.Wrap
+        }
+    }
+
     // ── 删除确认 Dialog ──
     Dialog {
         id: deleteConfirmDialog
@@ -312,6 +369,7 @@ FluentPage {
         property string deletingGuid: ""
         property string deletingName: ""
 
+        modal: true
         standardButtons: Dialog.Ok | Dialog.Cancel
         title: qsTr("确认删除")
         width: 400
@@ -358,6 +416,7 @@ FluentPage {
             editDialog.editProperties = copy;
         }
 
+        modal: true
         standardButtons: Dialog.Ok | Dialog.Cancel
         title: qsTr("编辑学生信息")
         width: 520
@@ -369,8 +428,19 @@ FluentPage {
             studentManagePage.refreshStudents();
         }
 
-        ColumnLayout {
+        Flickable {
             Layout.fillWidth: true
+            Layout.preferredHeight: Math.min(dialogContent.implicitHeight, 480)
+            ScrollBar.vertical: ScrollBar { }
+            boundsBehavior: Flickable.StopAtBounds
+            clip: true
+            contentHeight: dialogContent.implicitHeight
+            contentWidth: width
+
+        ColumnLayout {
+            id: dialogContent
+
+            width: parent.width
             spacing: 4
 
             // GUID（只读）
@@ -454,6 +524,13 @@ FluentPage {
                 action: RowLayout {
                     spacing: 8
 
+                    Image {
+                        Layout.preferredHeight: 28
+                        Layout.preferredWidth: 28
+                        fillMode: Image.PreserveAspectFit
+                        source: editAvatarField.text ? "file:///" + editAvatarField.text : ""
+                        visible: editAvatarField.text && status === Image.Ready
+                    }
                     Text {
                         Layout.maximumWidth: 160
                         color: Theme.currentTheme.colors.textSecondaryColor
@@ -483,6 +560,20 @@ FluentPage {
 
                             onClicked: avatarFileDialog.open()
                         }
+                    }
+                }
+
+                SettingItem {
+                    Layout.fillWidth: true
+                    title: qsTr("预览")
+                    visible: editAvatarField.text !== ""
+
+                    Image {
+                        Layout.maximumHeight: 96
+                        Layout.maximumWidth: 96
+                        fillMode: Image.PreserveAspectFit
+                        source: editAvatarField.text ? "file:///" + editAvatarField.text : ""
+                        visible: status === Image.Ready
                     }
                 }
             }
@@ -569,6 +660,7 @@ FluentPage {
                     }
                 }
             }
+        }
         }
     }
 

@@ -103,6 +103,17 @@ class StudentsConfig(QObject):
         except Exception as e:
             logger.exception(f"保存 设置 配置时出现错误: {e}")
 
+    @Slot()
+    def reload_config(self):
+        """从磁盘重新加载配置，丢弃写缓冲区的所有未保存更改。"""
+        self.load_config(DEFAULT_CONFIG)
+        logger.success("已从磁盘重新加载学生配置，写缓冲区已重置。")
+
+    @Slot(result=bool)
+    def has_unsaved_changes(self) -> bool:
+        """比较写缓冲区与读取快照，判断是否有未保存的更改。"""
+        return self.config_write != self.config_read
+
     @Slot(result=list)
     def get_students(self) -> list:
         """
