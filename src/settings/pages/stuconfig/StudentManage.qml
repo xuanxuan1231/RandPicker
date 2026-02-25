@@ -9,16 +9,13 @@ FluentPage {
 
     // 当前正在编辑的学生 GUID
     property string editingGuid: ""
-    // 学生列表模型（从写缓冲读取）
-    property var studentsModel: []
 
     // FluentPage 内部布局常量（用于精确计算剩余高度）
     readonly property int pageContainerTopMargin: 18
     readonly property int pageContainerSpacing: 14
 
-    function refreshStudents() {
-        studentsModel = StudentsConfig.get_write_students();
-    }
+    // 学生列表模型（从写缓冲读取）
+    property var studentsModel: []
 
     // 截断文本辅助
     function ellipsis(text, maxLen) {
@@ -36,6 +33,9 @@ FluentPage {
         if (path.charAt(0) === "/")
             return "file://" + path;
         return "file:///" + path;
+    }
+    function refreshStudents() {
+        studentsModel = StudentsConfig.get_write_students();
     }
 
     title: qsTr("学生信息管理")
@@ -102,12 +102,8 @@ FluentPage {
     Frame {
         // 精确计算剩余高度，使表格填满页面而非触发外层滚动
         Layout.fillWidth: true
-        Layout.preferredHeight: studentManagePage.height
-            - (studentManagePage.header ? studentManagePage.header.height : 0)
-            - studentManagePage.bottomPadding
-            - pageContainerTopMargin
-            - toolbarRow.height - pageContainerSpacing
         Layout.minimumHeight: 200
+        Layout.preferredHeight: studentManagePage.height - (studentManagePage.header ? studentManagePage.header.height : 0) - studentManagePage.bottomPadding - pageContainerTopMargin - toolbarRow.height - pageContainerSpacing
         hoverable: false
 
         ColumnLayout {
@@ -309,31 +305,31 @@ FluentPage {
                             ToolButton {
                                 icon.name: "ic_fluent_edit_20_regular"
 
-                                ToolTip {
-                                    delay: 500
-                                    text: qsTr("编辑")
-                                    visible: parent.hovered
-                                }
-
                                 onClicked: {
                                     studentManagePage.editingGuid = modelData.id;
                                     if (editDialog.loadStudent(modelData.id))
                                         editDialog.open();
                                 }
-                            }
-                            ToolButton {
-                                icon.name: "ic_fluent_delete_20_regular"
 
                                 ToolTip {
                                     delay: 500
-                                    text: qsTr("删除")
+                                    text: qsTr("编辑")
                                     visible: parent.hovered
                                 }
+                            }
+                            ToolButton {
+                                icon.name: "ic_fluent_delete_20_regular"
 
                                 onClicked: {
                                     deleteConfirmDialog.deletingGuid = modelData.id;
                                     deleteConfirmDialog.deletingName = modelData.name || "";
                                     deleteConfirmDialog.open();
+                                }
+
+                                ToolTip {
+                                    delay: 500
+                                    text: qsTr("删除")
+                                    visible: parent.hovered
                                 }
                             }
                         }
@@ -453,236 +449,237 @@ FluentPage {
         Flickable {
             Layout.fillWidth: true
             Layout.preferredHeight: Math.min(dialogContent.implicitHeight, 480)
-            ScrollBar.vertical: ScrollBar { }
             boundsBehavior: Flickable.StopAtBounds
             clip: true
             contentHeight: dialogContent.implicitHeight
             contentWidth: width
 
-        ColumnLayout {
-            id: dialogContent
-
-            width: parent.width
-            spacing: 4
-
-            // GUID（只读）
-            SettingCard {
-                Layout.fillWidth: true
-                description: studentManagePage.editingGuid
-                title: qsTr("GUID")
+            ScrollBar.vertical: ScrollBar {
             }
 
-            // 姓名
-            SettingCard {
-                Layout.fillWidth: true
-                description: qsTr("学生显示名称")
-                title: qsTr("姓名")
+            ColumnLayout {
+                id: dialogContent
 
-                TextField {
-                    id: editNameField
+                spacing: 4
+                width: parent.width
 
-                    implicitWidth: 180
-                    placeholderText: qsTr("请输入姓名")
-                }
-            }
-
-            // 权重
-            SettingCard {
-                Layout.fillWidth: true
-                description: qsTr("抽选权重，越高越容易被选中")
-                title: qsTr("权重")
-
-                ToolButton {
-                    color: "#0078d4"
-                    flat: true
-                    icon.name: "ic_fluent_arrow_hook_up_left_20_regular"
-                    visible: Math.abs(editWeightSlider.value - 1.0) > 0.01
-
-                    onClicked: {
-                        editWeightSlider.value = 1.0;
-                    }
-
-                    ToolTip {
-                        delay: 500
-                        text: qsTr("重置为默认值")
-                        visible: parent.hovered
-                    }
-                }
-                Text {
-                    color: Theme.currentTheme.colors.textColor
-                    font.pixelSize: 14
-                    text: editWeightSlider.value.toFixed(1)
-                    verticalAlignment: Text.AlignVCenter
-                }
-                Slider {
-                    id: editWeightSlider
-
-                    from: 0
-                    stepSize: 0.1
-                    to: 2
-                    value: 1
-                }
-            }
-
-            // 启用
-            SettingCard {
-                Layout.fillWidth: true
-                description: qsTr("是否参与抽选")
-                title: qsTr("启用")
-
-                Switch {
-                    id: editEnabledSwitch
-
-                    checked: true
-                }
-            }
-
-            // 头像（SettingExpander）
-            SettingExpander {
-                Layout.fillWidth: true
-                description: qsTr("学生头像图片路径")
-                title: qsTr("头像")
-
-                action: RowLayout {
-                    spacing: 8
-
-                    Image {
-                        Layout.preferredHeight: 28
-                        Layout.preferredWidth: 28
-                        fillMode: Image.PreserveAspectFit
-                        source: editAvatarField.text ? localFileUrl(editAvatarField.text) : ""
-                        visible: editAvatarField.text && status === Image.Ready
-                    }
-                    Text {
-                        Layout.maximumWidth: 160
-                        color: Theme.currentTheme.colors.textSecondaryColor
-                        elide: Text.ElideMiddle
-                        font.pixelSize: 12
-                        text: editAvatarField.text || qsTr("未设置")
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
-
-                SettingItem {
+                // GUID（只读）
+                SettingCard {
                     Layout.fillWidth: true
-                    description: qsTr("输入路径或点击按钮选择文件")
-                    title: qsTr("头像路径")
-
-                    RowLayout {
-                        spacing: 8
-
-                        TextField {
-                            id: editAvatarField
-
-                            implicitWidth: 220
-                            placeholderText: qsTr("图片路径")
-                        }
-                        Button {
-                            text: qsTr("浏览…")
-
-                            onClicked: avatarFileDialog.open()
-                        }
-                    }
+                    description: studentManagePage.editingGuid
+                    title: qsTr("GUID")
                 }
 
-                SettingItem {
+                // 姓名
+                SettingCard {
                     Layout.fillWidth: true
-                    title: qsTr("预览")
-                    visible: editAvatarField.text !== ""
+                    description: qsTr("学生显示名称")
+                    title: qsTr("姓名")
 
-                    Image {
-                        Layout.maximumHeight: 96
-                        Layout.maximumWidth: 96
-                        fillMode: Image.PreserveAspectFit
-                        source: editAvatarField.text ? localFileUrl(editAvatarField.text) : ""
-                        visible: status === Image.Ready
+                    TextField {
+                        id: editNameField
+
+                        implicitWidth: 180
+                        placeholderText: qsTr("请输入姓名")
                     }
                 }
-            }
 
-            // 附加属性
-            SettingExpander {
-                id: propsExpander
+                // 权重
+                SettingCard {
+                    Layout.fillWidth: true
+                    description: qsTr("抽选权重，越高越容易被选中")
+                    title: qsTr("权重")
 
-                Layout.fillWidth: true
-                description: qsTr("共 %1 项").arg(editDialog.editProperties.length)
-                title: qsTr("附加属性")
-
-                action: RowLayout {
-                    Button {
-                        text: qsTr("添加")
+                    ToolButton {
+                        color: "#0078d4"
+                        flat: true
+                        icon.name: "ic_fluent_arrow_hook_up_left_20_regular"
+                        visible: Math.abs(editWeightSlider.value - 1.0) > 0.01
 
                         onClicked: {
-                            var arr = editDialog.editProperties.slice();
-                            arr.push({
-                                name: "",
-                                value: ""
-                            });
-                            editDialog.editProperties = arr;
+                            editWeightSlider.value = 1.0;
                         }
+
+                        ToolTip {
+                            delay: 500
+                            text: qsTr("重置为默认值")
+                            visible: parent.hovered
+                        }
+                    }
+                    Text {
+                        color: Theme.currentTheme.colors.textColor
+                        font.pixelSize: 14
+                        text: editWeightSlider.value.toFixed(1)
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    Slider {
+                        id: editWeightSlider
+
+                        from: 0
+                        stepSize: 0.1
+                        to: 2
+                        value: 1
                     }
                 }
 
-                // 属性列表
-                Repeater {
-                    model: editDialog.editProperties
+                // 启用
+                SettingCard {
+                    Layout.fillWidth: true
+                    description: qsTr("是否参与抽选")
+                    title: qsTr("启用")
+
+                    Switch {
+                        id: editEnabledSwitch
+
+                        checked: true
+                    }
+                }
+
+                // 头像（SettingExpander）
+                SettingExpander {
+                    Layout.fillWidth: true
+                    description: qsTr("学生头像图片路径")
+                    title: qsTr("头像")
+
+                    action: RowLayout {
+                        spacing: 8
+
+                        Image {
+                            Layout.preferredHeight: 28
+                            Layout.preferredWidth: 28
+                            fillMode: Image.PreserveAspectFit
+                            source: editAvatarField.text ? localFileUrl(editAvatarField.text) : ""
+                            visible: editAvatarField.text && status === Image.Ready
+                        }
+                        Text {
+                            Layout.maximumWidth: 160
+                            color: Theme.currentTheme.colors.textSecondaryColor
+                            elide: Text.ElideMiddle
+                            font.pixelSize: 12
+                            text: editAvatarField.text || qsTr("未设置")
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
 
                     SettingItem {
-                        required property int index
-                        required property var modelData
-
                         Layout.fillWidth: true
-                        title: qsTr("属性 %1").arg(index + 1)
+                        description: qsTr("输入路径或点击按钮选择文件")
+                        title: qsTr("头像路径")
 
                         RowLayout {
                             spacing: 8
 
                             TextField {
-                                implicitWidth: 100
-                                placeholderText: qsTr("属性名")
-                                text: modelData.name
+                                id: editAvatarField
 
-                                onEditingFinished: {
-                                    if (index >= 0 && index < editDialog.editProperties.length && editDialog.editProperties[index].name !== text) {
-                                        var arr = editDialog.editProperties.slice();
-                                        arr[index] = {
-                                            name: text,
-                                            value: arr[index].value
-                                        };
-                                        editDialog.editProperties = arr;
+                                implicitWidth: 220
+                                placeholderText: qsTr("图片路径")
+                            }
+                            Button {
+                                text: qsTr("浏览…")
+
+                                onClicked: avatarFileDialog.open()
+                            }
+                        }
+                    }
+                    SettingItem {
+                        Layout.fillWidth: true
+                        title: qsTr("预览")
+                        visible: editAvatarField.text !== ""
+
+                        Image {
+                            Layout.maximumHeight: 96
+                            Layout.maximumWidth: 96
+                            fillMode: Image.PreserveAspectFit
+                            source: editAvatarField.text ? localFileUrl(editAvatarField.text) : ""
+                            visible: status === Image.Ready
+                        }
+                    }
+                }
+
+                // 附加属性
+                SettingExpander {
+                    id: propsExpander
+
+                    Layout.fillWidth: true
+                    description: qsTr("共 %1 项").arg(editDialog.editProperties.length)
+                    title: qsTr("附加属性")
+
+                    action: RowLayout {
+                        Button {
+                            text: qsTr("添加")
+
+                            onClicked: {
+                                var arr = editDialog.editProperties.slice();
+                                arr.push({
+                                    name: "",
+                                    value: ""
+                                });
+                                editDialog.editProperties = arr;
+                            }
+                        }
+                    }
+
+                    // 属性列表
+                    Repeater {
+                        model: editDialog.editProperties
+
+                        SettingItem {
+                            required property int index
+                            required property var modelData
+
+                            Layout.fillWidth: true
+                            title: qsTr("属性 %1").arg(index + 1)
+
+                            RowLayout {
+                                spacing: 8
+
+                                TextField {
+                                    implicitWidth: 100
+                                    placeholderText: qsTr("属性名")
+                                    text: modelData.name
+
+                                    onEditingFinished: {
+                                        if (index >= 0 && index < editDialog.editProperties.length && editDialog.editProperties[index].name !== text) {
+                                            var arr = editDialog.editProperties.slice();
+                                            arr[index] = {
+                                                name: text,
+                                                value: arr[index].value
+                                            };
+                                            editDialog.editProperties = arr;
+                                        }
                                     }
                                 }
-                            }
-                            TextField {
-                                implicitWidth: 120
-                                placeholderText: qsTr("属性值")
-                                text: modelData.value
+                                TextField {
+                                    implicitWidth: 120
+                                    placeholderText: qsTr("属性值")
+                                    text: modelData.value
 
-                                onEditingFinished: {
-                                    if (index >= 0 && index < editDialog.editProperties.length && editDialog.editProperties[index].value !== text) {
-                                        var arr = editDialog.editProperties.slice();
-                                        arr[index] = {
-                                            name: arr[index].name,
-                                            value: text
-                                        };
-                                        editDialog.editProperties = arr;
+                                    onEditingFinished: {
+                                        if (index >= 0 && index < editDialog.editProperties.length && editDialog.editProperties[index].value !== text) {
+                                            var arr = editDialog.editProperties.slice();
+                                            arr[index] = {
+                                                name: arr[index].name,
+                                                value: text
+                                            };
+                                            editDialog.editProperties = arr;
+                                        }
                                     }
                                 }
-                            }
-                            ToolButton {
-                                icon.name: "ic_fluent_delete_20_regular"
+                                ToolButton {
+                                    icon.name: "ic_fluent_delete_20_regular"
 
-                                onClicked: {
-                                    var arr = editDialog.editProperties.slice();
-                                    arr.splice(index, 1);
-                                    editDialog.editProperties = arr;
+                                    onClicked: {
+                                        var arr = editDialog.editProperties.slice();
+                                        arr.splice(index, 1);
+                                        editDialog.editProperties = arr;
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
         }
     }
 
