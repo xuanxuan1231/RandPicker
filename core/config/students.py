@@ -158,7 +158,9 @@ class StudentsConfig(QObject):
             "name": name,
             "weight": weight,
             "enabled": enabled,
-            "id": str(uuid4())
+            "id": str(uuid4()),
+            "avatar": "",
+            "properties": []
         }
         # 写入缓冲区
         if self.config_write is None:
@@ -204,6 +206,47 @@ class StudentsConfig(QObject):
             return [{"name": "没有附加属性", "value": "没有附加属性值"}]
         student = self.get_single_student(guid)
         return student.get("properties", [{"name": "没有附加属性", "value": "没有附加属性值"}])
+
+    @Slot(str, str, float, bool, str)
+    def update_student(self, guid: str, name: str, weight: float, enabled: bool, avatar: str) -> None:
+        """根据 GUID 更新学生基础信息（写缓冲区）。"""
+        idx = self._find_index_by_guid(guid, use_write=True)
+        if idx == -1:
+            logger.error(f"更新失败：未找到 GUID {guid}")
+            return
+        stu = self.config_write["students"][idx]
+        stu["name"] = name
+        stu["weight"] = weight
+        stu["enabled"] = enabled
+        stu["avatar"] = avatar
+        logger.success(f"缓冲区已更新学生 {name}（GUID: {guid}）")
+
+    @Slot(str, list)
+    def update_student_properties(self, guid: str, properties: list) -> None:
+        """根据 GUID 替换学生附加属性列表（写缓冲区）。"""
+        idx = self._find_index_by_guid(guid, use_write=True)
+        if idx == -1:
+            logger.error(f"更新附加属性失败：未找到 GUID {guid}")
+            return
+        self.config_write["students"][idx]["properties"] = properties
+        logger.success(f"缓冲区已更新学生附加属性（GUID: {guid}）")
+
+    @Slot(result=list)
+    def get_write_students(self) -> list:
+        """返回写缓冲中的学生列表（副本），供 QML 编辑页面使用。"""
+        cfg = self.config_write or {}
+        students = cfg.get("students", [])
+        return deepcopy(students)
+
+    @Slot(str, result=dict)
+    def get_write_student(self, guid: str) -> dict:
+        """根据 GUID 从写缓冲中获取单个学生信息。"""
+        if not guid:
+            return {}
+        idx = self._find_index_by_guid(guid, use_write=True)
+        if idx == -1:
+            return {}
+        return deepcopy(self.config_write["students"][idx])
 
     @Slot(result=dict)
     def getBuffer(self):
