@@ -207,4 +207,4 @@ __marimo__/
 
 *.lock
 RinUI/
-config/
+/config
