@@ -76,14 +76,14 @@ Dialog {
     }
 
     RowLayout {
-        Layout.fillHeight: true
         Layout.fillWidth: true
+        Layout.fillHeight: true
         spacing: 16
 
         // Left panel: Format settings
         ColumnLayout {
             Layout.fillHeight: true
-            Layout.preferredWidth: parent.width * 0.58
+            Layout.preferredWidth: root.availableWidth * 0.58
             spacing: 12
 
             // Title format section
@@ -193,7 +193,7 @@ Dialog {
                                     // Divider
                                     Rectangle {
                                         Layout.fillWidth: true
-                                        color: Theme.currentTheme.colors.dividerColor
+                                        color: Theme.currentTheme.colors.dividerBorderColor
                                         height: 1
                                     }
 
@@ -282,7 +282,7 @@ Dialog {
                                     // Divider
                                     Rectangle {
                                         Layout.fillWidth: true
-                                        color: Theme.currentTheme.colors.dividerColor
+                                        color: Theme.currentTheme.colors.dividerBorderColor
                                         height: 1
                                     }
 
@@ -318,7 +318,7 @@ Dialog {
         // Right panel: Content fill helpers
         Frame {
             Layout.fillHeight: true
-            Layout.preferredWidth: parent.width * 0.38
+            Layout.preferredWidth: root.availableWidth * 0.38
 
             ColumnLayout {
                 anchors.fill: parent
