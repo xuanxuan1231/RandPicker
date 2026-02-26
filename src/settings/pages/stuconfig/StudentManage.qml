@@ -440,8 +440,10 @@ FluentPage {
         width: 520
 
         onAccepted: {
-            // 写回缓冲区
-            StudentsConfig.update_student(studentManagePage.editingGuid, editNameField.text, parseFloat(editWeightSlider.value.toFixed(1)), editEnabledSwitch.checked, editAvatarField.text);
+            // 清理输入并写回缓冲区
+            var trimmedName = editNameField.text.trim();
+            var trimmedAvatar = editAvatarField.text.trim();
+            StudentsConfig.update_student(studentManagePage.editingGuid, trimmedName, parseFloat(editWeightSlider.value.toFixed(1)), editEnabledSwitch.checked, trimmedAvatar);
             StudentsConfig.update_student_properties(studentManagePage.editingGuid, editDialog.editProperties);
             studentManagePage.refreshStudents();
         }

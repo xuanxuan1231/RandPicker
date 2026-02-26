@@ -50,7 +50,7 @@ class NativeNotifier:
         return title, body
 
     @staticmethod
-    def _send(title: str, message: str) -> None:
+    def send(title: str, message: str) -> None:
         """发送系统通知"""
         try:
             notification.notify(

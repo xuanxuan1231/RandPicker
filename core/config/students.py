@@ -38,8 +38,20 @@ class StudentsConfig(QObject):
 
     def load_config(self, default_config):
         if self.file.exists():
-            with open(self.file, "r", encoding="utf-8") as f:
-                loaded = json.load(f)
+            try:
+                with open(self.file, "r", encoding="utf-8") as f:
+                    loaded = json.load(f)
+                if not isinstance(loaded, dict):
+                    logger.error("学生配置文件格式不正确（非字典），将使用默认配置。")
+                    loaded = deepcopy(default_config) if default_config else {}
+            except (json.JSONDecodeError, UnicodeDecodeError, OSError) as e:
+                logger.error(f"读取学生配置文件失败，将使用默认配置: {e}")
+                loaded = deepcopy(default_config) if default_config else {}
+                self.parent.notificationManager.send_raw(
+                    "RandPicker - 配置文件损坏",
+                    f"学生配置文件无法读取，已使用默认配置。\n错误: {e}",
+                    "native"
+                )
         else:
             logger.info("未找到学生配置文件。将写入默认配置。")
             if default_config is None:
@@ -56,10 +68,10 @@ class StudentsConfig(QObject):
                 logger.exception(f"保存 默认 学生配置时出现错误: {e}")
         # 初始化读写两份配置
         self.config_write = deepcopy(loaded)
-        self.config_read = deepcopy(loaded)
-        # 为所有学生补充 GUID
+        # 先为写缓冲补充 GUID，再从写缓冲复制到读快照，
+        # 确保两份配置中的学生 GUID 一致。
         self._ensure_student_ids(self.config_write)
-        self._ensure_student_ids(self.config_read)
+        self.config_read = deepcopy(self.config_write)
         # 如果有新增 id，持久化一次，避免后续缺失
         try:
             if not Path(CONFIG_DIR).exists():
@@ -70,15 +82,26 @@ class StudentsConfig(QObject):
             logger.exception(f"保存 学生 GUID 时出现错误: {e}")
 
     def _ensure_student_ids(self, cfg: dict) -> None:
-        """确保学生都有唯一 GUID。就地修改。"""
+        """确保学生都有唯一 GUID，并补全缺失字段。就地修改。"""
         if cfg is None:
             return
-        students = cfg.setdefault("students", [])
+        # 确保 students 是列表
+        students = cfg.get("students")
+        if not isinstance(students, list):
+            cfg["students"] = []
+            students = cfg["students"]
+        # 过滤掉非字典的无效条目
+        cfg["students"] = [stu for stu in students if isinstance(stu, dict)]
+        students = cfg["students"]
         for stu in students:
-            if not isinstance(stu, dict):
-                continue
             if not stu.get("id"):
                 stu["id"] = str(uuid4())
+            # 补全可能缺失的字段（兼容旧版配置）
+            stu.setdefault("name", "未命名")
+            stu.setdefault("weight", 1.0)
+            stu.setdefault("enabled", True)
+            stu.setdefault("avatar", "")
+            stu.setdefault("properties", [])
 
     def _find_index_by_guid(self, guid: str, use_write: bool = False) -> int:
         """根据 GUID 查找学生索引，找不到返回 -1。use_write=True 时使用写缓冲。"""
@@ -163,8 +186,13 @@ class StudentsConfig(QObject):
         s = self.get_students()
         return s[idx]
 
-    @Slot(str, int, bool)
-    def add_student(self, name: str, weight: int = 1, enabled: bool = True) -> None:
+    @Slot(str, float, bool)
+    def add_student(self, name: str, weight: float = 1.0, enabled: bool = True) -> None:
+        # 验证并清理输入
+        name = (name or "").strip()
+        if not name:
+            name = "未命名"
+        weight = max(0.0, float(weight))
         new_student = {
             "name": name,
             "weight": weight,
@@ -181,6 +209,9 @@ class StudentsConfig(QObject):
 
     @Slot(str)
     def remove_student(self, guid: str) -> None:
+        if self.config_write is None:
+            logger.error("写缓冲区为空，无法删除学生。")
+            return
         s = self.config_write.setdefault("students", [])
         idx = self._find_index_by_guid(guid, use_write=True)
         if idx == -1:
@@ -229,6 +260,13 @@ class StudentsConfig(QObject):
         if idx == -1:
             logger.error(f"更新失败：未找到 GUID {guid}")
             return
+        # 验证并清理名称
+        name = (name or "").strip()
+        if not name:
+            logger.warning(f"学生名称为空，将使用默认名称。GUID: {guid}")
+            name = "未命名"
+        # 验证权重
+        weight = max(0.0, float(weight))
         # 验证头像路径安全性
         safe_avatar = ""
         if avatar:
@@ -255,7 +293,16 @@ class StudentsConfig(QObject):
         if idx == -1:
             logger.error(f"更新附加属性失败：未找到 GUID {guid}")
             return
-        self.config_write["students"][idx]["properties"] = properties
+        # 验证并清理属性列表
+        cleaned = []
+        for prop in (properties or []):
+            if not isinstance(prop, dict):
+                continue
+            cleaned.append({
+                "name": str(prop.get("name", "")).strip(),
+                "value": str(prop.get("value", "")).strip()
+            })
+        self.config_write["students"][idx]["properties"] = cleaned
         logger.success(f"缓冲区已更新学生附加属性（GUID: {guid}）")
 
     @Slot(result=list)
