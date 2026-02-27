@@ -4,21 +4,28 @@ from typing import Optional
 from PySide6.QtCore import QObject, Slot
 from loguru import logger
 
-from core.integration.classisland import ciService
-from core.integration.native import nativeNotifier
+from .classisland import ClassIslandIntegration
+from .native import NativeNotifier
+from ..config.settings import SettingsConfig
 
 
 class NotificationManager(QObject):
+    _instance: "NotificationManager" = None
+
+    @classmethod
+    def instance(cls) -> "NotificationManager":
+        return cls._instance
+
     def __init__(self, parent=None):
         super().__init__()
-        self.parent = parent
-        self.settingsConfig = parent.settingsConfig
-
-        # 因为相关 service 在它自己那实例化了，就在这重新加一下 rpmain 相关的属性
-        ciService.main = parent
-        ciService.settingsConfig = self.settingsConfig
-        nativeNotifier.main = parent
-        nativeNotifier.settingsConfig = self.settingsConfig
+        NotificationManager._instance = self
+        self.settingsConfig = SettingsConfig.instance()
+        self.nativeNotifier = NativeNotifier()
+        self.ciService = ClassIslandIntegration()
+        try:
+            self.ciService.start()
+        except Exception as e:
+            logger.exception(f"初始化 ClassIsland 集成服务时出错: {e}")
 
     def send(self, pick_type: str, stus: list) -> None:
         """发送通知"""
@@ -33,10 +40,10 @@ class NotificationManager(QObject):
 
         for option in options:
             if option == "native":
-                nativeSent = nativeNotifier.send_message(pick_type, stus)
+                nativeSent = self.nativeNotifier.send_message(pick_type, stus)
                 sent = sent or nativeSent
             elif option == "classisland":
-                ciSent = ciService.send_message(pick_type, stus)
+                ciSent = self.ciService.send_message(pick_type, stus)
                 sent = sent or ciSent
             elif option == "classwidgets":
                 logger.error(f"不支持的通知方式: {option}")
@@ -46,7 +53,7 @@ class NotificationManager(QObject):
         # 发送失败，则使用备选通知
         if not sent and self.settingsConfig.getNotifyFallback():
             try:
-                nativeNotifier.send_message(pick_type, stus)
+                self.nativeNotifier.send_message(pick_type, stus)
             except Exception:
                 logger.exception("Native 回退通知发送失败")
 
@@ -59,9 +66,9 @@ class NotificationManager(QObject):
 
         for opt in options:
             if opt == "native":
-                nativeNotifier.send(title, message)
+                self.nativeNotifier.send_message(title, message)
             elif opt == "classisland":
-                ciService.send(title, message)
+                self.ciService.send_message(title, message)
             elif opt == "classwidgets":
                 logger.error(f"不支持的通知方式: {opt}")
             else:
@@ -71,9 +78,9 @@ class NotificationManager(QObject):
     def sendTest(self, option):
         match option:
             case "native":
-                nativeNotifier.send_test()
+                self.nativeNotifier.send_test()
             case "classisland":
-                ciService.send_test()
+                self.ciService.send_test()
             case "classwidgets":
                 logger.error(f"不支持的通知方式: {option}")
             case _:

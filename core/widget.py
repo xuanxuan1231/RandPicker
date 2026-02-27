@@ -5,15 +5,23 @@
 from RinUI.core.launcher import RinUIWindow
 from loguru import logger
 
+from .choice import ChoiceMaker
 from .config.dirs import *
+from .config.settings import SettingsConfig
 from .version_info import versionInfo
 
 
 class RPWidget(RinUIWindow):
     """Load and manage the floating widget window using RinUIWindow."""
 
+    _instance: "RPWidget" = None
+
+    @classmethod
+    def instance(cls) -> "RPWidget":
+        return cls._instance
+
     def __init__(self, parent=None):
-        self.parent = parent
+        RPWidget._instance = self
 
         qml_path = QML_DIR / "widget.qml"
         if not qml_path.exists():
@@ -22,9 +30,9 @@ class RPWidget(RinUIWindow):
             return
         super().__init__()
         self.engine.rootContext().setContextProperty("widget", self)
-        self.engine.rootContext().setContextProperty("ChoiceMaker", getattr(self.parent, "choiceMaker", None))
+        self.engine.rootContext().setContextProperty("ChoiceMaker", ChoiceMaker.instance())
         self.engine.rootContext().setContextProperty("VersionInfo", versionInfo)
-        self.engine.rootContext().setContextProperty("SettingsConfig", getattr(self.parent, "settingsConfig", None))
+        self.engine.rootContext().setContextProperty("SettingsConfig", SettingsConfig.instance())
 
         self.load(qml_path)
         self.window = getattr(self, "root_window", None)

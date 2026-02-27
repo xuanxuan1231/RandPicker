@@ -11,6 +11,7 @@ from PySide6.QtCore import QObject, Slot
 from loguru import logger
 
 from .dirs import CONFIG_DIR
+from ..integration import NotificationManager
 
 DEFAULT_CONFIG = {
     "students": [
@@ -27,9 +28,15 @@ DEFAULT_CONFIG = {
 
 
 class StudentsConfig(QObject):
+    _instance: "StudentsConfig" = None
+
+    @classmethod
+    def instance(cls) -> "StudentsConfig":
+        return cls._instance
+
     def __init__(self, parent=None):
         super().__init__()
-        self.parent = parent
+        StudentsConfig._instance = self
         # 维护两份配置：写入缓冲区与读取快照
         self.config_write = None
         self.config_read = None
@@ -47,11 +54,13 @@ class StudentsConfig(QObject):
             except (json.JSONDecodeError, UnicodeDecodeError, OSError) as e:
                 logger.error(f"读取学生配置文件失败，将使用默认配置: {e}")
                 loaded = deepcopy(default_config) if default_config else {}
-                self.parent.notificationManager.send_raw(
-                    "RandPicker - 配置文件损坏",
-                    f"学生配置文件无法读取，已使用默认配置。\n错误: {e}",
-                    "native"
-                )
+                nm = NotificationManager.instance()
+                if nm is not None:
+                    nm.send_raw(
+                        "RandPicker - 配置文件损坏",
+                        f"学生配置文件无法读取，已使用默认配置。\n错误: {e}",
+                        "native"
+                    )
         else:
             logger.info("未找到学生配置文件。将写入默认配置。")
             if default_config is None:

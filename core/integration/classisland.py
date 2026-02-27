@@ -11,8 +11,10 @@ from typing import Optional
 
 from PySide6.QtCore import QObject, Slot, Signal
 from loguru import logger
+from multipledispatch import dispatch
 
 from ..config.dirs import DLL_DIR
+from ..config.settings import SettingsConfig
 
 CSHARP_AVAILABLE = False
 try:
@@ -32,6 +34,7 @@ try:
     clr.AddReference("RP4CI.Interface")
     clr.AddReference("ClassIsland.Shared.IPC")
 
+    # noinspection PyUnresolvedReferences
     from System.Collections.Generic import List
 
     # noinspection PyUnresolvedReferences
@@ -53,12 +56,17 @@ except Exception as e:
 if CSHARP_AVAILABLE:
     class ClassIslandIntegration(QObject):
         connectivityUpdated = Signal(str)
+        _instance: "ClassIslandIntegration" = None
+
+        @classmethod
+        def instance(cls) -> "ClassIslandIntegration":
+            return cls._instance
 
         def __init__(self, parent=None):
             super().__init__(parent)
-            self.main = None
-            self.settingsConfig = None
-            self.is_available = CSHARP_AVAILABLE
+            ClassIslandIntegration._instance = self
+            self.is_available: bool = CSHARP_AVAILABLE
+            self.settingsConfig: SettingsConfig = SettingsConfig.instance()
             self.connectivity_status: str = "NotRunning"
 
             self.ipcClient: Optional[IpcClient] = None
@@ -196,6 +204,7 @@ if CSHARP_AVAILABLE:
                 # logger.warning(f"检查 ClassIsland 集成连接状态时出现 {type(e)} 错误: {e}")
                 return False
 
+        @dispatch(str, list)
         def send_message(self, pick_type: str, stus: list) -> bool:
             if self.connectivity_status != "Connected":
                 logger.warning("ClassIsland 未连接或未运行，无法发送通知。")
@@ -206,6 +215,23 @@ if CSHARP_AVAILABLE:
                 return True
             except Exception as e:
                 logger.exception(f"发送 ClassIsland 通知时出错: {e}")
+                return False
+
+        @dispatch(str, str)
+        def send_message(self, title: str, message: str) -> bool:
+            """发送原始文本通知到 ClassIsland"""
+            if self.connectivity_status != "Connected":
+                logger.warning("ClassIsland 未连接或未运行，无法发送通知。")
+                return False
+            try:
+                result = NotifyResult()
+                result.PickType = PickType.Test
+                result.Title = title
+                result.Overlay = message
+                self._send(result)
+                return True
+            except Exception as e:
+                logger.exception(f"ClassIsland 原始通知发送失败: {e}")
                 return False
 
         def send_test(self):
@@ -277,7 +303,7 @@ if CSHARP_AVAILABLE:
 
             return result
 
-        def send(self, result: NotifyResult):
+        def _send(self, result: NotifyResult):
             """
             发送通知到 ClassIsland
 
@@ -297,9 +323,15 @@ if CSHARP_AVAILABLE:
 else:
     class ClassIslandIntegration(QObject):
         connectivityUpdated = Signal(str)
+        _instance: "ClassIslandIntegration" = None
+
+        @classmethod
+        def instance(cls) -> "ClassIslandIntegration":
+            return cls._instance
 
         def __init__(self, parent=None):
             super().__init__(parent)
+            ClassIslandIntegration._instance = self
             self.is_available = False
             self.connectivity_status = "NotAvailable"
 
@@ -314,10 +346,6 @@ else:
             logger.warning("ClassIsland 集成不可用，无法发送通知。")
             return False
 
-        def send(self, *arg) -> bool:
-            logger.warning("ClassIsland 集成不可用，无法发送通知。")
-            return False
-
         def send_test(self):
             logger.warning("ClassIsland 集成不可用，无法发送测试通知。")
             return False
@@ -327,16 +355,3 @@ else:
 
         def stop(self):
             pass
-
-ciService = ClassIslandIntegration()
-
-
-def initialize_ci_service():
-    global ciService
-    try:
-        ciService.start()
-    except Exception as e:
-        logger.exception(f"初始化 ClassIsland 集成服务时出错: {e}")
-
-
-initialize_ci_service()

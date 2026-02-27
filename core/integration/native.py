@@ -3,18 +3,38 @@
 """
 
 from loguru import logger
+from multipledispatch import dispatch
 from plyer import notification
+
+from ..config.settings import SettingsConfig
 
 
 class NativeNotifier:
-    def __init__(self):
-        self.settingsConfig = None
-        self.main = None
+    _instance: "NativeNotifier" = None
 
+    @classmethod
+    def instance(cls) -> "NativeNotifier":
+        return cls._instance
+
+    def __init__(self):
+        NativeNotifier._instance = self
+        self.settingsConfig = SettingsConfig.instance()
+
+    @dispatch(str, list)
     def send_message(self, pick_type: str, stus: list) -> bool:
         """发送通知消息"""
         try:
             title, message = self._format_message(pick_type, stus)
+            self._send(title, message)
+            return True
+        except Exception as e:
+            logger.exception(f"Native 通知发送失败: {e}")
+            return False
+
+    @dispatch(str, str)
+    def send_message(self, title: str, message: str) -> bool:
+        """发送原始通知消息"""
+        try:
             self._send(title, message)
             return True
         except Exception as e:
@@ -32,8 +52,6 @@ class NativeNotifier:
 
     def _format_message(self, pick_type: str, stus: list) -> tuple[str, str]:
         """格式化通知消息"""
-        if not self.settingsConfig:
-            raise ValueError("SettingsConfig 未初始化，无法格式化消息")
         format = self.settingsConfig.getNotifyFormat("native")
 
         names = format['names']['separator'].join([s.get("name", "未知") for s in stus])
@@ -50,7 +68,7 @@ class NativeNotifier:
         return title, body
 
     @staticmethod
-    def send(title: str, message: str) -> None:
+    def _send(title: str, message: str) -> None:
         """发送系统通知"""
         try:
             notification.notify(
@@ -61,6 +79,3 @@ class NativeNotifier:
             logger.success(f"Native 通知发送成功: {title}: {message}")
         except Exception as e:
             logger.exception(f"Native 通知发送失败: {e}")
-
-
-nativeNotifier = NativeNotifier()

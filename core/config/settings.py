@@ -64,8 +64,14 @@ DEFAULT_CONFIG = {
 
 
 class SettingsConfig(ConfigManager, QObject):
+    _instance: "SettingsConfig" = None
+
+    @classmethod
+    def instance(cls) -> "SettingsConfig":
+        return cls._instance
+
     def __init__(self, parent=None):
-        self.parent = parent
+        SettingsConfig._instance = self
 
         ConfigManager.__init__(self, ".", Path(CONFIG_DIR) / "settings.json")
         QObject.__init__(self)
