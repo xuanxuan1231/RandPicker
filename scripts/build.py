@@ -4,6 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+# noinspection PyUnresolvedReferences
 import PyInstaller.__main__
 
 ROOT = Path(__file__).resolve().parent.parent

@@ -3,6 +3,7 @@
 """
 
 from loguru import logger
+from multipledispatch import dispatch
 from plyer import notification
 
 from ..config.settings import SettingsConfig
@@ -19,10 +20,21 @@ class NativeNotifier:
         NativeNotifier._instance = self
         self.settingsConfig = SettingsConfig.instance()
 
+    @dispatch(str, list)
     def send_message(self, pick_type: str, stus: list) -> bool:
         """发送通知消息"""
         try:
             title, message = self._format_message(pick_type, stus)
+            self._send(title, message)
+            return True
+        except Exception as e:
+            logger.exception(f"Native 通知发送失败: {e}")
+            return False
+
+    @dispatch(str, str)
+    def send_message(self, title: str, message: str) -> bool:
+        """发送原始通知消息"""
+        try:
             self._send(title, message)
             return True
         except Exception as e:
@@ -56,7 +68,7 @@ class NativeNotifier:
         return title, body
 
     @staticmethod
-    def send(title: str, message: str) -> None:
+    def _send(title: str, message: str) -> None:
         """发送系统通知"""
         try:
             notification.notify(

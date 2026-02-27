@@ -6,6 +6,7 @@ import asyncio
 import sys
 import threading
 import time
+from multipledispatch import dispatch
 from collections import deque
 from typing import Optional
 
@@ -33,6 +34,7 @@ try:
     clr.AddReference("RP4CI.Interface")
     clr.AddReference("ClassIsland.Shared.IPC")
 
+    # noinspection PyUnresolvedReferences
     from System.Collections.Generic import List
 
     # noinspection PyUnresolvedReferences
@@ -63,8 +65,8 @@ if CSHARP_AVAILABLE:
         def __init__(self, parent=None):
             super().__init__(parent)
             ClassIslandIntegration._instance = self
-            self.is_available = CSHARP_AVAILABLE
-            self.settingsConfig = SettingsConfig.instance()
+            self.is_available: bool = CSHARP_AVAILABLE
+            self.settingsConfig: SettingsConfig = SettingsConfig.instance()
             self.connectivity_status: str = "NotRunning"
 
             self.ipcClient: Optional[IpcClient] = None
@@ -202,16 +204,34 @@ if CSHARP_AVAILABLE:
                 # logger.warning(f"检查 ClassIsland 集成连接状态时出现 {type(e)} 错误: {e}")
                 return False
 
+        @dispatch(str, list)
         def send_message(self, pick_type: str, stus: list) -> bool:
             if self.connectivity_status != "Connected":
                 logger.warning("ClassIsland 未连接或未运行，无法发送通知。")
                 return False
             try:
                 result = self._format_message(pick_type, stus)
-                self.send(result)
+                self._send(result)
                 return True
             except Exception as e:
                 logger.exception(f"发送 ClassIsland 通知时出错: {e}")
+                return False
+
+        @dispatch(str, str)
+        def send_message(self, title: str, message: str) -> bool:
+            """发送原始文本通知到 ClassIsland"""
+            if self.connectivity_status != "Connected":
+                logger.warning("ClassIsland 未连接或未运行，无法发送通知。")
+                return False
+            try:
+                result = NotifyResult()
+                result.PickType = PickType.Test
+                result.Title = title
+                result.Overlay = message
+                self._send(result)
+                return True
+            except Exception as e:
+                logger.exception(f"ClassIsland 原始通知发送失败: {e}")
                 return False
 
         def send_test(self):
@@ -223,7 +243,7 @@ if CSHARP_AVAILABLE:
                 result.PickType = PickType.Test
                 result.Title = "测试通知"
                 result.Overlay = "这是一条来自 RandPicker 的测试通知。"
-                self.send(result)
+                self._send(result)
             except Exception as e:
                 logger.exception(f"发送 ClassIsland 测试通知时出错: {e}")
                 return
@@ -283,7 +303,7 @@ if CSHARP_AVAILABLE:
 
             return result
 
-        def send(self, result: NotifyResult):
+        def _send(self, result: NotifyResult):
             """
             发送通知到 ClassIsland
 
@@ -296,20 +316,6 @@ if CSHARP_AVAILABLE:
                 logger.success(f"ClassIsland 通知发送成功: {result.Title}: {result.Overlay}")
             except Exception as e:
                 logger.exception(f"向 ClassIsland 发送通知时出错: {e}")
-
-        def send_raw(self, title: str, message: str) -> None:
-            """发送原始文本通知到 ClassIsland"""
-            if self.connectivity_status != "Connected":
-                logger.warning("ClassIsland 未连接或未运行，无法发送通知。")
-                return
-            try:
-                result = NotifyResult()
-                result.PickType = PickType.Test
-                result.Title = title
-                result.Overlay = message
-                self.send(result)
-            except Exception as e:
-                logger.exception(f"ClassIsland 原始通知发送失败: {e}")
 
         def get_availability(self):
             return self.is_available
@@ -339,13 +345,6 @@ else:
         def send_message(self, *arg) -> bool:
             logger.warning("ClassIsland 集成不可用，无法发送通知。")
             return False
-
-        def send(self, *arg) -> bool:
-            logger.warning("ClassIsland 集成不可用，无法发送通知。")
-            return False
-
-        def send_raw(self, *arg) -> None:
-            logger.warning("ClassIsland 集成不可用，无法发送通知。")
 
         def send_test(self):
             logger.warning("ClassIsland 集成不可用，无法发送测试通知。")
