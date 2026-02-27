@@ -1,0 +1,193 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import RinUI
+
+FluentPage {
+    id: appearanceSettingsPage
+
+    title: qsTr("外观 & 行为")
+
+    ColumnLayout {
+        Layout.fillWidth: true
+
+        Text {
+            Layout.alignment: Qt.AlignLeft
+            Layout.fillWidth: true
+            font.bold: true
+            font.pixelSize: 18
+            text: qsTr("基本")
+        }
+
+        SettingExpander {
+            Layout.fillWidth: true
+            icon.name: "ic_fluent_window_shield_20_regular"
+            title: qsTr("使用管理员权限")
+            description: qsTr("使用管理员权限运行后，可以使用 UI Access 超级置顶。\n仅对 Windows 有效。")
+
+            SettingItem {
+                title: qsTr("使用管理员权限重新启动")
+
+                Button {
+                    text: qsTr("立即重新启动")
+                    enabled: Qt.platform.os === "windows"
+                    onClicked: {
+                        AppMain.restartAsAdmin();
+                    }
+                }
+
+            }
+
+            content: CheckBox {
+                text: qsTr("使用管理员权限启动")
+                checked: SettingsConfig.getRunAsAdmin()
+                onCheckedChanged: SettingsConfig.setRunAsAdmin(checked)
+                enabled: Qt.platform.os === "windows"
+            }
+
+        }
+
+    }
+
+    ColumnLayout {
+        Text {
+            Layout.alignment: Qt.AlignLeft
+            Layout.fillWidth: true
+            font.bold: true
+            font.pixelSize: 18
+            text: qsTr("外观")
+        }
+
+        SettingCard {
+            Layout.fillWidth: true
+            icon.name: "ic_fluent_dark_theme_20_regular"
+            title: qsTr("主题")
+            description: qsTr("选择应用的主题")
+
+            ComboBox {
+                id: themeComboBox
+                Layout.preferredWidth: 120
+                model: [qsTr("跟随系统"), qsTr("浅色"), qsTr("深色")]
+                // Theme.getTheme() 返回 "Light" "Dark" "Auto"
+                // Theme.setTheme(Theme.mode.Light/Dark/Auto)
+                currentIndex: {
+                    var t = Theme.getTheme();
+                    if (t === "Auto") return 0;
+                    if (t === "Light") return 1;
+                    if (t === "Dark") return 2;
+                    return 0;
+                }
+                onCurrentIndexChanged: {
+                    if (currentIndex === 0) {
+                        Theme.setTheme(Theme.mode.Auto);
+                    } else if (currentIndex === 1) {
+                        Theme.setTheme(Theme.mode.Light);
+                    } else if (currentIndex === 2) {
+                        Theme.setTheme(Theme.mode.Dark);
+                    }
+                }
+            }
+        }
+        SettingCard {
+            Layout.fillWidth: true
+            icon.name: "ic_fluent_color_20_regular"
+            title: qsTr("主题色")
+            description: qsTr("选择应用的主题色")
+            
+            Row {
+                spacing: 3
+
+                Rectangle {
+                    id: themeColorRect
+                    width: 40
+                    height: colorButton.implicitHeight
+                    radius: 4
+                    color: Theme.getThemeColor()
+                }
+                Button {
+                    id: colorButton
+                    text: qsTr("选择颜色")
+                    onClicked: colorPickerDialog.open()
+                }
+            }
+        }
+    }
+
+    ColumnLayout {
+        Text {
+            Layout.alignment: Qt.AlignLeft
+            Layout.fillWidth: true
+            font.bold: true
+            font.pixelSize: 18
+            text: qsTr("浮窗")
+        }
+
+        SettingExpander {
+            Layout.fillWidth: true
+            title: qsTr("浮窗设置")
+            description: qsTr("设置浮窗的外观和行为")
+
+            SettingItem {
+                title: qsTr("显示“抽人”按钮")
+
+                Switch {
+                    checked: SettingsConfig.showDrawButton
+                    onCheckedChanged: {
+                        if (checked !== SettingsConfig.showDrawButton)
+                            SettingsConfig.setShowDrawButton(checked)
+                    }
+                }
+
+            }
+
+            SettingItem {
+                title: qsTr("显示“抽组”按钮")
+
+                Switch {
+                    checked: SettingsConfig.showGroupButton
+                    onCheckedChanged: {
+                        if (checked !== SettingsConfig.showGroupButton)
+                            SettingsConfig.setShowGroupButton(checked)
+                    }
+                }
+
+            }
+
+            SettingItem {
+                title: qsTr("显示“更多”按钮")
+
+                Switch {
+                    checked: SettingsConfig.showMoreButton
+                    onCheckedChanged: {
+                        if (checked !== SettingsConfig.showMoreButton)
+                            SettingsConfig.setShowMoreButton(checked)
+                    }
+                }
+
+            }
+
+        }
+
+    }
+
+    Dialog {
+        id: colorPickerDialog
+        title: qsTr("为 RandPicker 选择主题色")
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        Component.onCompleted: {
+            colorPicker.color = Theme.getThemeColor();
+        }
+
+        ColorPicker {
+            id: colorPicker
+        }
+
+        onAccepted: {
+            Theme.setThemeColor(colorPicker.color);
+            themeColorRect.color = Theme.getThemeColor();
+        }
+    }
+
+}
