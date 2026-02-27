@@ -208,7 +208,7 @@ if CSHARP_AVAILABLE:
                 return False
             try:
                 result = self._format_message(pick_type, stus)
-                self._send(result)
+                self.send(result)
                 return True
             except Exception as e:
                 logger.exception(f"发送 ClassIsland 通知时出错: {e}")
@@ -223,7 +223,7 @@ if CSHARP_AVAILABLE:
                 result.PickType = PickType.Test
                 result.Title = "测试通知"
                 result.Overlay = "这是一条来自 RandPicker 的测试通知。"
-                self._send(result)
+                self.send(result)
             except Exception as e:
                 logger.exception(f"发送 ClassIsland 测试通知时出错: {e}")
                 return
@@ -344,7 +344,7 @@ else:
             logger.warning("ClassIsland 集成不可用，无法发送通知。")
             return False
 
-        def send_raw(self, title: str, message: str) -> None:
+        def send_raw(self, *arg) -> None:
             logger.warning("ClassIsland 集成不可用，无法发送通知。")
 
         def send_test(self):
