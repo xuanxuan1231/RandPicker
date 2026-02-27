@@ -11,9 +11,17 @@ from .config.dirs import ASSETS_DIR
 
 
 class RPTray(QObject):
-    def __init__(self, parent):
+    _instance: "RPTray" = None
+
+    @classmethod
+    def instance(cls) -> "RPTray":
+        return cls._instance
+
+    def __init__(self, parent=None):
         super().__init__()
-        self.main = parent
+        RPTray._instance = self
+        from .main import RPMain  # 延迟导入，避免循环引用
+        self.main = RPMain.instance()
 
         self.main.themeManager.themeChanged.connect(lambda theme: self.onThemeChanged(theme))
 

@@ -7,13 +7,22 @@ from typing import Any
 from PySide6.QtCore import QObject, Slot
 from loguru import logger
 
+from .config.students import StudentsConfig
+from .integration import NotificationManager
+
 
 class ChoiceMaker(QObject):
-    def __init__(self, parent):
+    _instance: "ChoiceMaker" = None
+
+    @classmethod
+    def instance(cls) -> "ChoiceMaker":
+        return cls._instance
+
+    def __init__(self, parent=None):
         super().__init__()
-        self.parent = parent
-        self.studentsConfig = self.parent.studentsConfig
-        self.notificationManager = self.parent.notificationManager
+        ChoiceMaker._instance = self
+        self.studentsConfig = StudentsConfig.instance()
+        self.notificationManager = NotificationManager.instance()
         self._refresh()
 
     def _refresh(self):

@@ -13,6 +13,7 @@ from PySide6.QtCore import QObject, Slot, Signal
 from loguru import logger
 
 from ..config.dirs import DLL_DIR
+from ..config.settings import SettingsConfig
 
 CSHARP_AVAILABLE = False
 try:
@@ -53,12 +54,17 @@ except Exception as e:
 if CSHARP_AVAILABLE:
     class ClassIslandIntegration(QObject):
         connectivityUpdated = Signal(str)
+        _instance: "ClassIslandIntegration" = None
+
+        @classmethod
+        def instance(cls) -> "ClassIslandIntegration":
+            return cls._instance
 
         def __init__(self, parent=None):
             super().__init__(parent)
-            self.main = None
-            self.settingsConfig = None
+            ClassIslandIntegration._instance = self
             self.is_available = CSHARP_AVAILABLE
+            self.settingsConfig = SettingsConfig.instance()
             self.connectivity_status: str = "NotRunning"
 
             self.ipcClient: Optional[IpcClient] = None
@@ -297,9 +303,15 @@ if CSHARP_AVAILABLE:
 else:
     class ClassIslandIntegration(QObject):
         connectivityUpdated = Signal(str)
+        _instance: "ClassIslandIntegration" = None
+
+        @classmethod
+        def instance(cls) -> "ClassIslandIntegration":
+            return cls._instance
 
         def __init__(self, parent=None):
             super().__init__(parent)
+            ClassIslandIntegration._instance = self
             self.is_available = False
             self.connectivity_status = "NotAvailable"
 
@@ -327,16 +339,3 @@ else:
 
         def stop(self):
             pass
-
-ciService = ClassIslandIntegration()
-
-
-def initialize_ci_service():
-    global ciService
-    try:
-        ciService.start()
-    except Exception as e:
-        logger.exception(f"初始化 ClassIsland 集成服务时出错: {e}")
-
-
-initialize_ci_service()

@@ -9,17 +9,25 @@ from PySide6.QtWidgets import QApplication
 from RinUI import ThemeManager
 from loguru import logger
 
-from core.choice import ChoiceMaker
-from core.config import SettingsConfig, StudentsConfig
-from core.integration import NotificationManager, ciService
-from core.settings import SettingsWindow
-from core.tray import RPTray
-from core.widget import RPWidget
+from .choice import ChoiceMaker
+from .config import SettingsConfig, StudentsConfig
+from .integration import NotificationManager
+from .integration.classisland import ClassIslandIntegration
+from .settings import SettingsWindow
+from .tray import RPTray
+from .widget import RPWidget
 
 
 class RPMain(QObject):
+    _instance: "RPMain" = None
+
+    @classmethod
+    def instance(cls) -> "RPMain":
+        return cls._instance
+
     def __init__(self):
         super().__init__()
+        RPMain._instance = self
         self.settingsWindow = None
         self.tray = None
         self.choiceMaker = None
@@ -36,24 +44,24 @@ class RPMain(QObject):
     def init(self):
         logger.info("正在启动 RandPicker。")
 
-        self.settingsConfig = SettingsConfig(self)
+        self.settingsConfig = SettingsConfig()
 
         self.open_uiaccess()
 
-        self.studentsConfig = StudentsConfig(self)
-        self.notificationManager = NotificationManager(self)
-        self.choiceMaker = ChoiceMaker(self)
+        self.studentsConfig = StudentsConfig()
+        self.notificationManager = NotificationManager()
+        self.choiceMaker = ChoiceMaker()
         self.themeManager = ThemeManager()
 
         self.themeManager.themeChanged.connect(lambda theme: self.onThemeChanged(theme))
 
-        self.widget = RPWidget(self)
+        self.widget = RPWidget()
         self.widget.show()
 
-        self.tray = RPTray(self)
+        self.tray = RPTray()
 
     def open_settings(self):
-        self.settingsWindow = SettingsWindow(self)
+        self.settingsWindow = SettingsWindow()
 
     def onThemeChanged(self, theme):
         logger.info(f"主题切换为 {theme}。")
@@ -70,7 +78,9 @@ class RPMain(QObject):
         self.app.quit()
 
     def cleanup(self):
-        ciService.stop()
+        ci = ClassIslandIntegration.instance()
+        if ci:
+            ci.stop()
 
     def open_uiaccess(self):
         if not self.settingsConfig.getUIAccessEnabled():
@@ -78,7 +88,7 @@ class RPMain(QObject):
             return
 
         try:
-            from core.uiaccess import IsUIAccess, run_with_uiaccess, check_privileges
+            from .uiaccess import IsUIAccess, run_with_uiaccess, check_privileges
         except ImportError as e:
             logger.exception(f"导入 UIAccess 模块时发生错误: {e}，跳过启用 UIAccess。")
             return

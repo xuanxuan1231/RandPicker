@@ -5,11 +5,19 @@
 from loguru import logger
 from plyer import notification
 
+from ..config.settings import SettingsConfig
+
 
 class NativeNotifier:
+    _instance: "NativeNotifier" = None
+
+    @classmethod
+    def instance(cls) -> "NativeNotifier":
+        return cls._instance
+
     def __init__(self):
-        self.settingsConfig = None
-        self.main = None
+        NativeNotifier._instance = self
+        self.settingsConfig = SettingsConfig.instance()
 
     def send_message(self, pick_type: str, stus: list) -> bool:
         """发送通知消息"""
@@ -32,8 +40,6 @@ class NativeNotifier:
 
     def _format_message(self, pick_type: str, stus: list) -> tuple[str, str]:
         """格式化通知消息"""
-        if not self.settingsConfig:
-            raise ValueError("SettingsConfig 未初始化，无法格式化消息")
         format = self.settingsConfig.getNotifyFormat("native")
 
         names = format['names']['separator'].join([s.get("name", "未知") for s in stus])
@@ -62,5 +68,3 @@ class NativeNotifier:
         except Exception as e:
             logger.exception(f"Native 通知发送失败: {e}")
 
-
-nativeNotifier = NativeNotifier()

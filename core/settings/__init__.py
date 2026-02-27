@@ -5,26 +5,29 @@
 from RinUI import RinUIWindow
 
 from .service import SettingsService
+from ..choice import ChoiceMaker
+from ..config import SettingsConfig, StudentsConfig
 from ..config.dirs import *
+from ..integration import NotificationManager
 from ..version_info import versionInfo
 
 
 class SettingsWindow(RinUIWindow):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super().__init__()
 
-        self.main = parent
-        self.studentsConfig = parent.studentsConfig
-        self.config = parent.settingsConfig
+        from ..main import RPMain  # 延迟导入，避免循环引用
+        self.main = RPMain.instance()
+
         self.service = SettingsService()
 
         self.engine.rootContext().setContextProperty("SettingsService", self.service)
-        self.engine.rootContext().setContextProperty("SettingsConfig", self.config)
-        self.engine.rootContext().setContextProperty("ChoiceMaker", self.main.choiceMaker)
-        self.engine.rootContext().setContextProperty("StudentsConfig", self.studentsConfig)
+        self.engine.rootContext().setContextProperty("SettingsConfig", SettingsConfig.instance())
+        self.engine.rootContext().setContextProperty("ChoiceMaker", ChoiceMaker.instance())
+        self.engine.rootContext().setContextProperty("StudentsConfig", StudentsConfig.instance())
         self.engine.rootContext().setContextProperty("VersionInfo", versionInfo)
         self.engine.rootContext().setContextProperty("AppMain", self.main)
-        self.engine.rootContext().setContextProperty("NotificationManager", self.main.notificationManager)
+        self.engine.rootContext().setContextProperty("NotificationManager", NotificationManager.instance())
 
         self.load(QML_DIR / "settings" / "main.qml")
 
