@@ -4,9 +4,9 @@ from typing import Optional
 from PySide6.QtCore import QObject, Slot
 from loguru import logger
 
-from ..config.settings import SettingsConfig
 from .classisland import ClassIslandIntegration
 from .native import NativeNotifier
+from ..config.settings import SettingsConfig
 
 
 class NotificationManager(QObject):

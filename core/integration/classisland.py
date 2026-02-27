@@ -6,12 +6,12 @@ import asyncio
 import sys
 import threading
 import time
-from multipledispatch import dispatch
 from collections import deque
 from typing import Optional
 
 from PySide6.QtCore import QObject, Slot, Signal
 from loguru import logger
+from multipledispatch import dispatch
 
 from ..config.dirs import DLL_DIR
 from ..config.settings import SettingsConfig

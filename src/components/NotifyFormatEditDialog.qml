@@ -76,8 +76,8 @@ Dialog {
     }
 
     RowLayout {
-        Layout.fillWidth: true
         Layout.fillHeight: true
+        Layout.fillWidth: true
         spacing: 16
 
         // Left panel: Format settings

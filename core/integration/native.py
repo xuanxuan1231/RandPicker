@@ -79,4 +79,3 @@ class NativeNotifier:
             logger.success(f"Native 通知发送成功: {title}: {message}")
         except Exception as e:
             logger.exception(f"Native 通知发送失败: {e}")
-
