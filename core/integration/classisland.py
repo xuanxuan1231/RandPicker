@@ -277,7 +277,7 @@ if CSHARP_AVAILABLE:
 
             return result
 
-        def _send(self, result: NotifyResult):
+        def send(self, result: NotifyResult):
             """
             发送通知到 ClassIsland
 
@@ -311,6 +311,10 @@ else:
             logger.warning("ClassIsland 集成不可用，无法启动客户端。")
 
         def send_message(self, *arg) -> bool:
+            logger.warning("ClassIsland 集成不可用，无法发送通知。")
+            return False
+
+        def send(self, *arg) -> bool:
             logger.warning("ClassIsland 集成不可用，无法发送通知。")
             return False
 
