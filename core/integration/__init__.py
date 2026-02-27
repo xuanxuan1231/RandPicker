@@ -68,7 +68,7 @@ class NotificationManager(QObject):
             if opt == "native":
                 self.nativeNotifier.send(title, message)
             elif opt == "classisland":
-                self.ciService.send(title, message)
+                self.ciService.send_raw(title, message)
             elif opt == "classwidgets":
                 logger.error(f"不支持的通知方式: {opt}")
             else:

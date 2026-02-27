@@ -297,6 +297,20 @@ if CSHARP_AVAILABLE:
             except Exception as e:
                 logger.exception(f"向 ClassIsland 发送通知时出错: {e}")
 
+        def send_raw(self, title: str, message: str) -> None:
+            """发送原始文本通知到 ClassIsland"""
+            if self.connectivity_status != "Connected":
+                logger.warning("ClassIsland 未连接或未运行，无法发送通知。")
+                return
+            try:
+                result = NotifyResult()
+                result.PickType = PickType.Test
+                result.Title = title
+                result.Overlay = message
+                self.send(result)
+            except Exception as e:
+                logger.exception(f"ClassIsland 原始通知发送失败: {e}")
+
         def get_availability(self):
             return self.is_available
 # 不是怎么老被炸啊（
@@ -329,6 +343,9 @@ else:
         def send(self, *arg) -> bool:
             logger.warning("ClassIsland 集成不可用，无法发送通知。")
             return False
+
+        def send_raw(self, title: str, message: str) -> None:
+            logger.warning("ClassIsland 集成不可用，无法发送通知。")
 
         def send_test(self):
             logger.warning("ClassIsland 集成不可用，无法发送测试通知。")

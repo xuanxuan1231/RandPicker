@@ -6,7 +6,7 @@ import platform
 from PySide6.QtCore import Slot, QObject, Signal
 from loguru import logger
 
-from ..integration.classisland import ciService
+from ..integration.classisland import ClassIslandIntegration
 
 
 class SettingsService(QObject):
@@ -14,7 +14,8 @@ class SettingsService(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        ciService.connectivityUpdated.connect(lambda x: self.updateConnectivityStatus("classisland", x))
+        self.ciService = ClassIslandIntegration.instance()
+        self.ciService.connectivityUpdated.connect(lambda x: self.updateConnectivityStatus("classisland", x))
         # cwService.connectivityUpdated.connect(lambda x: self.updateConnectivityStatus("classwidgets", x))
 
     @Slot(str, result=bool)
@@ -37,7 +38,7 @@ class SettingsService(QObject):
         """获取通知方式的连接状态，供 QML 初始化状态"""
         match option:
             case "classisland":
-                return ciService.get_connectivity_status()
+                return self.ciService.get_connectivity_status()
             case "classwidgets":
                 return "NotAvailable"
             case _:
