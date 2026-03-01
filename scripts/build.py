@@ -251,6 +251,10 @@ def build(platform_key: str, name: str = APP_NAME):
     for data_arg in _add_data_args():
         args.append(f"--add-data={data_arg}")
 
+    # Hidden imports
+    args.append("--collect-all=cv2")
+    args.append("--hidden-import=PySide6.QtMultimedia")
+
     print(f"Running PyInstaller with args: {args}")
     PyInstaller.__main__.run(args)
 
