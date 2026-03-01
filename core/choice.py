@@ -60,3 +60,7 @@ class ChoiceMaker(QObject):
     def advancedChoose(self):
         """ TODO)) 高级抽选"""
         pass
+
+    def faceChoose(self):
+        """ TODO)) 人脸抽选"""
+        pass

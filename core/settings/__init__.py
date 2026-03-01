@@ -8,6 +8,7 @@ from .service import SettingsService
 from ..choice import ChoiceMaker
 from ..config import SettingsConfig, StudentsConfig
 from ..config.dirs import *
+from ..face import FaceChooser
 from ..integration import NotificationManager
 from ..version_info import versionInfo
 
@@ -20,6 +21,7 @@ class SettingsWindow(RinUIWindow):
         self.main = RPMain.instance()
 
         self.service = SettingsService()
+        self.faceChooser = FaceChooser()
 
         self.engine.rootContext().setContextProperty("SettingsService", self.service)
         self.engine.rootContext().setContextProperty("SettingsConfig", SettingsConfig.instance())
@@ -28,6 +30,10 @@ class SettingsWindow(RinUIWindow):
         self.engine.rootContext().setContextProperty("VersionInfo", versionInfo)
         self.engine.rootContext().setContextProperty("AppMain", self.main)
         self.engine.rootContext().setContextProperty("NotificationManager", NotificationManager.instance())
+        self.engine.rootContext().setContextProperty("FaceChooser", self.faceChooser)
+
+        # 注册摄像头 ImageProvider
+        self.engine.addImageProvider("camera", self.faceChooser.imageProvider)
 
         self.load(QML_DIR / "settings" / "main.qml")
 
@@ -40,3 +46,8 @@ class SettingsWindow(RinUIWindow):
         icon_path = str(
             ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
         self.setIcon(icon_path)
+
+    def close(self):
+        """关闭设置窗口时清理人脸抽选资源"""
+        self.faceChooser.cleanup()
+        super().close()

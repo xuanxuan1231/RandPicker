@@ -89,6 +89,7 @@ def _platform_args(platform_key: str) -> list[str]:
         args.extend([
             "--onedir",
             "--windowed",
+            "--contents-directory=.",
         ])
     return args
 
