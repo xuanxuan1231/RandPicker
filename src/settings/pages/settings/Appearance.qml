@@ -28,11 +28,23 @@ FluentPage {
             SettingItem {
                 title: qsTr("使用管理员权限重新启动")
 
-                Button {
-                    text: qsTr("立即重新启动")
-                    enabled: Qt.platform.os === "windows"
-                    onClicked: {
-                        AppMain.restartAsAdmin();
+                Row {
+                    spacing: 8
+                    anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: Qt.platform.os === "windows" && AppMain.isAdmin
+                        color: Theme.currentTheme.colors.textSecondaryColor
+                        text: qsTr("当前已以管理员身份运行")
+                    }
+
+                    Button {
+                        text: qsTr("立即重新启动")
+                        enabled: Qt.platform.os === "windows" && !AppMain.isAdmin
+                        onClicked: {
+                            AppMain.restartAsAdmin();
+                        }
                     }
                 }
 
@@ -41,7 +53,12 @@ FluentPage {
             content: CheckBox {
                 text: qsTr("使用管理员权限启动")
                 checked: SettingsConfig.getRunAsAdmin()
-                onCheckedChanged: SettingsConfig.setRunAsAdmin(checked)
+                onCheckedChanged: {
+                    if (checked === SettingsConfig.getRunAsAdmin()) {
+                        return;
+                    }
+                    SettingsConfig.setRunAsAdmin(checked);
+                }
                 enabled: Qt.platform.os === "windows"
             }
 
@@ -50,6 +67,7 @@ FluentPage {
     }
 
     ColumnLayout {
+        Layout.fillWidth: true
         Text {
             Layout.alignment: Qt.AlignLeft
             Layout.fillWidth: true
@@ -114,6 +132,7 @@ FluentPage {
     }
 
     ColumnLayout {
+        Layout.fillWidth: true
         Text {
             Layout.alignment: Qt.AlignLeft
             Layout.fillWidth: true
