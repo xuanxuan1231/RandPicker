@@ -4,13 +4,23 @@
 
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Slot
+from PySide6.QtCore import QObject, Slot, Signal, Property
 from RinUI import ConfigManager
 from loguru import logger
 
 from .dirs import CONFIG_DIR
 
 DEFAULT_CONFIG = {
+    "appear_behave": {
+        "general": {
+            "run_as_admin": False
+        },
+        "widget": {
+            "person_button": True,
+            "group_button": True,
+            "more_button": True
+        }
+    },
     "notification": {
         "fallback": True,
         "options": {
@@ -63,8 +73,13 @@ DEFAULT_CONFIG = {
 }
 
 
+
 class SettingsConfig(ConfigManager, QObject):
     _instance: "SettingsConfig" = None
+
+    showDrawButtonChanged = Signal()
+    showGroupButtonChanged = Signal()
+    showMoreButtonChanged = Signal()
 
     @classmethod
     def instance(cls) -> "SettingsConfig":
@@ -275,4 +290,66 @@ class SettingsConfig(ConfigManager, QObject):
         advanced = self.config.setdefault("advanced", {})
         advanced["uiaccess"] = enabled
         self.save_config()
+    # endregion #
+
+    # region 外观 & 行为 #
+    @Slot(result=bool)
+    def getRunAsAdmin(self) -> bool:
+        """获取是否以管理员权限运行"""
+        appear_behave = self.config.get("appear_behave", {})
+        general = appear_behave.get("general", {})
+        return bool(general.get("run_as_admin", False))
+
+    @Slot(bool)
+    def setRunAsAdmin(self, run_as_admin: bool) -> None:
+        """设置是否以管理员权限运行"""
+        appear_behave = self.config.setdefault("appear_behave", {})
+        general = appear_behave.setdefault("general", {})
+        general["run_as_admin"] = run_as_admin
+        self.save_config()
+
+    @Property(bool, notify=showDrawButtonChanged)
+    def showDrawButton(self):
+        appear_behave = self.config.get("appear_behave", {})
+        widget = appear_behave.get("widget", {})
+        return bool(widget.get("person_button", True))
+
+    @Property(bool, notify=showGroupButtonChanged)
+    def showGroupButton(self):
+        appear_behave = self.config.get("appear_behave", {})
+        widget = appear_behave.get("widget", {})
+        return bool(widget.get("group_button", True))
+
+    @Property(bool, notify=showMoreButtonChanged)
+    def showMoreButton(self):
+        appear_behave = self.config.get("appear_behave", {})
+        widget = appear_behave.get("widget", {})
+        return bool(widget.get("more_button", True))
+
+    @Slot(bool)
+    def setShowDrawButton(self, show: bool) -> None:
+        """设置是否显示抽选按钮"""
+        appear_behave = self.config.setdefault("appear_behave", {})
+        widget = appear_behave.setdefault("widget", {})
+        widget["person_button"] = show
+        self.save_config()
+        self.showDrawButtonChanged.emit()
+
+    @Slot(bool)
+    def setShowGroupButton(self, show: bool) -> None:
+        """设置是否显示抽选小组按钮"""
+        appear_behave = self.config.setdefault("appear_behave", {})
+        widget = appear_behave.setdefault("widget", {})
+        widget["group_button"] = show
+        self.save_config()
+        self.showGroupButtonChanged.emit()
+
+    @Slot(bool)
+    def setShowMoreButton(self, show: bool) -> None:
+        """设置是否显示更多按钮"""
+        appear_behave = self.config.setdefault("appear_behave", {})
+        widget = appear_behave.setdefault("widget", {})
+        widget["more_button"] = show
+        self.save_config()
+        self.showMoreButtonChanged.emit()
     # endregion #

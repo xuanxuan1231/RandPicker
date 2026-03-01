@@ -6,6 +6,8 @@ import RinUI
 import "./components"
 
 QQW.Window {
+
+
     id: widget
 
     property int itemCount: 5
@@ -120,7 +122,7 @@ QQW.Window {
 
     color: "transparent"
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Widget | Qt.X11BypassWindowManagerHint
-    height: 157
+    height: mainLayout.implicitHeight + 20
     opacity: positionApplied ? 1 : 0
     title: qsTr("RandPicker")
     visible: true
@@ -204,6 +206,8 @@ QQW.Window {
         radius: 12
     }
     ColumnLayout {
+        id: mainLayout
+
         anchors.fill: parent
         anchors.margins: 10
         spacing: 5
@@ -259,6 +263,7 @@ QQW.Window {
 
                 iconName: "ic_fluent_people_20_regular"
                 text: "人"
+                visible: SettingsConfig.showDrawButton
 
                 onClicked: ChoiceMaker.choosePeople(itemCount, true)
             }
@@ -267,9 +272,21 @@ QQW.Window {
 
                 iconName: "ic_fluent_group_20_regular"
                 text: "组"
+                visible: SettingsConfig.showGroupButton
 
                 onClicked: console.log(" [TODO] 抽组")
             }
+            IconButton {
+                id: settingsButton
+
+                Layout.preferredHeight: 25
+                iconName: ""
+                text: "···"
+                visible: SettingsConfig.showMoreButton
+
+                onClicked: AppMain.open_settings()
+            }
+            
         }
     }
     Item {

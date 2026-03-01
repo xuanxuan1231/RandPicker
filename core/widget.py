@@ -28,8 +28,13 @@ class RPWidget(RinUIWindow):
             logger.error(f"Widget QML 文件不存在: {qml_path}")
             self.window = None
             return
+
+        from .main import RPMain
+        self.main = RPMain.instance()
+
         super().__init__()
         self.engine.rootContext().setContextProperty("widget", self)
+        self.engine.rootContext().setContextProperty("AppMain", self.main)
         self.engine.rootContext().setContextProperty("ChoiceMaker", ChoiceMaker.instance())
         self.engine.rootContext().setContextProperty("VersionInfo", versionInfo)
         self.engine.rootContext().setContextProperty("SettingsConfig", SettingsConfig.instance())

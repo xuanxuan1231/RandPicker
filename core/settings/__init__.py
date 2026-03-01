@@ -14,6 +14,8 @@ from ..version_info import versionInfo
 
 
 class SettingsWindow(RinUIWindow):
+    _instance: "SettingsWindow" = None
+
     def __init__(self, parent=None):
         super().__init__()
 
@@ -42,6 +44,12 @@ class SettingsWindow(RinUIWindow):
         icon_path = str(
             ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
         self.setIcon(icon_path)
+
+    @classmethod
+    def instance(cls) -> "SettingsWindow":
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
 
     def onThemeChanged(self):
         icon_path = str(

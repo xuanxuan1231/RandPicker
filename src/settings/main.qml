@@ -48,7 +48,6 @@ FluentWindow {
         {
             title: qsTr("应用设置"),
             icon: "ic_fluent_settings_20_regular",
-            page: Qt.resolvedUrl("pages/SettingsPage.qml"),
             position: Position.Bottom,
             subItems: [
                 {

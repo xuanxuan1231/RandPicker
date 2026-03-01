@@ -27,7 +27,7 @@ if not os.path.exists(UIACCESS_DLL_PATH):
     raise FileNotFoundError(f"未找到 uiaccess.dll 文件: {UIACCESS_DLL_PATH}")
 
 with open(UIACCESS_DLL_PATH, "rb") as f:
-    checksum = hashlib.file_digest("md5", f).hexdigest()
+    checksum = hashlib.file_digest(f, "md5").hexdigest()
     if checksum != CHECKSUM_EXPECTED:
         logger.error(f"uiaccess.dll 文件校验失败。期望: {CHECKSUM_EXPECTED}, 实际: {checksum}")
         raise ValueError(f"uiaccess.dll 文件校验失败。期望: {CHECKSUM_EXPECTED}, 实际: {checksum}")
