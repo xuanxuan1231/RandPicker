@@ -133,7 +133,7 @@ class FaceChooser(QObject):
                 cap = cv2.VideoCapture(dev["path"], cv2.CAP_V4L2)
                 if cap.isOpened():
                     cameras.append({"id": dev["path"], "name": dev["name"]})
-                    cap.release()
+                cap.release()
         else:
             # Windows / macOS: 先用 cv2 探测，得到经过验证的索引列表；
             # 再用 QMediaDevices 获取真实名称。两者基于相同的底层 OS API
@@ -144,9 +144,7 @@ class FaceChooser(QObject):
                 cap = cv2.VideoCapture(i)
                 if cap.isOpened():
                     cv_indices.append(i)
-                    cap.release()
-                else:
-                    break  # 连续失败即停止
+                cap.release()
 
             qt_names = self._get_qt_camera_names()
             if qt_names and len(qt_names) == len(cv_indices):
