@@ -8,6 +8,7 @@ dependencies = [
     "dbus-python>=1.4.0; sys_platform == 'linux'",
     "loguru>=0.7.3",
     "multipledispatch>=1.0.0",
+    "opencv-python>=4.13.0.92",
     "packaging>=26.0",
     "plyer>=2.1.0",
     "pyside6>=6.10.1",

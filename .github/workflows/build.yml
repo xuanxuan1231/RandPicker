@@ -63,15 +63,7 @@ jobs:
         if: matrix.platform == 'mac'
         shell: bash
         run: |
-          pyinstaller app.py \
-            --name RandPicker \
-            --icon assets/icon-dark.icns \
-            --add-data assets:assets \
-            --add-data src:src \
-            --add-data LICENSE:LICENSE \
-            --add-data lib:lib \
-            --contents-directory . \
-            --windowed
+          pyinstaller RandPicker-macOS.spec
 
       - name: Post Build
         run: |

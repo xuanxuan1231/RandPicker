@@ -124,6 +124,11 @@ class RPMain(QObject):
         ci = ClassIslandIntegration.instance()
         if ci:
             ci.stop()
+        # 清理人脸抽选资源
+        from .face import FaceChooser
+        fc = FaceChooser.instance()
+        if fc:
+            fc.cleanup()
 
     def open_uiaccess(self):
         if not self.settingsConfig.getUIAccessEnabled():

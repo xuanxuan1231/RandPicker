@@ -26,6 +26,11 @@ FluentWindow {
             position: Position.Top
         },
         {
+            title: qsTr("人脸抽选"),
+            icon: "ic_fluent_person_20_regular",
+            page: Qt.resolvedUrl("pages/FaceChoosePage.qml")
+        },
+        {
             title: qsTr("学生管理"),
             icon: "ic_fluent_people_20_regular",
             page: Qt.resolvedUrl("pages/stuconfig/StudentManage.qml")
@@ -74,6 +79,12 @@ FluentWindow {
     title: qsTr("RandPicker")
     visible: true
     width: 900
+
+    onClosing: {
+        if (FaceChooser) {
+            FaceChooser.stopCamera();
+        }
+    }
 
     Item {
         id: watermark
