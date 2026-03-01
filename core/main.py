@@ -4,7 +4,7 @@
 import os
 import sys
 
-from PySide6.QtCore import QObject, Slot
+from PySide6.QtCore import QObject, Property, Slot
 from PySide6.QtWidgets import QApplication
 from RinUI import ThemeManager
 from loguru import logger
@@ -60,8 +60,22 @@ class RPMain(QObject):
 
         self.tray = RPTray()
 
+    @Slot()
     def open_settings(self):
-        self.settingsWindow = SettingsWindow()
+        self.settingsWindow = SettingsWindow.instance()
+        self.settingsWindow.show()
+        self.settingsWindow.raise_()
+
+    @Property(bool, constant=True)
+    def isAdmin(self) -> bool:
+        """返回当前进程是否以管理员（提升权限）身份运行。"""
+        if sys.platform != "win32":
+            return False
+        try:
+            from ctypes import windll
+            return bool(windll.shell32.IsUserAnAdmin())
+        except Exception:
+            return False
 
     def onThemeChanged(self, theme):
         logger.info(f"主题切换为 {theme}。")
@@ -69,7 +83,36 @@ class RPMain(QObject):
     @Slot()
     def restart(self):
         logger.debug("触发重新启动")
+        self.cleanup()
         os.execl(sys.executable, sys.executable, *sys.argv)
+
+    @Slot()
+    def restartAsAdmin(self):
+        if sys.platform != "win32":
+            logger.warning("仅支持在 Windows 上以管理员权限重新启动。")
+            return
+
+        from ctypes import windll
+        from subprocess import list2cmdline
+
+        if getattr(sys, "frozen", False):
+            exe = sys.executable
+            params = list2cmdline(sys.argv[1:])
+        else:
+            exe = sys.executable
+            params = list2cmdline([sys.argv[0]] + sys.argv[1:])
+        try:
+            logger.info("尝试以管理员权限重新启动程序。")
+            result = windll.shell32.ShellExecuteW(None, "runas", exe, params, None, 1)
+            if result <= 32:
+                # 错误
+                logger.error(f"以管理员权限重新启动失败，错误码: {result}。")
+                return
+            # 确认提权成功
+            self.quit()
+        except Exception as e:
+            logger.exception(f"以管理员权限重新启动时发生异常: {e}。")
+            return
 
     @Slot()
     def quit(self):
