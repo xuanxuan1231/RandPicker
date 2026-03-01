@@ -1,11 +1,8 @@
 """
 人脸抽选模块
 """
-import os
 import platform
 import random
-import shutil
-import tempfile
 from pathlib import Path
 from typing import Optional
 
@@ -35,6 +32,26 @@ class CameraImageProvider(QQuickImageProvider):
         self._image = image
 
 
+class FaceImageProvider(QQuickImageProvider):
+    """为 QML 提供人脸抠图的内存 ImageProvider，避免将生物特征图像写入磁盘"""
+
+    def __init__(self):
+        super().__init__(QQuickImageProvider.ImageType.Image)
+        self._images: dict[str, QImage] = {}
+
+    def requestImage(self, id, size, requestedSize):
+        img = self._images.get(id)
+        if img is not None:
+            return img
+        return QImage()
+
+    def store(self, key: str, image: QImage):
+        self._images[key] = image
+
+    def clear(self):
+        self._images.clear()
+
+
 class FaceChooser(QObject):
     """人脸抽选"""
     _instance: "FaceChooser" = None
@@ -58,6 +75,7 @@ class FaceChooser(QObject):
         self._timer.timeout.connect(self._grab_frame)
 
         self.imageProvider = CameraImageProvider()
+        self.faceImageProvider = FaceImageProvider()
 
         # 加载 YuNet 人脸检测模型
         model_path = str(ASSETS_DIR / "face_detection_yunet_2023mar.onnx")
@@ -69,7 +87,6 @@ class FaceChooser(QObject):
         except Exception as e:
             logger.error(f"无法加载人脸检测模型: {e}")
 
-        self._temp_dir = tempfile.mkdtemp(prefix="randpicker_faces_")
         logger.info("人脸抽选模块已初始化（YuNet）")
 
     @staticmethod
@@ -118,21 +135,28 @@ class FaceChooser(QObject):
                     cameras.append({"id": dev["path"], "name": dev["name"]})
                     cap.release()
         else:
-            # Windows / macOS: 通过 QMediaDevices 快速获取摄像头列表，避免逐个 cv2 探测
+            # Windows / macOS: 先用 cv2 探测，得到经过验证的索引列表；
+            # 再用 QMediaDevices 获取真实名称。两者基于相同的底层 OS API
+            # （Windows: MSMF/DirectShow；macOS: AVFoundation），枚举顺序一致。
+            # 只有计数吻合时才将名称与索引配对，避免因排序差异对应到错误设备。
+            cv_indices = []
+            for i in range(10):
+                cap = cv2.VideoCapture(i)
+                if cap.isOpened():
+                    cv_indices.append(i)
+                    cap.release()
+                else:
+                    break  # 连续失败即停止
+
             qt_names = self._get_qt_camera_names()
-            if qt_names:
-                for i, name in enumerate(qt_names):
-                    cameras.append({"id": i, "name": name})
+            if qt_names and len(qt_names) == len(cv_indices):
+                # 数量吻合：按顺序配对，使用 Qt 提供的真实设备名称
+                for idx, name in zip(cv_indices, qt_names):
+                    cameras.append({"id": idx, "name": name})
             else:
-                # 回退: 仅探测少量索引
-                for i in range(10):
-                    cap = cv2.VideoCapture(i)
-                    if cap.isOpened():
-                        backend = cap.getBackendName()
-                        cameras.append({"id": i, "name": f"{backend} Camera {i}"})
-                        cap.release()
-                    else:
-                        break  # 连续失败即停止
+                # 数量不一致或 Qt 不可用：使用已验证的 cv2 索引，名称回退为通用格式
+                for i in cv_indices:
+                    cameras.append({"id": i, "name": f"Camera {i}"})
         return cameras
 
     @staticmethod
@@ -237,9 +261,8 @@ class FaceChooser(QObject):
             count = len(face_list)
         selected = random.sample(face_list, count)
 
-        # 清理旧的临时文件
-        for f in os.listdir(self._temp_dir):
-            os.remove(os.path.join(self._temp_dir, f))
+        # 清除上一轮缓存，将新抠图存入内存 Provider，不写入磁盘
+        self.faceImageProvider.clear()
 
         results = []
         for i, face in enumerate(selected):
@@ -255,12 +278,17 @@ class FaceChooser(QObject):
 
             face_crop = frame[y1:y2, x1:x2]
 
-            # 保存到临时文件
-            face_path = os.path.join(self._temp_dir, f"face_{i}.png")
-            cv2.imwrite(face_path, face_crop)
+            # 转为 QImage 存入内存 Provider；生物特征图像不落盘
+            rgb = cv2.cvtColor(face_crop, cv2.COLOR_BGR2RGB)
+            crop_h, crop_w = rgb.shape[:2]
+            qimg = QImage(
+                rgb.data, crop_w, crop_h, crop_w * 3, QImage.Format.Format_RGB888
+            ).copy()
+            key = f"face_{i}"
+            self.faceImageProvider.store(key, qimg)
 
             results.append({
-                "path": Path(face_path).as_uri(),
+                "path": f"image://faces/{key}",
                 "x": fx,
                 "y": fy,
                 "width": fw,
@@ -284,5 +312,4 @@ class FaceChooser(QObject):
     def cleanup(self):
         """清理资源"""
         self.stopCamera()
-        if os.path.exists(self._temp_dir):
-            shutil.rmtree(self._temp_dir, ignore_errors=True)
+        self.faceImageProvider.clear()

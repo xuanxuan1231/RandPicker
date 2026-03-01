@@ -1,5 +1,4 @@
 import os
-import plistlib
 import shutil
 import subprocess
 import sys

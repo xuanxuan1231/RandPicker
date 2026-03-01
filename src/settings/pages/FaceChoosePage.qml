@@ -47,8 +47,6 @@ FluentPage {
 
         onTriggered: {
             faceChoosePage.frameCounter++;
-            cameraPreview.source = "";
-            cameraPreview.source = "image://camera/frame?" + faceChoosePage.frameCounter;
         }
     }
 
@@ -83,7 +81,7 @@ FluentPage {
                 height: parent.height
                 fillMode: Image.PreserveAspectFit
                 cache: false
-                source: cameraActive ? "image://camera/frame?0" : ""
+                source: cameraActive ? "image://camera/frame?" + faceChoosePage.frameCounter : ""
                 visible: cameraActive
             }
 

@@ -32,8 +32,9 @@ class SettingsWindow(RinUIWindow):
         self.engine.rootContext().setContextProperty("NotificationManager", NotificationManager.instance())
         self.engine.rootContext().setContextProperty("FaceChooser", self.faceChooser)
 
-        # 注册摄像头 ImageProvider
+        # 注册 ImageProvider
         self.engine.addImageProvider("camera", self.faceChooser.imageProvider)
+        self.engine.addImageProvider("faces", self.faceChooser.faceImageProvider)
 
         self.load(QML_DIR / "settings" / "main.qml")
 
