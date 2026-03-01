@@ -1,4 +1,5 @@
 import os
+import plistlib
 import shutil
 import subprocess
 import sys
@@ -224,6 +225,24 @@ Terminal=false
     print(f".deb package built at {output_deb}")
 
 
+def _patch_macos_plist(app_bundle: Path):
+    """向 macOS .app 的 Info.plist 注入摄像头权限描述"""
+    plist_path = app_bundle / "Contents" / "Info.plist"
+    if not plist_path.exists():
+        print(f"Warning: {plist_path} not found, skipping plist patch")
+        return
+
+    with open(plist_path, "rb") as f:
+        plist = plistlib.load(f)
+
+    plist["NSCameraUsageDescription"] = "RandPicker 需要访问摄像头以进行人脸抽选。"
+
+    with open(plist_path, "wb") as f:
+        plistlib.dump(plist, f)
+
+    print(f"Patched Info.plist with NSCameraUsageDescription at {plist_path}")
+
+
 def build(platform_key: str, name: str = APP_NAME):
     if not MAIN_FILE.exists():
         raise FileNotFoundError(f"Missing app.py entry point at {MAIN_FILE}")
@@ -257,6 +276,9 @@ def build(platform_key: str, name: str = APP_NAME):
 
     print(f"Running PyInstaller with args: {args}")
     PyInstaller.__main__.run(args)
+
+    if platform_key == "mac":
+        _patch_macos_plist(DIST_DIR / f"{name}.app")
 
     if platform_key == "linux":
         build_deb(DIST_DIR / name)
