@@ -251,14 +251,17 @@ FluentPage {
 
                     delegate: Rectangle {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: faceImage.paintedHeight + faceLabel.implicitHeight + 24
+                        implicitHeight: delegateColumn.implicitHeight + 16
                         color: "transparent"
                         radius: 8
                         border.color: "#3399ff"
                         border.width: 2
 
                         ColumnLayout {
-                            anchors.fill: parent
+                            id: delegateColumn
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
                             anchors.margins: 8
                             spacing: 8
 

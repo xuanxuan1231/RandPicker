@@ -81,6 +81,12 @@ FluentWindow {
     visible: true
     width: 900
 
+    onClosing: {
+        if (FaceChooser) {
+            FaceChooser.stopCamera();
+        }
+    }
+
     Item {
         id: watermark
 

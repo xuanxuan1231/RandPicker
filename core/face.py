@@ -118,17 +118,21 @@ class FaceChooser(QObject):
                     cameras.append({"id": dev["path"], "name": dev["name"]})
                     cap.release()
         else:
-            # Windows / macOS: 通过 QMediaDevices 获取真实摄像头名称
+            # Windows / macOS: 通过 QMediaDevices 快速获取摄像头列表，避免逐个 cv2 探测
             qt_names = self._get_qt_camera_names()
-            for i in range(10):
-                cap = cv2.VideoCapture(i)
-                if cap.isOpened():
-                    name = qt_names[i] if i < len(qt_names) else None
-                    if not name:
-                        backend = cap.getBackendName()
-                        name = f"{backend} Camera {i}"
+            if qt_names:
+                for i, name in enumerate(qt_names):
                     cameras.append({"id": i, "name": name})
-                    cap.release()
+            else:
+                # 回退: 仅探测少量索引
+                for i in range(10):
+                    cap = cv2.VideoCapture(i)
+                    if cap.isOpened():
+                        backend = cap.getBackendName()
+                        cameras.append({"id": i, "name": f"{backend} Camera {i}"})
+                        cap.release()
+                    else:
+                        break  # 连续失败即停止
         return cameras
 
     @staticmethod
@@ -256,7 +260,7 @@ class FaceChooser(QObject):
             cv2.imwrite(face_path, face_crop)
 
             results.append({
-                "path": "file://" + face_path,
+                "path": Path(face_path).as_uri(),
                 "x": fx,
                 "y": fy,
                 "width": fw,
