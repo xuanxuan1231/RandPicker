@@ -15,6 +15,94 @@ APP_NAME = "RandPicker"
 PKG_NAME = APP_NAME.lower()
 APP_VERSION = str(VERSION)
 
+# Qt native library name prefixes to remove (suffixes like .so.6 / .dll / .dylib handled by glob)
+_QT_UNUSED_LIB_PREFIXES = [
+    "libQt6WebEngineCore", "Qt6WebEngineCore",
+    "libQt63DAnimation", "Qt63DAnimation",
+    "libQt63DCore", "Qt63DCore",
+    "libQt63DExtras", "Qt63DExtras",
+    "libQt63DInput", "Qt63DInput",
+    "libQt63DLogic", "Qt63DLogic",
+    "libQt63DRender", "Qt63DRender",
+    "libQt6Bluetooth", "Qt6Bluetooth",
+    "libQt6Charts", "Qt6Charts",
+    "libQt6DataVisualization", "Qt6DataVisualization",
+    "libQt6Graphs", "Qt6Graphs",
+    "libQt6Location", "Qt6Location",
+    "libQt6Multimedia", "Qt6Multimedia",
+    "libQt6MultimediaQuick", "Qt6MultimediaQuick",
+    "libQt6Nfc", "Qt6Nfc",
+    "libQt6Pdf", "Qt6Pdf",
+    "libQt6Positioning", "Qt6Positioning",
+    "libQt6PrintSupport", "Qt6PrintSupport",
+    "libQt6Quick3D", "Qt6Quick3D",
+    "libQt6Quick3DRuntimeRender", "Qt6Quick3DRuntimeRender",
+    "libQt6Quick3DUtils", "Qt6Quick3DUtils",
+    "libQt6Quick3DAssetImport", "Qt6Quick3DAssetImport",
+    "libQt6RemoteObjects", "Qt6RemoteObjects",
+    "libQt6Sensors", "Qt6Sensors",
+    "libQt6SerialBus", "Qt6SerialBus",
+    "libQt6SerialPort", "Qt6SerialPort",
+    "libQt6SpatialAudio", "Qt6SpatialAudio",
+    "libQt6TextToSpeech", "Qt6TextToSpeech",
+    "libQt6WaylandClient", "Qt6WaylandClient",
+    "libQt6WaylandCompositor", "Qt6WaylandCompositor",
+    "libQt6WebChannel", "Qt6WebChannel",
+    "libQt6WebSockets", "Qt6WebSockets",
+    "libQt6WebView", "Qt6WebView",
+]
+
+# QML module directories to remove
+_QML_UNUSED_DIRS = [
+    "Qt3D", "QtBluetooth", "QtCharts", "QtDataVisualization", "QtGraphs",
+    "QtLocation", "QtMultimedia", "QtNfc", "QtPositioning",
+    "QtQuick3D", "QtRemoteObjects", "QtScxml", "QtSensors",
+    "QtTest", "QtTextToSpeech", "QtWayland", "QtWebChannel",
+    "QtWebEngine", "QtWebSockets", "QtWebView",
+]
+
+
+def _cleanup_qt_bloat(dist_root: Path) -> None:
+    """Remove unused Qt native libraries, QML modules, and translations."""
+    removed_bytes = 0
+
+    # Remove unused Qt native lib files (.so*, .dll, .dylib)
+    for lib_dir in dist_root.rglob("PySide6"):
+        # Qt/lib on Linux/macOS, PySide6/ directly on Windows
+        search_dirs = [lib_dir / "Qt" / "lib", lib_dir]
+        for search_dir in search_dirs:
+            if not search_dir.is_dir():
+                continue
+            for f in list(search_dir.iterdir()):
+                if not f.is_file():
+                    continue
+                for prefix in _QT_UNUSED_LIB_PREFIXES:
+                    if f.name.startswith(prefix + ".") or f.name == prefix:
+                        removed_bytes += f.stat().st_size
+                        f.unlink()
+                        print(f"  Removed lib: {f.name}")
+                        break
+
+        # Remove unused QML modules
+        qml_dir = lib_dir / "Qt" / "qml"
+        if qml_dir.is_dir():
+            for d in list(qml_dir.iterdir()):
+                if d.is_dir() and d.name in _QML_UNUSED_DIRS:
+                    size = sum(f.stat().st_size for f in d.rglob("*") if f.is_file())
+                    removed_bytes += size
+                    shutil.rmtree(d)
+                    print(f"  Removed QML: {d.name}")
+
+        # Remove Qt translations
+        translations_dir = lib_dir / "Qt" / "translations"
+        if translations_dir.is_dir():
+            size = sum(f.stat().st_size for f in translations_dir.rglob("*") if f.is_file())
+            removed_bytes += size
+            shutil.rmtree(translations_dir)
+            print(f"  Removed translations ({size // 1024 // 1024} MB)")
+
+    print(f"Qt bloat cleanup freed {removed_bytes / 1024 / 1024:.1f} MB")
+
 
 def _resolve_platform() -> str:
     if sys.platform.startswith("win"):
@@ -105,13 +193,21 @@ Terminal=false
 
 def _post_build_windows() -> None:
     _remove_if_exists(ROOT / "version.txt")
+    _cleanup_qt_bloat(DIST_DIR / APP_NAME)
 
 
 def _post_build_linux() -> None:
     dist_app_dir = DIST_DIR / APP_NAME
     if not dist_app_dir.exists():
         raise FileNotFoundError(f"Missing dist app dir at {dist_app_dir}")
+    _cleanup_qt_bloat(dist_app_dir)
     build_deb(dist_app_dir)
+
+
+def _post_build_mac() -> None:
+    app_bundle = DIST_DIR / f"{APP_NAME}.app"
+    if app_bundle.exists():
+        _cleanup_qt_bloat(app_bundle)
 
 
 def main() -> None:
@@ -120,6 +216,8 @@ def main() -> None:
         _post_build_windows()
     elif platform_key == "linux":
         _post_build_linux()
+    elif platform_key == "mac":
+        _post_build_mac()
 
 
 if __name__ == "__main__":
