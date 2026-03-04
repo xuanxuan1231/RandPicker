@@ -101,6 +101,14 @@ def _cleanup_qt_bloat(dist_root: Path) -> None:
             shutil.rmtree(translations_dir)
             print(f"  Removed translations ({size // 1024 // 1024} MB)")
 
+    # Remove dangling symlinks in dist root (PyInstaller creates top-level
+    # symlinks pointing into PySide6/Qt/lib/; after we delete the targets
+    # above those links become dangling and cause shutil.copytree to fail)
+    for entry in dist_root.iterdir():
+        if entry.is_symlink() and not entry.exists():
+            entry.unlink()
+            print(f"  Removed dangling symlink: {entry.name}")
+
     print(f"Qt bloat cleanup freed {removed_bytes / 1024 / 1024:.1f} MB")
 
 
