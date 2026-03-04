@@ -35,6 +35,14 @@ jobs:
           enable-cache: true
           activate-environment: true
 
+      - name: Install UPX (Windows)
+        if: matrix.platform == 'windows'
+        run: choco install upx
+
+      - name: Install UPX (macOS)
+        if: matrix.platform == 'mac'
+        run: brew install upx
+
       - name: Install dependencies
         run: |
           uv pip install .
@@ -57,7 +65,9 @@ jobs:
             --add-data lib:lib \
             --version-file version.txt \
             --contents-directory . \
-            --windowed
+            --windowed \
+            --strip \
+            --optimize 2
 
       - name: Build (macOS)
         if: matrix.platform == 'mac'
@@ -98,7 +108,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-            git curl ca-certificates zip \
+            git curl ca-certificates zip upx-ucl \
             build-essential pkg-config python3-dev libfontconfig1 libxrender1 \
             libffi-dev libglib2.0-dev libx11-dev libxcb1-dev libglu1-mesa-dev \
             libxkbcommon-dev libxkbcommon-x11-0 libxcb-shm0-dev libxcb-render0-dev \
@@ -134,7 +144,9 @@ jobs:
             --add-data LICENSE:LICENSE \
             --add-data lib:lib \
             --contents-directory . \
-            --windowed
+            --windowed \
+            --strip \
+            --optimize 2
 
       - name: Post Build
         shell: bash

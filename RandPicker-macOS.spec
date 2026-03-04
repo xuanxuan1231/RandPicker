@@ -16,7 +16,7 @@ a = Analysis(
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
-    optimize=0,
+    optimize=2,
 )
 
 pyz = PYZ(a.pure)
@@ -29,7 +29,7 @@ exe = EXE(
     name='RandPicker',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
+    strip=True,
     upx=True,
     console=False,
     icon='assets/icon-dark.icns',
@@ -40,7 +40,7 @@ coll = COLLECT(
     exe,
     a.binaries,
     a.datas,
-    strip=False,
+    strip=True,
     upx=True,
     upx_exclude=[],
     name='RandPicker',
