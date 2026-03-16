@@ -12,6 +12,7 @@ from loguru import logger
 
 from .dirs import CONFIG_DIR
 from ..integration import NotificationManager
+from .excel_import import ExcelImporter
 
 DEFAULT_CONFIG = {
     "students": [
@@ -339,3 +340,57 @@ class StudentsConfig(QObject):
         if self.config_write is None:
             return None
         return deepcopy(self.config_write)
+
+    @Slot(str, str, result=str)
+    def import_students_from_excel(self, file_path: str, import_mode: str = "replace") -> str:
+        """
+        从 Excel 文件导入学生列表。
+
+        :param file_path: Excel 文件路径
+        :param import_mode: 导入模式 "replace" (替换全部) 或 "merge" (合并追加)
+        :return: 结果消息
+        """
+        students, message = ExcelImporter.import_from_excel(file_path, import_mode)
+
+        if not students:
+            logger.error(f"导入失败: {message}")
+            return f"导入失败: {message}"
+
+        # 根据导入模式处理
+        if import_mode == "replace":
+            # 替换模式：清空现有学生列表
+            self.config_write["students"] = students
+            logger.info(f"已替换全部学生数据，共 {len(students)} 名学生")
+        elif import_mode == "merge":
+            # 合并模式：追加到现有列表
+            existing = self.config_write.get("students", [])
+            existing.extend(students)
+            self.config_write["students"] = existing
+            logger.info(f"已合并学生数据，新增 {len(students)} 名学生")
+        else:
+            return f"未知的导入模式: {import_mode}"
+
+        return message
+
+    @Slot(str, result=str)
+    def export_students_to_excel(self, file_path: str) -> str:
+        """
+        导出学生列表到 Excel 文件。
+
+        :param file_path: 输出文件路径
+        :return: 结果消息
+        """
+        students = self.get_write_students()
+        success, message = ExcelImporter.export_to_excel(file_path, students)
+
+        if success:
+            logger.success(message)
+        else:
+            logger.error(message)
+
+        return message
+
+    @Slot(result=bool)
+    def is_excel_available(self) -> bool:
+        """检查 Excel 导入导出功能是否可用"""
+        return ExcelImporter.is_available()
