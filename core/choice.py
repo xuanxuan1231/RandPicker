@@ -4,7 +4,7 @@
 from random import choices
 from typing import Any
 
-from PySide6.QtCore import QObject, Slot
+from PySide6.QtCore import QObject, Slot, Signal, Property
 from loguru import logger
 
 from .config.students import StudentsConfig
@@ -13,6 +13,8 @@ from .integration import NotificationManager
 
 class ChoiceMaker(QObject):
     _instance: "ChoiceMaker" = None
+    memoryEnabledChanged = Signal(bool)
+    memoryEnabled = Property(bool, fget=lambda self: getattr(self, "_memory_enabled", False), fset=lambda self, v: self.setMemoryEnabled(v), notify=memoryEnabledChanged)
 
     @classmethod
     def instance(cls) -> "ChoiceMaker":
@@ -24,6 +26,9 @@ class ChoiceMaker(QObject):
         self.studentsConfig = StudentsConfig.instance()
         self.notificationManager = NotificationManager.instance()
         self._refresh()
+        # session-only memory mode: exclude already-picked students when enabled
+        self._memory_enabled = False
+        self._memory_set: set = set()
 
     def _refresh(self):
         self.students = self.studentsConfig.get_enabled_students()
@@ -36,9 +41,21 @@ class ChoiceMaker(QObject):
         if len(self.students) == 0:
             logger.warning("没有可用的学生进行选择。")
             return None
-        if number > len(self.students):
-            number = len(self.students)
-        result = choices(self.students, weights=self.students_weights, k=number)
+        # 记忆模式
+        available_students = list(self.students)
+        available_weights = list(self.students_weights)
+        if self._memory_enabled:
+            pairs = [(s, w) for s, w in zip(available_students, available_weights) if s not in self._memory_set]
+            if not pairs:
+                # 自动清空会话内记忆，允许重新从全部学生中抽选
+                self._memory_set.clear()
+            else:
+                available_students, available_weights = map(list, zip(*pairs))
+
+        if number > len(available_students):
+            number = len(available_students)
+
+        result = choices(available_students, weights=available_weights, k=number)
         logger.info(f"选择结果: {result}")
         if notify:
             self.notificationManager.send(
@@ -47,6 +64,10 @@ class ChoiceMaker(QObject):
                 # message=", ".join([self.studentsConfig.get_single_student(s).get("name", "未知") for s in result])
                 stus=[self.studentsConfig.get_single_student(s) for s in result]
             )
+            # record into memory set if enabled
+            if self._memory_enabled:
+                for student_id in result:
+                    self._memory_set.add(student_id)
             return None
         else:
             final_result = []
@@ -55,8 +76,25 @@ class ChoiceMaker(QObject):
                 student["properties"] = self.studentsConfig.getProperty(student_id)
                 student["avatar"] = self.studentsConfig.getAvatarPath(student_id)
                 final_result.append(student)
+            if self._memory_enabled:
+                for student_id in result:
+                    self._memory_set.add(student_id)
             return final_result
 
     def advancedChoose(self):
         """ TODO)) 高级抽选"""
         pass
+    
+    @Slot(bool)
+    def setMemoryEnabled(self, enabled: bool) -> None:
+        """启用/禁用会话内记忆模式（排除已选学生）"""
+        self._memory_enabled = bool(enabled)
+        try:
+            self.memoryEnabledChanged.emit(self._memory_enabled)
+        except Exception:
+            pass
+
+    @Slot()
+    def resetMemory(self) -> None:
+        """清除会话内记忆（重置已记录的已选学生）"""
+        self._memory_set.clear()
