@@ -388,7 +388,12 @@ class SettingsConfig(ConfigManager, QObject):
         """设置浮窗整体缩放"""
         appear_behave = self.config.setdefault("appear_behave", {})
         widget = appear_behave.setdefault("widget", {})
-        clamped_scale = max(0.6, min(2.0, float(scale)))
+        try:
+            parsed_scale = float(scale)
+        except (TypeError, ValueError):
+            parsed_scale = 1.0
+
+        clamped_scale = max(0.6, min(2.0, parsed_scale))
 
         try:
             current_scale = float(widget.get("scale", 1.0))

@@ -56,7 +56,7 @@ FluentPage {
                 checked: SettingsConfig.getRunAsAdmin()
                 onCheckedChanged: {
                     if (checked === SettingsConfig.getRunAsAdmin())
-                        return ;
+                        return;
 
                     SettingsConfig.setRunAsAdmin(checked);
                 }
