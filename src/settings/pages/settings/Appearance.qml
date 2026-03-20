@@ -185,6 +185,19 @@ FluentPage {
 
             }
 
+            SettingItem {
+                title: qsTr("显示“记忆”设置")
+
+                Switch {
+                    checked: SettingsConfig.showMemoryRow
+                    onCheckedChanged: {
+                        if (checked !== SettingsConfig.showMemoryRow)
+                            SettingsConfig.setShowMemoryRow(checked)
+                    }
+                }
+
+            }
+
         }
 
     }

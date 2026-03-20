@@ -92,6 +92,33 @@ FluentPage {
                     }
                 }
             }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
+
+                ToggleButton {
+                    id: memoryToggle
+                    checked: ChoiceMaker.memoryEnabled
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 36
+                    text: qsTr("记忆 · ") + (ChoiceMaker.memoryEnabled ? qsTr("开") : qsTr("关"))
+                    onClicked: ChoiceMaker.memoryEnabled = !ChoiceMaker.memoryEnabled
+                }
+
+                ToolButton {
+                    icon.name: "ic_fluent_arrow_sync_20_regular"
+                    icon.width: 20
+                    icon.height: 20
+                    Layout.preferredWidth: 36
+                    Layout.preferredHeight: 36
+                    onClicked: ChoiceMaker.resetMemory()
+                    ToolTip {
+                        delay: 500
+                        text: qsTr("重置记忆")
+                        visible: parent.hovered
+                    }
+                }
+            }
             Button {
                 id: generalPick
 

@@ -18,7 +18,8 @@ DEFAULT_CONFIG = {
         "widget": {
             "person_button": True,
             "group_button": True,
-            "more_button": True
+            "more_button": True,
+            "memory_row": True
         }
     },
     "notification": {
@@ -80,6 +81,7 @@ class SettingsConfig(ConfigManager, QObject):
     showDrawButtonChanged = Signal()
     showGroupButtonChanged = Signal()
     showMoreButtonChanged = Signal()
+    showMemoryRowChanged = Signal()
 
     @classmethod
     def instance(cls) -> "SettingsConfig":
@@ -326,6 +328,12 @@ class SettingsConfig(ConfigManager, QObject):
         widget = appear_behave.get("widget", {})
         return bool(widget.get("more_button", True))
 
+    @Property(bool, notify=showMemoryRowChanged)
+    def showMemoryRow(self):
+        appear_behave = self.config.get("appear_behave", {})
+        widget = appear_behave.get("widget", {})
+        return bool(widget.get("memory_row", True))
+
     @Slot(bool)
     def setShowDrawButton(self, show: bool) -> None:
         """设置是否显示抽选按钮"""
@@ -352,4 +360,13 @@ class SettingsConfig(ConfigManager, QObject):
         widget["more_button"] = show
         self.save_config()
         self.showMoreButtonChanged.emit()
+
+    @Slot(bool)
+    def setShowMemoryRow(self, show: bool) -> None:
+        """设置是否显示记忆行（记忆 Toggle + 重置）"""
+        appear_behave = self.config.setdefault("appear_behave", {})
+        widget = appear_behave.setdefault("widget", {})
+        widget["memory_row"] = show
+        self.save_config()
+        self.showMemoryRowChanged.emit()
     # endregion #

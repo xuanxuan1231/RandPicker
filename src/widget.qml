@@ -276,6 +276,39 @@ QQW.Window {
 
                 onClicked: console.log(" [TODO] 抽组")
             }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
+                visible: SettingsConfig.showMemoryRow
+
+                ToggleButton {
+                    id: memoryToggle
+                    property int textSize: 12
+                    text: "记忆"
+                    checked: ChoiceMaker.memoryEnabled
+                    onClicked: ChoiceMaker.memoryEnabled = !ChoiceMaker.memoryEnabled
+
+                    Component.onCompleted: contentItem.children[0].children[1].font.pixelSize = textSize
+
+                    Layout.preferredHeight: Math.max((contentItem && contentItem.children && contentItem.children[0] &&
+                        contentItem.children[0].children && contentItem.children[0].children[1]
+                        ? contentItem.children[0].children[1].height : textSize) + 8, 22)
+
+                    Layout.preferredWidth: Math.max(((contentItem && contentItem.children && contentItem.children[0])
+                        ? contentItem.children[0].implicitWidth : textSize * 3) + 12, 32)
+                }
+
+                ToolButton {
+                    id: memoryReset
+                    flat: true
+                    icon.name: "ic_fluent_arrow_sync_20_regular"
+                    property int iconSize: 12
+                    size: iconSize
+                    Layout.preferredHeight: iconSize
+                    Layout.preferredWidth: iconSize
+                    onClicked: ChoiceMaker.resetMemory()
+                }
+            }
             IconButton {
                 id: settingsButton
 
