@@ -28,7 +28,6 @@ class RPWidget(RinUIWindow):
             logger.error(f"Widget QML 文件不存在: {qml_path}")
             self.window = None
             return
-        
 
         from .main import RPMain
         self.main = RPMain.instance()

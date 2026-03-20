@@ -99,11 +99,9 @@ FluentPage {
                 ToggleButton {
                     id: memoryToggle
                     checked: ChoiceMaker.memoryEnabled
-                    text: qsTr("记忆")
-                    Layout.preferredWidth: 40
+                    Layout.fillWidth: true
                     Layout.preferredHeight: 36
-                    font.pixelSize: 12
-                    visible: SettingsConfig.showMemoryRow
+                    text: qsTr("记忆 · ") + (ChoiceMaker.memoryEnabled ? qsTr("开") : qsTr("关"))
                     onClicked: ChoiceMaker.memoryEnabled = !ChoiceMaker.memoryEnabled
                 }
 
@@ -113,7 +111,6 @@ FluentPage {
                     icon.height: 20
                     Layout.preferredWidth: 36
                     Layout.preferredHeight: 36
-                    visible: SettingsConfig.showMemoryRow
                     onClicked: ChoiceMaker.resetMemory()
                     ToolTip {
                         delay: 500
