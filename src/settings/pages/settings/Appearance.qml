@@ -46,6 +46,7 @@ FluentPage {
                             AppMain.restartAsAdmin();
                         }
                     }
+
                 }
 
             }
@@ -54,9 +55,9 @@ FluentPage {
                 text: qsTr("使用管理员权限启动")
                 checked: SettingsConfig.getRunAsAdmin()
                 onCheckedChanged: {
-                    if (checked === SettingsConfig.getRunAsAdmin()) {
-                        return;
-                    }
+                    if (checked === SettingsConfig.getRunAsAdmin())
+                        return ;
+
                     SettingsConfig.setRunAsAdmin(checked);
                 }
                 enabled: Qt.platform.os === "windows"
@@ -68,6 +69,7 @@ FluentPage {
 
     ColumnLayout {
         Layout.fillWidth: true
+
         Text {
             Layout.alignment: Qt.AlignLeft
             Layout.fillWidth: true
@@ -84,55 +86,70 @@ FluentPage {
 
             ComboBox {
                 id: themeComboBox
+
                 Layout.preferredWidth: 120
                 model: [qsTr("跟随系统"), qsTr("浅色"), qsTr("深色")]
                 // Theme.getTheme() 返回 "Light" "Dark" "Auto"
                 // Theme.setTheme(Theme.mode.Light/Dark/Auto)
                 currentIndex: {
                     var t = Theme.getTheme();
-                    if (t === "Auto") return 0;
-                    if (t === "Light") return 1;
-                    if (t === "Dark") return 2;
+                    if (t === "Auto")
+                        return 0;
+
+                    if (t === "Light")
+                        return 1;
+
+                    if (t === "Dark")
+                        return 2;
+
                     return 0;
                 }
                 onCurrentIndexChanged: {
-                    if (currentIndex === 0) {
+                    if (currentIndex === 0)
                         Theme.setTheme(Theme.mode.Auto);
-                    } else if (currentIndex === 1) {
+                    else if (currentIndex === 1)
                         Theme.setTheme(Theme.mode.Light);
-                    } else if (currentIndex === 2) {
+                    else if (currentIndex === 2)
                         Theme.setTheme(Theme.mode.Dark);
-                    }
                 }
             }
+
         }
+
         SettingCard {
             Layout.fillWidth: true
             icon.name: "ic_fluent_color_20_regular"
             title: qsTr("主题色")
             description: qsTr("选择应用的主题色")
-            
+
             Row {
                 spacing: 3
 
                 Rectangle {
                     id: themeColorRect
+
                     width: 40
                     height: colorButton.implicitHeight
                     radius: 4
                     color: Theme.getThemeColor()
                 }
+
                 Button {
                     id: colorButton
+
                     text: qsTr("选择颜色")
                     onClicked: colorPickerDialog.open()
                 }
+
             }
+
         }
+
     }
 
     ColumnLayout {
         Layout.fillWidth: true
+
         Text {
             Layout.alignment: Qt.AlignLeft
             Layout.fillWidth: true
@@ -141,10 +158,80 @@ FluentPage {
             text: qsTr("浮窗")
         }
 
+        SettingCard {
+            Layout.fillWidth: true
+            title: qsTr("缩放")
+            description: qsTr("设置浮窗整体的缩放大小。不影响主界面。")
+
+            RowLayout {
+                Layout.preferredWidth: parent.width * 0.4
+                spacing: 8
+
+                Text {
+                    color: Theme.currentTheme.colors.textSecondaryColor
+                    font.pixelSize: 12
+                    text: "60%"
+                }
+
+                Slider {
+                    id: widgetScaleSlider
+
+                    Layout.fillWidth: true
+                    from: 0.6
+                    stepSize: 0.05
+                    to: 2
+                    value: SettingsConfig.getWidgetScale()
+                    onMoved: {
+                        SettingsConfig.setWidgetScale(value);
+                    }
+                }
+
+                Connections {
+                    function onWidgetScaleChanged() {
+                        if (!widgetScaleSlider.pressed)
+                            widgetScaleSlider.value = SettingsConfig.getWidgetScale();
+
+                    }
+
+                    target: SettingsConfig
+                }
+
+                Text {
+                    color: Theme.currentTheme.colors.textColor
+                    font.pixelSize: 12
+                    text: Math.round(widgetScaleSlider.value * 100) + "%"
+                }
+
+                ToolButton {
+                    flat: true
+                    icon.name: "ic_fluent_arrow_reset_20_regular"
+                    visible: Math.abs(widgetScaleSlider.value - 1) > 0.001
+                    onClicked: {
+                        SettingsConfig.setWidgetScale(1);
+                    }
+
+                    ToolTip {
+                        delay: 500
+                        text: qsTr("重置为 100%")
+                        visible: parent.hovered
+                    }
+
+                }
+
+                Text {
+                    color: Theme.currentTheme.colors.textSecondaryColor
+                    font.pixelSize: 12
+                    text: "200%"
+                }
+
+            }
+
+        }
+
         SettingExpander {
             Layout.fillWidth: true
-            title: qsTr("浮窗设置")
-            description: qsTr("设置浮窗的外观和行为")
+            title: qsTr("显示内容")
+            description: qsTr("设置浮窗中显示的按钮和选项。")
 
             SettingItem {
                 title: qsTr("显示“抽人”按钮")
@@ -153,7 +240,8 @@ FluentPage {
                     checked: SettingsConfig.showDrawButton
                     onCheckedChanged: {
                         if (checked !== SettingsConfig.showDrawButton)
-                            SettingsConfig.setShowDrawButton(checked)
+                            SettingsConfig.setShowDrawButton(checked);
+
                     }
                 }
 
@@ -166,7 +254,8 @@ FluentPage {
                     checked: SettingsConfig.showGroupButton
                     onCheckedChanged: {
                         if (checked !== SettingsConfig.showGroupButton)
-                            SettingsConfig.setShowGroupButton(checked)
+                            SettingsConfig.setShowGroupButton(checked);
+
                     }
                 }
 
@@ -179,7 +268,8 @@ FluentPage {
                     checked: SettingsConfig.showMoreButton
                     onCheckedChanged: {
                         if (checked !== SettingsConfig.showMoreButton)
-                            SettingsConfig.setShowMoreButton(checked)
+                            SettingsConfig.setShowMoreButton(checked);
+
                     }
                 }
 
@@ -192,7 +282,8 @@ FluentPage {
                     checked: SettingsConfig.showMemoryRow
                     onCheckedChanged: {
                         if (checked !== SettingsConfig.showMemoryRow)
-                            SettingsConfig.setShowMemoryRow(checked)
+                            SettingsConfig.setShowMemoryRow(checked);
+
                     }
                 }
 
@@ -204,22 +295,22 @@ FluentPage {
 
     Dialog {
         id: colorPickerDialog
+
         title: qsTr("为 RandPicker 选择主题色")
         modal: true
         standardButtons: Dialog.Ok | Dialog.Cancel
-
         Component.onCompleted: {
             colorPicker.color = Theme.getThemeColor();
+        }
+        onAccepted: {
+            Theme.setThemeColor(colorPicker.color);
+            themeColorRect.color = Theme.getThemeColor();
         }
 
         ColorPicker {
             id: colorPicker
         }
 
-        onAccepted: {
-            Theme.setThemeColor(colorPicker.color);
-            themeColorRect.color = Theme.getThemeColor();
-        }
     }
 
 }

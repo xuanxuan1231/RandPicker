@@ -16,6 +16,8 @@ QQW.Window {
     property int screenPadding: 10  // 恢复到屏幕内时的边距
     property int snapThreshold: 50  // 吸附阈值（接近边缘50px时触发）
     property int visibleMargin: 10  // 屏幕内保留的可见像素
+    property real baseWidgetWidth: 75
+    property real widgetScale: SettingsConfig ? SettingsConfig.widgetScale : 1.0
 
     // 带动画移动到指定位置
     function animateTo(newX, newY) {
@@ -122,11 +124,11 @@ QQW.Window {
 
     color: "transparent"
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Widget | Qt.X11BypassWindowManagerHint
-    height: mainLayout.implicitHeight + 20
+    height: Math.round(scaledContent.height * widgetScale)
     opacity: positionApplied ? 1 : 0
     title: qsTr("RandPicker")
     visible: true
-    width: 75
+    width: Math.round(scaledContent.width * widgetScale)
 
     Component.onCompleted: Qt.callLater(applySavedPosition)
     onVisibleChanged: {
@@ -198,20 +200,33 @@ QQW.Window {
             }
         }
     }
-    Rectangle {
-        anchors.fill: parent
-        border.color: Colors.get("windowBorderColor")
-        border.width: 1
-        color: Colors.get("backgroundColor")
-        radius: 12
-    }
-    ColumnLayout {
-        id: mainLayout
+    Item {
+        id: scaledContent
 
-        anchors.fill: parent
-        anchors.margins: 10
-        spacing: 5
-        z: 1
+        height: mainLayout.implicitHeight + 20
+        width: baseWidgetWidth
+
+        transform: Scale {
+            origin.x: 0
+            origin.y: 0
+            xScale: widget.widgetScale
+            yScale: widget.widgetScale
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            border.color: Colors.get("windowBorderColor")
+            border.width: 1
+            color: Colors.get("backgroundColor")
+            radius: 12
+        }
+        ColumnLayout {
+            id: mainLayout
+
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 5
+            z: 1
 
         // 计数器和加减按钮
         RowLayout {
@@ -321,9 +336,9 @@ QQW.Window {
             }
             
         }
-    }
-    Item {
-        id: watermark
+        }
+        Item {
+            id: watermark
 
         enabled: false
         height: watermarkColumn.implicitHeight
@@ -331,29 +346,30 @@ QQW.Window {
         width: watermarkColumn.implicitWidth
         z: 114514
 
-        anchors {
-            bottom: parent.bottom
-            bottomMargin: 8
-            left: parent.left
-            leftMargin: 8
-        }
-        Column {
-            id: watermarkColumn
+            anchors {
+                bottom: parent.bottom
+                bottomMargin: 8
+                left: parent.left
+                leftMargin: 8
+            }
+            Column {
+                id: watermarkColumn
 
             spacing: 1
 
-            Text {
-                color: Colors.get("textColor")
-                font.bold: true
-                font.pixelSize: 10
-                opacity: 0.7
-                text: qsTr("开发预览")
-            }
-            Text {
-                color: Colors.get("textColor")
-                font.pixelSize: 9
-                opacity: 0.67
-                text: "JellyCat"
+                Text {
+                    color: Colors.get("textColor")
+                    font.bold: true
+                    font.pixelSize: 10
+                    opacity: 0.7
+                    text: qsTr("开发预览")
+                }
+                Text {
+                    color: Colors.get("textColor")
+                    font.pixelSize: 9
+                    opacity: 0.67
+                    text: "JellyCat"
+                }
             }
         }
     }

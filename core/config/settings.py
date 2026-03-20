@@ -19,7 +19,8 @@ DEFAULT_CONFIG = {
             "person_button": True,
             "group_button": True,
             "more_button": True,
-            "memory_row": True
+            "memory_row": True,
+            "scale": 1.0
         }
     },
     "notification": {
@@ -82,6 +83,7 @@ class SettingsConfig(ConfigManager, QObject):
     showGroupButtonChanged = Signal()
     showMoreButtonChanged = Signal()
     showMemoryRowChanged = Signal()
+    widgetScaleChanged = Signal()
 
     @classmethod
     def instance(cls) -> "SettingsConfig":
@@ -95,7 +97,7 @@ class SettingsConfig(ConfigManager, QObject):
 
         self.load_config(DEFAULT_CONFIG)
 
-    # region 通知 #
+    # region 通知
     @Slot(result=bool)
     def getNotifyFallback(self) -> bool:
         """获取通知回退选项"""
@@ -259,9 +261,9 @@ class SettingsConfig(ConfigManager, QObject):
         data["format"] = format_data
         self.save_config()
 
-    # endregion #
+    # endregion
 
-    # region 窗口位置 #
+    # region 窗口位置
     @Slot(result="QVariantList")
     def getWidgetPosition(self) -> list[int | None]:
         """获取主窗口位置"""
@@ -278,9 +280,9 @@ class SettingsConfig(ConfigManager, QObject):
         self.config["widget_position"]["y"] = y
         self.save_config()
 
-    # endregion #
+    # endregion
 
-    # region UIACCESS #
+    # region UIACCESS
     def getUIAccessEnabled(self) -> bool:
         """获取 UIAccess 启用状态"""
         advanced = self.config.get("advanced", {})
@@ -292,9 +294,9 @@ class SettingsConfig(ConfigManager, QObject):
         advanced = self.config.setdefault("advanced", {})
         advanced["uiaccess"] = enabled
         self.save_config()
-    # endregion #
+    # endregion
 
-    # region 外观 & 行为 #
+    # region 外观 & 行为
     @Slot(result=bool)
     def getRunAsAdmin(self) -> bool:
         """获取是否以管理员权限运行"""
@@ -334,6 +336,17 @@ class SettingsConfig(ConfigManager, QObject):
         widget = appear_behave.get("widget", {})
         return bool(widget.get("memory_row", True))
 
+    @Property(float, notify=widgetScaleChanged)
+    def widgetScale(self):
+        appear_behave = self.config.get("appear_behave", {})
+        widget = appear_behave.get("widget", {})
+        scale = widget.get("scale", 1.0)
+        try:
+            scale = float(scale)
+        except (TypeError, ValueError):
+            scale = 1.0
+        return max(0.6, min(2.0, scale))
+
     @Slot(bool)
     def setShowDrawButton(self, show: bool) -> None:
         """设置是否显示抽选按钮"""
@@ -369,4 +382,28 @@ class SettingsConfig(ConfigManager, QObject):
         widget["memory_row"] = show
         self.save_config()
         self.showMemoryRowChanged.emit()
-    # endregion #
+
+    @Slot(float)
+    def setWidgetScale(self, scale: float) -> None:
+        """设置浮窗整体缩放"""
+        appear_behave = self.config.setdefault("appear_behave", {})
+        widget = appear_behave.setdefault("widget", {})
+        clamped_scale = max(0.6, min(2.0, float(scale)))
+
+        try:
+            current_scale = float(widget.get("scale", 1.0))
+        except (TypeError, ValueError):
+            current_scale = 1.0
+
+        if abs(current_scale - clamped_scale) < 0.001:
+            return
+
+        widget["scale"] = clamped_scale
+        self.save_config()
+        self.widgetScaleChanged.emit()
+
+    @Slot(result=float)
+    def getWidgetScale(self) -> float:
+        """获取浮窗整体缩放"""
+        return self.widgetScale
+    # endregion
