@@ -73,13 +73,10 @@ class NativeNotifier:
     def _send(self, title: str, message: str) -> None:
         """发送系统通知"""
         try:
-            if not self.tray or not self.tray.trayIcon:
-                raise RuntimeError("托盘图标未初始化，无法发送通知")
-
             self.tray.trayIcon.showMessage(
                 title,
                 message,
-                QIcon(fileName=str(ASSETS_DIR / "icon-light.jpg")),
+                QIcon(str(ASSETS_DIR / "icon-light.jpg")),
                 5000,
             )
 

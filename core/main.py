@@ -56,7 +56,7 @@ class RPMain(QObject):
         self.studentsConfig = StudentsConfig()
         self.notificationManager = NotificationManager()
         self.choiceMaker = ChoiceMaker()
-        
+
         self.themeManager.themeChanged.connect(lambda theme: self.onThemeChanged(theme))
 
         self.widget = RPWidget()
