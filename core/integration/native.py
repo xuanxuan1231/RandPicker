@@ -4,9 +4,11 @@
 
 from loguru import logger
 from multipledispatch import dispatch
-from plyer import notification
+from PySide6.QtGui import QIcon
 
+from ..tray import RPTray
 from ..config.settings import SettingsConfig
+from ..config.dirs import ASSETS_DIR
 
 
 class NativeNotifier:
@@ -19,6 +21,7 @@ class NativeNotifier:
     def __init__(self):
         NativeNotifier._instance = self
         self.settingsConfig = SettingsConfig.instance()
+        self.tray = RPTray.instance()
 
     @dispatch(str, list)
     def send_message(self, pick_type: str, stus: list) -> bool:
@@ -67,15 +70,19 @@ class NativeNotifier:
                                                                                                 names)
         return title, body
 
-    @staticmethod
-    def _send(title: str, message: str) -> None:
+    def _send(self, title: str, message: str) -> None:
         """发送系统通知"""
         try:
-            notification.notify(
-                title=title,
-                message=message,
-                app_name="RandPicker",
+            if not self.tray or not self.tray.trayIcon:
+                raise RuntimeError("托盘图标未初始化，无法发送通知")
+
+            self.tray.trayIcon.showMessage(
+                title,
+                message,
+                QIcon(fileName=str(ASSETS_DIR / "icon-light.jpg")),
+                5000,
             )
+
             logger.success(f"Native 通知发送成功: {title}: {message}")
         except Exception as e:
             logger.exception(f"Native 通知发送失败: {e}")

@@ -25,7 +25,7 @@ class RPTray(QObject):
 
         self.main.themeManager.themeChanged.connect(lambda theme: self.onThemeChanged(theme))
 
-        self.tray = None
+        self.trayIcon = None
         self.menu = None
         self.toggle_action = None
         self._init_tray()
@@ -37,8 +37,8 @@ class RPTray(QObject):
 
         icon_path = str(
             ASSETS_DIR / ("icon-light.jpg" if self.main.themeManager.get_theme() == "Light" else "icon-dark.jpg"))
-        self.tray = QSystemTrayIcon(QIcon(icon_path), self)
-        self.tray.setToolTip("RandPicker")
+        self.trayIcon = QSystemTrayIcon(QIcon(icon_path), self)
+        self.trayIcon.setToolTip("RandPicker")
 
         self.menu = QMenu()
         self.toggle_action = self.menu.addAction("隐藏窗口", self.toggle_visibility)
@@ -47,9 +47,9 @@ class RPTray(QObject):
         self.menu.addAction("重启", self.restart_app)
         self.menu.addAction("退出", self.quit_app)
 
-        self.tray.setContextMenu(self.menu)
-        self.tray.activated.connect(self._handle_activation)
-        self.tray.show()
+        self.trayIcon.setContextMenu(self.menu)
+        self.trayIcon.activated.connect(self._handle_activation)
+        self.trayIcon.show()
         self._sync_action_text()
 
     def _handle_activation(self, reason):
@@ -98,7 +98,7 @@ class RPTray(QObject):
         logger.error("退出应用失败")
 
     def onThemeChanged(self, theme):
-        if not self.tray:
+        if not self.trayIcon:
             return
         icon_path = str(ASSETS_DIR / ("icon-light.jpg" if theme == "Light" else "icon-dark.jpg"))
-        self.tray.setIcon(QIcon(icon_path))
+        self.trayIcon.setIcon(QIcon(icon_path))

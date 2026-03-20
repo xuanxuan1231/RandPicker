@@ -44,21 +44,24 @@ class RPMain(QObject):
     def init(self):
         logger.info("正在启动 RandPicker。")
 
+        # 软件基础设施
+        self.themeManager = ThemeManager()
+        self.tray = RPTray()
         self.settingsConfig = SettingsConfig()
 
+        # UI Access
         self.open_uiaccess()
 
+        # 其他核心组件
         self.studentsConfig = StudentsConfig()
         self.notificationManager = NotificationManager()
         self.choiceMaker = ChoiceMaker()
-        self.themeManager = ThemeManager()
-
+        
         self.themeManager.themeChanged.connect(lambda theme: self.onThemeChanged(theme))
 
         self.widget = RPWidget()
         self.widget.show()
 
-        self.tray = RPTray()
 
     @Slot()
     def open_settings(self):
