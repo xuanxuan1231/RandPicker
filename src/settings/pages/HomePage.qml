@@ -104,7 +104,7 @@ FluentPage {
                     Layout.preferredHeight: 36
                     font.pixelSize: 12
                     visible: SettingsConfig.showMemoryRow
-                    onClicked: ChoiceMaker.setMemoryEnabled(!ChoiceMaker.memoryEnabled)
+                    onClicked: ChoiceMaker.memoryEnabled = !ChoiceMaker.memoryEnabled
                 }
 
                 ToolButton {

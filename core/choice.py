@@ -13,9 +13,10 @@ from .integration import NotificationManager
 
 class ChoiceMaker(QObject):
     _instance: "ChoiceMaker" = None
-    memoryEnabledChanged = Signal(bool)
-    memoryEnabled = Property(bool, fget=lambda self: getattr(self, "_memory_enabled", False), fset=lambda self, v: self.setMemoryEnabled(v), notify=memoryEnabledChanged)
 
+    # 记忆模式和变化信号
+    memoryEnabledChanged = Signal(bool)
+    
     @classmethod
     def instance(cls) -> "ChoiceMaker":
         return cls._instance
@@ -26,8 +27,10 @@ class ChoiceMaker(QObject):
         self.studentsConfig = StudentsConfig.instance()
         self.notificationManager = NotificationManager.instance()
         self._refresh()
-        # session-only memory mode: exclude already-picked students when enabled
+
+        # 记忆模式状态
         self._memory_enabled = False
+        # 一选
         self._memory_set: set = set()
 
     def _refresh(self):
@@ -41,7 +44,8 @@ class ChoiceMaker(QObject):
         if len(self.students) == 0:
             logger.warning("没有可用的学生进行选择。")
             return None
-        # 记忆模式
+        
+        # 记忆模式前处理
         available_students = list(self.students)
         available_weights = list(self.students_weights)
         if self._memory_enabled:
@@ -55,8 +59,19 @@ class ChoiceMaker(QObject):
         if number > len(available_students):
             number = len(available_students)
 
-        result = choices(available_students, weights=available_weights, k=number)
+        # 不重复抽样
+        result = []
+        temp_students = list(available_students)
+        temp_weights = list(available_weights)
+        for _ in range(number):
+            pick = choices(temp_students, weights=temp_weights, k=1)[0]
+            result.append(pick)
+            idx = temp_students.index(pick)
+            temp_students.pop(idx)
+            temp_weights.pop(idx)
         logger.info(f"选择结果: {result}")
+
+        # 发送通知
         if notify:
             self.notificationManager.send(
                 # title=f"抽选了 {number} 名学生",
@@ -64,7 +79,7 @@ class ChoiceMaker(QObject):
                 # message=", ".join([self.studentsConfig.get_single_student(s).get("name", "未知") for s in result])
                 stus=[self.studentsConfig.get_single_student(s) for s in result]
             )
-            # record into memory set if enabled
+            # 记忆模式下记录已抽中的学生
             if self._memory_enabled:
                 for student_id in result:
                     self._memory_set.add(student_id)
@@ -85,8 +100,13 @@ class ChoiceMaker(QObject):
         """ TODO)) 高级抽选"""
         pass
     
-    @Slot(bool)
-    def setMemoryEnabled(self, enabled: bool) -> None:
+    @Property(bool, notify=memoryEnabledChanged)
+    def memoryEnabled(self) -> bool:
+        """获取当前会话内记忆模式状态"""
+        return getattr(self, "_memory_enabled", False)
+
+    @memoryEnabled.setter
+    def memoryEnabled(self, enabled: bool) -> None:
         """启用/禁用会话内记忆模式（排除已选学生）"""
         self._memory_enabled = bool(enabled)
         try:

@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls as QQC
 import QtQuick.Window as QQW
 import QtQuick.Window
 import RinUI
@@ -287,7 +286,7 @@ QQW.Window {
                     property int textSize: 12
                     text: "记忆"
                     checked: ChoiceMaker.memoryEnabled
-                    onClicked: ChoiceMaker.setMemoryEnabled(!ChoiceMaker.memoryEnabled)
+                    onClicked: ChoiceMaker.memoryEnabled = !ChoiceMaker.memoryEnabled
 
                     Component.onCompleted: contentItem.children[0].children[1].font.pixelSize = textSize
 
