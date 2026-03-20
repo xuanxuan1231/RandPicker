@@ -1,0 +1,259 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Dialogs
+import RinUI
+
+FluentPage {
+    id: fileManagePage
+
+    readonly property int pageContainerTopMargin: 18
+    readonly property int pageContainerSpacing: 14
+
+    property bool excelAvailable: false
+    property string selectedFilePath: ""
+    property string importMode: "replace"
+
+    title: qsTr("文件管理")
+
+    Component.onCompleted: {
+        excelAvailable = StudentsConfig.is_excel_available();
+    }
+
+    // 跨平台本地文件路径转 URL
+    function localFileUrl(path) {
+        if (!path)
+            return "";
+        if (path.charAt(0) === "/")
+            return "file://" + path;
+        return "file:///" + path;
+    }
+
+    // ── 不可用提示 ──
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: 8
+        visible: !fileManagePage.excelAvailable
+
+        InfoBar {
+            Layout.fillWidth: true
+            severity: Severity.Warning
+            text: qsTr("Excel 导入导出功能需要安装 openpyxl 库。\n请在终端运行：pip install openpyxl")
+            title: qsTr("功能不可用")
+        }
+    }
+
+    // ── 主内容区域 ──
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: 12
+        visible: fileManagePage.excelAvailable
+
+        // ══════════════════════════════════════
+        // ── 导入学生列表 ──
+        // ══════════════════════════════════════
+        SettingExpander {
+            Layout.fillWidth: true
+            description: qsTr("从 Excel 文件导入学生列表")
+            title: qsTr("导入学生")
+
+            action: Button {
+                highlighted: true
+                icon.name: "ic_fluent_arrow_download_20_regular"
+                text: qsTr("选择文件")
+
+                onClicked: importFileDialog.open()
+            }
+
+            // 导入模式选择
+            SettingCard {
+                Layout.fillWidth: true
+                description: qsTr("选择导入模式")
+                title: qsTr("导入模式")
+
+                ComboBox {
+                    id: importModeCombo
+
+                    currentIndex: 0
+                    model: [qsTr("替换全部学生"), qsTr("合并到现有列表")]
+
+                    onCurrentIndexChanged: {
+                        fileManagePage.importMode = currentIndex === 0 ? "replace" : "merge";
+                    }
+                }
+            }
+
+            // Excel 文件格式说明
+            SettingExpander {
+                Layout.fillWidth: true
+                description: qsTr("查看 Excel 文件格式要求")
+                title: qsTr("文件格式说明")
+
+                SettingItem {
+                    Layout.fillWidth: true
+                    description: qsTr("必需列：「姓名」或「name」")
+                    title: qsTr("必需列")
+                }
+                SettingItem {
+                    Layout.fillWidth: true
+                    description: qsTr("可选列：「权重」「启用」「头像路径」")
+                    title: qsTr("可选列")
+                }
+                SettingItem {
+                    Layout.fillWidth: true
+                    description: qsTr("附加属性使用成对的列：「属性1名称」「属性1值」")
+                    title: qsTr("附加属性")
+                }
+                SettingItem {
+                    Layout.fillWidth: true
+                    title: qsTr("示例")
+
+                    ColumnLayout {
+                        spacing: 4
+
+                        Text {
+                            color: Theme.currentTheme.colors.textSecondaryColor
+                            font.family: "Consolas, Monaco, monospace"
+                            font.pixelSize: 11
+                            text: "姓名    | 权重 | 启用 | 头像路径 | 属性1名称 | 属性1值"
+                        }
+                        Text {
+                            color: Theme.currentTheme.colors.textSecondaryColor
+                            font.family: "Consolas, Monaco, monospace"
+                            font.pixelSize: 11
+                            text: "张三    | 1.0  | 是   |          | 班级      | 一班"
+                        }
+                        Text {
+                            color: Theme.currentTheme.colors.textSecondaryColor
+                            font.family: "Consolas, Monaco, monospace"
+                            font.pixelSize: 11
+                            text: "李四    | 1.5  | 是   |          | 班级      | 二班"
+                        }
+                    }
+                }
+            }
+        }
+
+        // ══════════════════════════════════════
+        // ── 导出学生列表 ──
+        // ══════════════════════════════════════
+        SettingCard {
+            Layout.fillWidth: true
+            description: qsTr("导出当前学生列表到 Excel 文件")
+            title: qsTr("导出学生")
+
+            RowLayout {
+                spacing: 8
+
+                Button {
+                    icon.name: "ic_fluent_arrow_upload_20_regular"
+                    text: qsTr("导出为 Excel")
+
+                    onClicked: exportFileDialog.open()
+                }
+                Text {
+                    color: Theme.currentTheme.colors.textSecondaryColor
+                    font.pixelSize: 12
+                    text: qsTr("共 %1 名学生").arg(StudentsConfig.get_write_students().length)
+                }
+            }
+        }
+
+        // ══════════════════════════════════════
+        // ── 使用提示 ──
+        // ══════════════════════════════════════
+        InfoBar {
+            Layout.fillWidth: true
+            severity: Severity.Info
+            text: qsTr("导入学生后，请点击「保存」按钮保存更改。\n如果选择「替换全部学生」模式，原有学生数据将被完全覆盖。")
+            title: qsTr("提示")
+        }
+    }
+
+    // ── 导入文件选择对话框 ──
+    FileDialog {
+        id: importFileDialog
+
+        acceptLabel: qsTr("导入")
+        fileMode: FileDialog.OpenFile
+        nameFilters: [qsTr("Excel 文件 (*.xlsx *.xls)"), qsTr("所有文件 (*)")]
+        title: qsTr("选择要导入的 Excel 文件")
+
+        onAccepted: {
+            var path = selectedFile.toString();
+            // 移除 file:// 前缀
+            if (Qt.platform.os === "windows") {
+                path = path.replace(/^file:\/\/\//, "");
+            } else {
+                path = path.replace(/^file:\/\//, "");
+            }
+            path = decodeURIComponent(path);
+            // 执行导入
+            var result = StudentsConfig.import_students_from_excel(path, fileManagePage.importMode);
+            // 显示结果
+            if (result.indexOf("成功导入") !== -1) {
+                fileManagePage.Window.window.floatLayer.createInfoBar({
+                    title: qsTr("导入成功"),
+                    text: result,
+                    severity: Severity.Success,
+                    timeout: 5000,
+                    position: Position.Top
+                });
+            } else {
+                fileManagePage.Window.window.floatLayer.createInfoBar({
+                    title: qsTr("导入失败"),
+                    text: result,
+                    severity: Severity.Error,
+                    timeout: 5000,
+                    position: Position.Top
+                });
+            }
+        }
+    }
+
+    // ── 导出文件保存对话框 ──
+    FileDialog {
+        id: exportFileDialog
+
+        acceptLabel: qsTr("导出")
+        defaultSuffix: "xlsx"
+        fileMode: FileDialog.SaveFile
+        nameFilters: [qsTr("Excel 文件 (*.xlsx)"), qsTr("所有文件 (*)")]
+        title: qsTr("导出学生列表")
+
+        onAccepted: {
+            var path = selectedFile.toString();
+            // 移除 file:// 前缀
+            if (Qt.platform.os === "windows") {
+                path = path.replace(/^file:\/\/\//, "");
+            } else {
+                path = path.replace(/^file:\/\//, "");
+            }
+            path = decodeURIComponent(path);
+            // 确保文件扩展名为 .xlsx
+            if (!path.toLowerCase().endsWith('.xlsx') && !path.toLowerCase().endsWith('.xls')) {
+                path += '.xlsx';
+            }
+            // 执行导出
+            var result = StudentsConfig.export_students_to_excel(path);
+            // 显示结果
+            if (result.indexOf("成功导出") !== -1) {
+                fileManagePage.Window.window.floatLayer.createInfoBar({
+                    title: qsTr("导出成功"),
+                    text: result,
+                    severity: Severity.Success,
+                    timeout: 5000,
+                    position: Position.Top
+                });
+            } else {
+                fileManagePage.Window.window.floatLayer.createInfoBar({
+                    title: qsTr("导出失败"),
+                    text: result,
+                    severity: Severity.Error,
+                    timeout: 5000,
+                    position: Position.Top
+                });
+            }
+        }
+    }
+}
