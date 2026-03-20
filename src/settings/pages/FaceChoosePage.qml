@@ -6,22 +6,11 @@ import RinUI
 FluentPage {
     id: faceChoosePage
 
-    property var detectedFaces: []
     property bool cameraActive: false
-    property int frameCounter: 0
-    property var cameraNames: []
     property var cameraIds: []
-
-    title: qsTr("人脸抽选")
-
-    Component.onCompleted: {
-        refreshCameras();
-    }
-    Component.onDestruction: {
-        if (cameraActive) {
-            FaceChooser.stopCamera();
-        }
-    }
+    property var cameraNames: []
+    property var detectedFaces: []
+    property int frameCounter: 0
 
     function refreshCameras() {
         var cams = FaceChooser.getAvailableCameras();
@@ -38,9 +27,21 @@ FluentPage {
         }
     }
 
+    title: qsTr("人脸抽选")
+
+    Component.onCompleted: {
+        refreshCameras();
+    }
+    Component.onDestruction: {
+        if (cameraActive) {
+            FaceChooser.stopCamera();
+        }
+    }
+
     // 帧定时器：定时刷新摄像头画面
     Timer {
         id: frameTimer
+
         interval: 50
         repeat: true
         running: cameraActive
@@ -52,7 +53,6 @@ FluentPage {
 
     // 摄像头状态信号处理
     Connections {
-        target: FaceChooser
         function onCameraStatusChanged(status) {
             if (status === "running") {
                 cameraActive = true;
@@ -60,11 +60,12 @@ FluentPage {
                 cameraActive = false;
             }
         }
-    }
 
+        target: FaceChooser
+    }
     ColumnLayout {
-        Layout.fillWidth: true
         Layout.fillHeight: true
+        Layout.fillWidth: true
         spacing: 16
 
         // ── 摄像头预览区域 ──
@@ -76,30 +77,30 @@ FluentPage {
 
             Image {
                 id: cameraPreview
+
                 anchors.centerIn: parent
-                width: parent.width
-                height: parent.height
-                fillMode: Image.PreserveAspectFit
                 cache: false
+                fillMode: Image.PreserveAspectFit
+                height: parent.height
                 source: cameraActive ? "image://camera/frame?" + faceChoosePage.frameCounter : ""
                 visible: cameraActive
+                width: parent.width
             }
-
             ColumnLayout {
                 anchors.centerIn: parent
-                visible: !cameraActive
                 spacing: 8
+                visible: !cameraActive
 
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "📷"
                     font.pixelSize: 48
+                    text: "📷"
                 }
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: qsTr("摄像头未启动")
-                    font.pixelSize: 16
                     color: "#aaaaaa"
+                    font.pixelSize: 16
+                    text: qsTr("摄像头未启动")
                 }
             }
         }
@@ -114,15 +115,16 @@ FluentPage {
                 spacing: 4
 
                 Text {
-                    text: qsTr("选择摄像头")
-                    font.pixelSize: 12
                     color: "#888"
+                    font.pixelSize: 12
+                    text: qsTr("选择摄像头")
                 }
                 ComboBox {
                     id: cameraSelector
+
                     Layout.preferredWidth: 180
-                    model: cameraNames
                     enabled: !cameraActive
+                    model: cameraNames
 
                     onCurrentIndexChanged: {
                         if (currentIndex >= 0 && currentIndex < cameraIds.length) {
@@ -137,44 +139,55 @@ FluentPage {
                 spacing: 4
 
                 Text {
-                    text: qsTr("抽选人数")
-                    font.pixelSize: 12
                     color: "#888"
+                    font.pixelSize: 12
+                    text: qsTr("抽选人数")
                 }
                 RowLayout {
                     spacing: 4
 
                     ToolButton {
                         icon.name: "ic_fluent_subtract_20_regular"
+
                         onClicked: {
                             var val = parseInt(faceCountInput.text);
-                            if (val > 1) faceCountInput.text = (val - 1).toString();
+                            if (val > 1)
+                                faceCountInput.text = (val - 1).toString();
                         }
                     }
                     TextField {
                         id: faceCountInput
+
                         Layout.preferredWidth: 50
                         horizontalAlignment: Text.AlignHCenter
                         text: "1"
-                        validator: IntValidator { bottom: 1; top: 99 }
+
+                        validator: IntValidator {
+                            bottom: 1
+                            top: 99
+                        }
                     }
                     ToolButton {
                         icon.name: "ic_fluent_add_20_regular"
+
                         onClicked: {
                             var val = parseInt(faceCountInput.text);
-                            if (val < 99) faceCountInput.text = (val + 1).toString();
+                            if (val < 99)
+                                faceCountInput.text = (val + 1).toString();
                         }
                     }
                 }
             }
-
-            Item { Layout.fillWidth: true }
+            Item {
+                Layout.fillWidth: true
+            }
 
             // 刷新摄像头列表
             Button {
-                text: qsTr("刷新")
-                icon.name: "ic_fluent_arrow_sync_20_regular"
                 enabled: !cameraActive
+                icon.name: "ic_fluent_arrow_sync_20_regular"
+                text: qsTr("刷新")
+
                 onClicked: refreshCameras()
             }
         }
@@ -186,12 +199,13 @@ FluentPage {
 
             Button {
                 id: toggleCameraBtn
+
                 Layout.fillWidth: true
-                implicitHeight: 44
-                highlighted: !cameraActive
                 enabled: cameraActive || cameraIds.length > 0
-                text: cameraActive ? qsTr("关闭摄像头") : qsTr("开启摄像头")
+                highlighted: !cameraActive
                 icon.name: cameraActive ? "ic_fluent_video_off_20_regular" : "ic_fluent_video_20_regular"
+                implicitHeight: 44
+                text: cameraActive ? qsTr("关闭摄像头") : qsTr("开启摄像头")
 
                 onClicked: {
                     if (cameraActive) {
@@ -201,15 +215,15 @@ FluentPage {
                     }
                 }
             }
-
             Button {
                 id: captureBtn
+
                 Layout.fillWidth: true
-                implicitHeight: 44
-                highlighted: true
                 enabled: cameraActive
-                text: qsTr("拍照并抽选")
+                highlighted: true
                 icon.name: "ic_fluent_camera_20_regular"
+                implicitHeight: 44
+                text: qsTr("拍照并抽选")
 
                 onClicked: {
                     var count = parseInt(faceCountInput.text) || 1;
@@ -230,18 +244,18 @@ FluentPage {
         id: faceResultDialog
 
         anchors.centerIn: parent
-        width: Math.min(faceChoosePage.width * 0.85, 700)
         modal: true
-        title: qsTr("抽选结果 - 选中 %1 张人脸").arg(faceChoosePage.detectedFaces.length)
         standardButtons: Dialog.Ok
+        title: qsTr("抽选结果 - 选中 %1 张人脸").arg(faceChoosePage.detectedFaces.length)
+        width: Math.min(faceChoosePage.width * 0.85, 700)
 
         contentItem: ColumnLayout {
             spacing: 16
 
             GridLayout {
                 Layout.fillWidth: true
-                columns: Math.max(1, Math.min(3, faceChoosePage.detectedFaces.length))
                 columnSpacing: 12
+                columns: Math.max(1, Math.min(3, faceChoosePage.detectedFaces.length))
                 rowSpacing: 12
 
                 Repeater {
@@ -249,35 +263,38 @@ FluentPage {
 
                     delegate: Rectangle {
                         Layout.fillWidth: true
-                        implicitHeight: delegateColumn.implicitHeight + 16
-                        color: "transparent"
-                        radius: 8
                         border.color: "#3399ff"
                         border.width: 2
+                        color: "transparent"
+                        implicitHeight: delegateColumn.implicitHeight + 16
+                        radius: 8
 
                         ColumnLayout {
                             id: delegateColumn
+
                             anchors.left: parent.left
+                            anchors.margins: 8
                             anchors.right: parent.right
                             anchors.top: parent.top
-                            anchors.margins: 8
                             spacing: 8
 
                             Image {
                                 id: faceImage
+
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 160
+                                cache: false
                                 fillMode: Image.PreserveAspectFit
                                 source: modelData.path
-                                cache: false
                             }
                             Text {
                                 id: faceLabel
+
                                 Layout.alignment: Qt.AlignHCenter
-                                text: qsTr("人脸 %1").arg(modelData.index + 1)
-                                font.pixelSize: 14
-                                font.bold: true
                                 color: "#3399ff"
+                                font.bold: true
+                                font.pixelSize: 14
+                                text: qsTr("人脸 %1").arg(modelData.index + 1)
                             }
                         }
                     }
@@ -295,18 +312,18 @@ FluentPage {
         id: noFaceDialog
 
         anchors.centerIn: parent
-        width: 350
         modal: true
-        title: qsTr("提示")
         standardButtons: Dialog.Ok
+        title: qsTr("提示")
+        width: 350
 
         contentItem: ColumnLayout {
             spacing: 12
 
             Text {
                 Layout.fillWidth: true
-                text: qsTr("未检测到人脸。请确保画面中有可识别的人脸，然后重试。")
                 font.pixelSize: 14
+                text: qsTr("未检测到人脸。请确保画面中有可识别的人脸，然后重试。")
                 wrapMode: Text.Wrap
             }
         }

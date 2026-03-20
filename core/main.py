@@ -62,7 +62,6 @@ class RPMain(QObject):
         self.widget = RPWidget()
         self.widget.show()
 
-
     @Slot()
     def open_settings(self):
         self.settingsWindow = SettingsWindow.instance()

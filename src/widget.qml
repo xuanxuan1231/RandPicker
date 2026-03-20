@@ -6,16 +6,16 @@ import RinUI
 import "./components"
 
 QQW.Window {
-
-
     id: widget
 
+    property real baseWidgetWidth: 75
     property int itemCount: 5
     property bool pendingPositionSave: false
     property bool positionApplied: false
     property int screenPadding: 10  // 恢复到屏幕内时的边距
     property int snapThreshold: 50  // 吸附阈值（接近边缘50px时触发）
     property int visibleMargin: 10  // 屏幕内保留的可见像素
+    property real widgetScale: SettingsConfig ? SettingsConfig.widgetScale : 1.0
 
     // 带动画移动到指定位置
     function animateTo(newX, newY) {
@@ -122,11 +122,11 @@ QQW.Window {
 
     color: "transparent"
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Widget | Qt.X11BypassWindowManagerHint
-    height: mainLayout.implicitHeight + 20
+    height: Math.round(scaledContent.height * widgetScale)
     opacity: positionApplied ? 1 : 0
     title: qsTr("RandPicker")
     visible: true
-    width: 75
+    width: Math.round(scaledContent.width * widgetScale)
 
     Component.onCompleted: Qt.callLater(applySavedPosition)
     onVisibleChanged: {
@@ -198,162 +198,174 @@ QQW.Window {
             }
         }
     }
-    Rectangle {
-        anchors.fill: parent
-        border.color: Colors.get("windowBorderColor")
-        border.width: 1
-        color: Colors.get("backgroundColor")
-        radius: 12
-    }
-    ColumnLayout {
-        id: mainLayout
+    Item {
+        id: scaledContent
 
-        anchors.fill: parent
-        anchors.margins: 10
-        spacing: 5
-        z: 1
+        height: mainLayout.implicitHeight + 20
+        width: baseWidgetWidth
 
-        // 计数器和加减按钮
-        RowLayout {
-            Layout.fillWidth: true
+        transform: Scale {
+            origin.x: 0
+            origin.y: 0
+            xScale: widget.widgetScale
+            yScale: widget.widgetScale
+        }
 
-            Text {
-                Layout.fillWidth: true
-                color: Colors.get("textColor")
-                font.bold: true
-                font.pixelSize: 12
-                horizontalAlignment: Text.AlignHCenter
-                text: itemCount
-                verticalAlignment: Text.AlignVCenter
-            }
+        Rectangle {
+            anchors.fill: parent
+            border.color: Colors.get("windowBorderColor")
+            border.width: 1
+            color: Colors.get("backgroundColor")
+            radius: 12
+        }
+        ColumnLayout {
+            id: mainLayout
+
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 5
+            z: 1
+
+            // 计数器和加减按钮
             RowLayout {
-                Layout.alignment: Qt.AlignRight
+                Layout.fillWidth: true
+
+                Text {
+                    Layout.fillWidth: true
+                    color: Colors.get("textColor")
+                    font.bold: true
+                    font.pixelSize: 12
+                    horizontalAlignment: Text.AlignHCenter
+                    text: itemCount
+                    verticalAlignment: Text.AlignVCenter
+                }
+                RowLayout {
+                    Layout.alignment: Qt.AlignRight
+                    spacing: 1
+
+                    Button {
+                        Layout.preferredHeight: 22
+                        Layout.preferredWidth: 16
+                        enabled: itemCount < 99
+                        flat: true
+                        font.pixelSize: 12
+                        text: "+"
+
+                        onClicked: itemCount++
+                    }
+                    Button {
+                        Layout.preferredHeight: 22
+                        Layout.preferredWidth: 16
+                        enabled: itemCount > 1
+                        flat: true
+                        font.pixelSize: 12
+                        text: "-"
+
+                        onClicked: itemCount--
+                    }
+                }
+            }
+
+            // 功能按钮组
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 10
+
+                IconButton {
+                    id: pickButton
+
+                    iconName: "ic_fluent_people_20_regular"
+                    text: "人"
+                    visible: SettingsConfig.showDrawButton
+
+                    onClicked: ChoiceMaker.choosePeople(itemCount, true)
+                }
+                IconButton {
+                    id: itemButton
+
+                    iconName: "ic_fluent_group_20_regular"
+                    text: "组"
+                    visible: SettingsConfig.showGroupButton
+
+                    onClicked: console.log(" [TODO] 抽组")
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    visible: SettingsConfig.showMemoryRow
+
+                    ToggleButton {
+                        id: memoryToggle
+
+                        property int textSize: 12
+
+                        Layout.preferredHeight: Math.max((contentItem && contentItem.children && contentItem.children[0] && contentItem.children[0].children && contentItem.children[0].children[1] ? contentItem.children[0].children[1].height : textSize) + 8, 22)
+                        Layout.preferredWidth: Math.max(((contentItem && contentItem.children && contentItem.children[0]) ? contentItem.children[0].implicitWidth : textSize * 3) + 12, 32)
+                        checked: ChoiceMaker.memoryEnabled
+                        text: "记忆"
+
+                        Component.onCompleted: contentItem.children[0].children[1].font.pixelSize = textSize
+                        onClicked: ChoiceMaker.memoryEnabled = !ChoiceMaker.memoryEnabled
+                    }
+                    ToolButton {
+                        id: memoryReset
+
+                        property int iconSize: 12
+
+                        Layout.preferredHeight: iconSize
+                        Layout.preferredWidth: iconSize
+                        flat: true
+                        icon.name: "ic_fluent_arrow_sync_20_regular"
+                        size: iconSize
+
+                        onClicked: ChoiceMaker.resetMemory()
+                    }
+                }
+                IconButton {
+                    id: settingsButton
+
+                    Layout.preferredHeight: 25
+                    iconName: ""
+                    text: "···"
+                    visible: SettingsConfig.showMoreButton
+
+                    onClicked: AppMain.open_settings()
+                }
+            }
+        }
+        Item {
+            id: watermark
+
+            enabled: false
+            height: watermarkColumn.implicitHeight
+            visible: VersionInfo ? VersionInfo.getAvailability() : false
+            width: watermarkColumn.implicitWidth
+            z: 114514
+
+            anchors {
+                bottom: parent.bottom
+                bottomMargin: 8
+                left: parent.left
+                leftMargin: 8
+            }
+            Column {
+                id: watermarkColumn
+
                 spacing: 1
 
-                Button {
-                    Layout.preferredHeight: 22
-                    Layout.preferredWidth: 16
-                    enabled: itemCount < 99
-                    flat: true
-                    font.pixelSize: 12
-                    text: "+"
-
-                    onClicked: itemCount++
+                Text {
+                    color: Colors.get("textColor")
+                    font.bold: true
+                    font.pixelSize: 10
+                    opacity: 0.7
+                    text: qsTr("开发预览")
                 }
-                Button {
-                    Layout.preferredHeight: 22
-                    Layout.preferredWidth: 16
-                    enabled: itemCount > 1
-                    flat: true
-                    font.pixelSize: 12
-                    text: "-"
-
-                    onClicked: itemCount--
+                Text {
+                    color: Colors.get("textColor")
+                    font.pixelSize: 9
+                    opacity: 0.67
+                    text: "JellyCat"
                 }
-            }
-        }
-
-        // 功能按钮组
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 10
-
-            IconButton {
-                id: pickButton
-
-                iconName: "ic_fluent_people_20_regular"
-                text: "人"
-                visible: SettingsConfig.showDrawButton
-
-                onClicked: ChoiceMaker.choosePeople(itemCount, true)
-            }
-            IconButton {
-                id: itemButton
-
-                iconName: "ic_fluent_group_20_regular"
-                text: "组"
-                visible: SettingsConfig.showGroupButton
-
-                onClicked: console.log(" [TODO] 抽组")
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 6
-                visible: SettingsConfig.showMemoryRow
-
-                ToggleButton {
-                    id: memoryToggle
-                    property int textSize: 12
-                    text: "记忆"
-                    checked: ChoiceMaker.memoryEnabled
-                    onClicked: ChoiceMaker.memoryEnabled = !ChoiceMaker.memoryEnabled
-
-                    Component.onCompleted: contentItem.children[0].children[1].font.pixelSize = textSize
-
-                    Layout.preferredHeight: Math.max((contentItem && contentItem.children && contentItem.children[0] &&
-                        contentItem.children[0].children && contentItem.children[0].children[1]
-                        ? contentItem.children[0].children[1].height : textSize) + 8, 22)
-
-                    Layout.preferredWidth: Math.max(((contentItem && contentItem.children && contentItem.children[0])
-                        ? contentItem.children[0].implicitWidth : textSize * 3) + 12, 32)
-                }
-
-                ToolButton {
-                    id: memoryReset
-                    flat: true
-                    icon.name: "ic_fluent_arrow_sync_20_regular"
-                    property int iconSize: 12
-                    size: iconSize
-                    Layout.preferredHeight: iconSize
-                    Layout.preferredWidth: iconSize
-                    onClicked: ChoiceMaker.resetMemory()
-                }
-            }
-            IconButton {
-                id: settingsButton
-
-                Layout.preferredHeight: 25
-                iconName: ""
-                text: "···"
-                visible: SettingsConfig.showMoreButton
-
-                onClicked: AppMain.open_settings()
-            }
-            
-        }
-    }
-    Item {
-        id: watermark
-
-        enabled: false
-        height: watermarkColumn.implicitHeight
-        visible: VersionInfo ? VersionInfo.getAvailability() : false
-        width: watermarkColumn.implicitWidth
-        z: 114514
-
-        anchors {
-            bottom: parent.bottom
-            bottomMargin: 8
-            left: parent.left
-            leftMargin: 8
-        }
-        Column {
-            id: watermarkColumn
-
-            spacing: 1
-
-            Text {
-                color: Colors.get("textColor")
-                font.bold: true
-                font.pixelSize: 10
-                opacity: 0.7
-                text: qsTr("开发预览")
-            }
-            Text {
-                color: Colors.get("textColor")
-                font.pixelSize: 9
-                opacity: 0.67
-                text: "JellyCat"
             }
         }
     }
