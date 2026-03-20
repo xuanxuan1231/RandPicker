@@ -16,7 +16,7 @@ class ChoiceMaker(QObject):
 
     # 记忆模式和变化信号
     memoryEnabledChanged = Signal(bool)
-    
+
     @classmethod
     def instance(cls) -> "ChoiceMaker":
         return cls._instance
@@ -44,7 +44,7 @@ class ChoiceMaker(QObject):
         if len(self.students) == 0:
             logger.warning("没有可用的学生进行选择。")
             return None
-        
+
         # 记忆模式前处理
         available_students = list(self.students)
         available_weights = list(self.students_weights)
@@ -99,7 +99,7 @@ class ChoiceMaker(QObject):
     def advancedChoose(self):
         """ TODO)) 高级抽选"""
         pass
-    
+
     @Property(bool, notify=memoryEnabledChanged)
     def memoryEnabled(self) -> bool:
         """获取当前会话内记忆模式状态"""
