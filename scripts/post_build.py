@@ -41,6 +41,19 @@ def _remove_if_exists(path: Path) -> None:
         path.unlink()
 
 
+def _merge_copy_dir(src: Path, dst: Path) -> None:
+    if not src.exists():
+        print(f"Patch dir not found, skip copy: {src}")
+        return
+    if not src.is_dir():
+        raise NotADirectoryError(f"Patch path is not a directory: {src}")
+
+    dst.mkdir(parents=True, exist_ok=True)
+    # 使用 merge copy，并在同名文件时直接覆盖
+    shutil.copytree(src, dst, dirs_exist_ok=True)
+    print(f"Patched files copied from {src} to {dst}")
+
+
 def build_deb(dist_app_dir: Path) -> None:
     """构建 .deb 软件包，参考 build.py 的 Class-Widgets 风格"""
     print("Starting .deb package build (Class-Widgets style)...")
@@ -104,6 +117,12 @@ Terminal=false
 
 
 def _post_build_windows() -> None:
+    patch_dir = ROOT / "patch"
+    dist_app_dir = DIST_DIR / APP_NAME
+    if not dist_app_dir.exists():
+        raise FileNotFoundError(f"Missing dist app dir at {dist_app_dir}")
+
+    _merge_copy_dir(patch_dir, dist_app_dir)
     _remove_if_exists(ROOT / "version.txt")
 
 
