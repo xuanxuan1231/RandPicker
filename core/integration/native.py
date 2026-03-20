@@ -2,13 +2,13 @@
 向系统发送通知
 """
 
+from PySide6.QtGui import QIcon
 from loguru import logger
 from multipledispatch import dispatch
-from PySide6.QtGui import QIcon
 
-from ..tray import RPTray
-from ..config.settings import SettingsConfig
 from ..config.dirs import ASSETS_DIR
+from ..config.settings import SettingsConfig
+from ..tray import RPTray
 
 
 class NativeNotifier:

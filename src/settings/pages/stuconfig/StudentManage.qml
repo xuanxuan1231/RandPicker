@@ -9,10 +9,10 @@ FluentPage {
 
     // 当前正在编辑的学生 GUID
     property string editingGuid: ""
+    readonly property int pageContainerSpacing: 14
 
     // FluentPage 内部布局常量
     readonly property int pageContainerTopMargin: 18
-    readonly property int pageContainerSpacing: 14
 
     // 学生列表模型（从写缓冲读取）
     property var studentsModel: []

@@ -75,7 +75,6 @@ DEFAULT_CONFIG = {
 }
 
 
-
 class SettingsConfig(ConfigManager, QObject):
     _instance: "SettingsConfig" = None
 
@@ -294,6 +293,7 @@ class SettingsConfig(ConfigManager, QObject):
         advanced = self.config.setdefault("advanced", {})
         advanced["uiaccess"] = enabled
         self.save_config()
+
     # endregion
 
     # region 外观 & 行为

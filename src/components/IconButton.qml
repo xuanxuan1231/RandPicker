@@ -18,8 +18,8 @@ Button {
             anchors.horizontalCenter: parent.horizontalCenter
             color: Colors.get("textColor")
             name: root.iconName
-            visible: root.iconName !== ""
             size: 20
+            visible: root.iconName !== ""
         }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
