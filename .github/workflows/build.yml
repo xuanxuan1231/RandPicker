@@ -26,7 +26,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v7
@@ -131,7 +131,7 @@ jobs:
           hdiutil create -volname "RandPicker" -srcfolder dist/RandPicker.app -ov -format UDZO "dist/RandPicker-macOS-${{ matrix.arch }}.dmg"
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RandPicker-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
@@ -155,7 +155,7 @@ jobs:
             libgl1-mesa-dev mesa-utils libgl1-mesa-dri dbus libdbus-1-*
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -238,7 +238,7 @@ jobs:
           zip -r RandPicker-Linux-Debian13.zip RandPicker/
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RandPicker-Linux
           path: |
@@ -253,7 +253,7 @@ jobs:
       contents: write
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true
